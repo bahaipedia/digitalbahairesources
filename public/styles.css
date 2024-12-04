@@ -31,18 +31,15 @@ header {
     font-weight: bold;
     color: #005bb5;
 }
-
 .logo-text a {
     text-decoration: none;
     color: #005bb5;
     transition: color 0.3s ease;
 }
-
 .logo-text span {
     color: #333; /* Contrast for 'Bahá’í Resources' */
     font-weight: normal;
 }
-
 .logo-text a:hover {
     color: #003f8c;
 }
@@ -55,11 +52,9 @@ header {
     margin: 0;
     padding: 0;
 }
-
 .nav-bar li {
     margin: 0;
 }
-
 .nav-bar a {
     text-decoration: none;
     color: #333;
@@ -68,12 +63,10 @@ header {
     transition: color 0.3s ease, background-color 0.3s ease;
     border-radius: 3px;
 }
-
 .nav-bar a:hover {
     background-color: #005bb5; /* Subtle highlight effect */
     color: white;
 }
-
 .nav-bar .active {
     background-color: #005bb5;
     color: white;
@@ -83,48 +76,44 @@ header {
 /* Project styling */
 .projects {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-direction: column; 
     gap: 20px;
     padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
-
 .project-row {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     gap: 30px;
 }
-
 .project-item {
+    flex: 1; 
     background-color: white;
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 15px;
     text-align: center;
-    width: 250px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
-
 .project-item h2 {
     font-size: 1.2rem;
     margin-bottom: 10px;
     color: #005bb5;
 }
-
 .project-item h2 a {
     text-decoration: none;
     color: inherit;
 }
-
 .project-item h2 a:hover {
     text-decoration: underline;
 }
-
 .project-item p {
     font-size: 0.9rem;
     margin: 0;
 }
 
+/* Footer */
 footer {
     text-align: center;
     padding: 15px;
@@ -140,9 +129,16 @@ footer {
         align-items: center;
         text-align: center;
     }
-
     .nav-bar ul {
         flex-direction: column;
         gap: 10px;
+    }
+    .project-row {
+        flex-direction: column; /* Stack items vertically */
+        align-items: center; /* Center items */
+        gap: 20px; /* Add spacing between items */
+    }
+    .project-item {
+        width: 100%; /* Full width for better usability */
     }
 }
