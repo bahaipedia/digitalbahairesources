@@ -7,9 +7,9 @@ body {
 }
 /* Header Styling */
 header {
-    background-color: #f9f9f9; /* Light background for a modern look */
-    color: #333; /* Neutral text color */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    background-color: #f9f9f9; 
+    color: #333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -25,9 +25,26 @@ header {
 }
 
 /* Logo Styling */
-.logo img {
-    height: 80px;
-    width: auto;
+.logo-text {
+    font-family: 'Arial', sans-serif;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #005bb5;
+}
+
+.logo-text a {
+    text-decoration: none;
+    color: #005bb5;
+    transition: color 0.3s ease;
+}
+
+.logo-text span {
+    color: #333; /* Contrast for 'Bahá’í Resources' */
+    font-weight: normal;
+}
+
+.logo-text a:hover {
+    color: #003f8c;
 }
 
 /* Navigation Bar */
