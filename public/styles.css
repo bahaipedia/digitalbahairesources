@@ -13,7 +13,7 @@ header {
     position: sticky;
     top: 0;
     z-index: 1000;
-    padding: 10px 0;
+    padding: 25px 0;
 }
 .header-container {
     display: flex;
