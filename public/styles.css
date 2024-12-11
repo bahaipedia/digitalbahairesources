@@ -126,6 +126,7 @@ header {
 /* Main Content Area */
 .content-area {
     max-width: 1200px;
+    width: 100%;
     margin: 20px auto;
     padding: 20px;
     background-color: white;
