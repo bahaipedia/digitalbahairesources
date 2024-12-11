@@ -5,6 +5,7 @@ body {
     background-color: #f9f9f9;
     color: #333;
 }
+
 /* Header Styling */
 header {
     background-color: #f9f9f9; 
@@ -111,6 +112,17 @@ header {
 .project-item p {
     font-size: 0.9rem;
     margin: 0;
+}
+
+/* Main Content Area */
+.content-area {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
 }
 
 /* Footer */
