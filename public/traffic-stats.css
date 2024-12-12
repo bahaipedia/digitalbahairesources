@@ -87,6 +87,6 @@ nav select {
 }
 .traffic-summary-table th,
 .traffic-summary-table td {
-    padding: 8px 12px;
+    text-align: center;
     border: 1px solid #ddd;
 }
