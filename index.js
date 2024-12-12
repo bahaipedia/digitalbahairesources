@@ -137,6 +137,56 @@ app.get('/api/traffic-stats', async (req, res) => {
     }
 });
 
+// API route to fetch filtered "monthly traffic" stats
+app.get('/api/monthly-history', async (req, res) => {
+    const { website_id, server_id, year } = req.query;
+
+    try {
+        const query = `
+            SELECT 
+                month,
+                COALESCE(SUM(CASE WHEN day = 0 THEN unique_visitors ELSE 0 END), 0) AS unique_visitors,
+                COALESCE(SUM(number_of_visits), 0) AS total_visits,
+                COALESCE(SUM(pages), 0) AS total_pages,
+                COALESCE(SUM(hits), 0) AS total_hits,
+                COALESCE(SUM(bandwidth), 0) AS total_bandwidth
+            FROM summary
+            WHERE 
+                (? IS NULL OR website_id = ?) AND 
+                (? IS NULL OR server_id = ?) AND
+                year = ?
+            GROUP BY month
+            ORDER BY month;
+        `;
+
+        const [monthlyResults] = await pool.query(query, [
+            website_id === 'null' ? null : website_id, 
+            website_id === 'null' ? null : website_id,
+            server_id === 'null' ? null : server_id, 
+            server_id === 'null' ? null : server_id,
+            year
+        ]);
+
+        // Ensure all values are properly summed without null or invalid data
+        const totals = monthlyResults.reduce(
+            (acc, row) => {
+                acc.unique_visitors += Number(row.unique_visitors) || 0;
+                acc.total_visits += Number(row.total_visits) || 0;
+                acc.total_pages += Number(row.total_pages) || 0;
+                acc.total_hits += Number(row.total_hits) || 0;
+                acc.total_bandwidth += Number(row.total_bandwidth) || 0;
+                return acc;
+            },
+            { unique_visitors: 0, total_visits: 0, total_pages: 0, total_hits: 0, total_bandwidth: 0 }
+        );
+
+        res.json({ monthly: monthlyResults, totals });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error fetching monthly history.' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Primary site running at http://localhost:${PORT}`);
 });
