@@ -77,7 +77,7 @@ app.get('/api/traffic-stats', async (req, res) => {
     try {
         const query = `
             SELECT 
-                MAX(CASE WHEN day = 0 THEN unique_visitors ELSE NULL END) AS unique_visitors,
+                SUM(CASE WHEN day = 0 THEN unique_visitors ELSE 0 END) AS unique_visitors,
                 SUM(number_of_visits) AS total_visits,
                 SUM(pages) AS total_pages,
                 SUM(hits) AS total_hits,
@@ -87,11 +87,9 @@ app.get('/api/traffic-stats', async (req, res) => {
                 (? IS NULL OR website_id = ?) AND 
                 (? IS NULL OR server_id = ?) AND 
                 year = ? AND 
-                month = ?
-            GROUP BY year, month;
+                month = ?;
         `;
 
-        // Replace "all" with null for filtering
         const [results] = await pool.query(query, [
             website_id === 'null' ? null : website_id, 
             website_id === 'null' ? null : website_id,
