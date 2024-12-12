@@ -56,6 +56,23 @@ app.get('/traffic-stats', async (req, res) => {
         `);
         const [servers] = await pool.query('SELECT id, location FROM servers ORDER BY location');
         
+        // Map server names with transformations and custom ordering
+        const serverNameMapping = {
+            usa: 'United States',
+            singapore: 'Singapore',
+            frankfurt: 'Frankfurt',
+            saopaulo: 'São Paulo'
+        };
+        const transformedServers = servers
+            .map(server => ({
+                id: server.id,
+                location: serverNameMapping[server.location.toLowerCase()] || server.location
+            }))
+            .sort((a, b) => {
+                const customOrder = ['United States', 'Singapore', 'Frankfurt', 'São Paulo'];
+                return customOrder.indexOf(a.location) - customOrder.indexOf(b.location);
+            });
+        
         // For years and months, you might do something like:
         const [yearResults] = await pool.query('SELECT DISTINCT year FROM summary ORDER BY year');
         const years = yearResults.map(row => row.year);
@@ -66,7 +83,7 @@ app.get('/traffic-stats', async (req, res) => {
         // Render the stats page
         res.render('traffic-stats', {
             websites: websites,
-            servers: servers,
+            servers: transformedServers,
             years: years,
             months: months,
             selectedYear: 2024,   // Preselected value
