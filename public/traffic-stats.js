@@ -19,6 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Check if data is valid
             if (data && Object.keys(data).length > 0) {
+                    console.log("Formatted Data:", {
+        unique_visitors: data.unique_visitors?.toLocaleString(),
+        total_visits: data.total_visits?.toLocaleString(),
+        total_pages: data.total_pages?.toLocaleString(),
+        total_hits: data.total_hits?.toLocaleString(),
+        total_bandwidth: (data.total_bandwidth / 1024 / 1024).toFixed(2).toLocaleString()
+    });
                 tableBody.innerHTML = `
                     <tr>
                         <td>${data.unique_visitors?.toLocaleString() || 'N/A'}</td>
