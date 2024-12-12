@@ -101,3 +101,20 @@ nav select {
 .traffic-summary-table td {
     border: 1px solid #ddd;
 }
+
+/* partials/monthly-history.ejs */
+.monthly-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    table-layout: fixed;
+}
+.monthly-history-table th,
+.monthly-history-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+.monthly-history-table th {
+    background-color: #CCCCDD;
+    font-weight: bold;
+}
