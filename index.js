@@ -43,7 +43,7 @@ app.get('/traffic-stats', async (req, res) => {
         const months = monthResults.map(row => row.month);
 
         // Render the stats page
-        res.render('stats', {
+        res.render('traffic-stats', {
             websites: websites,
             servers: servers,
             years: years,
