@@ -70,6 +70,41 @@ app.get('/traffic-stats', async (req, res) => {
     }
 });
 
+// API route to fetch filtered traffic stats dynamically
+app.get('/api/traffic-stats', async (req, res) => {
+    const { website_id, server_id, year, month } = req.query;
+
+    try {
+        const query = `
+            SELECT 
+                MAX(CASE WHEN day = 0 THEN unique_visitors ELSE NULL END) AS unique_visitors,
+                SUM(number_of_visits) AS total_visits,
+                SUM(pages) AS total_pages,
+                SUM(hits) AS total_hits,
+                SUM(bandwidth) AS total_bandwidth
+            FROM summary
+            WHERE 
+                (? IS NULL OR website_id = ?) AND 
+                (? IS NULL OR server_id = ?) AND 
+                (? IS NULL OR year = ?) AND 
+                (? IS NULL OR month = ?)
+            GROUP BY year, month;
+        `;
+
+        const [results] = await pool.query(query, [
+            website_id || null, website_id || null,
+            server_id || null, server_id || null,
+            year || null, year || null,
+            month || null, month || null
+        ]);
+
+        res.json(results[0] || {});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error fetching traffic stats.' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Primary site running at http://localhost:${PORT}`);
 });
