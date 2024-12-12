@@ -17,18 +17,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`/api/traffic-stats?${params}`);
             const data = await response.json();
 
-            // Update table with the fetched data
-            tableBody.innerHTML = `
-                <tr>
-                    <td>${data.unique_visitors || 'N/A'}</td>
-                    <td>${data.total_visits || 0}</td>
-                    <td>${data.total_pages || 0}</td>
-                    <td>${data.total_hits || 0}</td>
-                    <td>${(data.total_bandwidth / 1024 / 1024).toFixed(2) || 0} MB</td>
-                </tr>
-            `;
+            // Check if data is valid
+            if (data && Object.keys(data).length > 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td>${data.unique_visitors?.toLocaleString() || 'N/A'}</td>
+                        <td>${data.total_visits?.toLocaleString() || 0}</td>
+                        <td>${data.total_pages?.toLocaleString() || 0}</td>
+                        <td>${data.total_hits?.toLocaleString() || 0}</td>
+                        <td>${(data.total_bandwidth / 1024 / 1024).toFixed(2).toLocaleString()} MB</td>
+                    </tr>
+                `;
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5">No data available for the selected filters.</td>
+                    </tr>
+                `;
+            }
         } catch (err) {
             console.error('Error fetching data:', err);
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5">Error loading data. Please try again later.</td>
+                </tr>
+            `;
         }
     };
 
