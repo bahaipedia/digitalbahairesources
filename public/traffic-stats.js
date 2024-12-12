@@ -2,21 +2,23 @@
 document.addEventListener('DOMContentLoaded', () => {
     const monthSelect = document.getElementById('month-select');
     const yearSelect = document.getElementById('year-select');
-    const summaryHeading = document.querySelector('#traffic-summary h2');
+    const summaryMonth = document.getElementById('summary-month');
+    const summaryYear = document.getElementById('summary-year');
+
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
 
     const updateSummaryHeading = () => {
-        const monthNames = [
-            "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
-        ];
         const selectedMonth = monthSelect.value;
         const selectedYear = yearSelect.value;
 
-        const monthName = monthNames[selectedMonth - 1];
-        summaryHeading.textContent = `Summary for ${monthName}, ${selectedYear}`;
+        summaryMonth.textContent = monthNames[selectedMonth - 1];
+        summaryYear.textContent = selectedYear;
     };
 
-    // Attach event listeners to dropdowns
+    // Attach event listeners
     monthSelect.addEventListener('change', updateSummaryHeading);
     yearSelect.addEventListener('change', updateSummaryHeading);
 
