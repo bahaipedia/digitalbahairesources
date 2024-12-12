@@ -107,7 +107,7 @@ app.get('/api/traffic-stats', async (req, res) => {
 
 // API route to fetch filtered "monthly traffic" stats
 app.get('/api/monthly-history', async (req, res) => {
-    const { year } = req.query;
+    const { website_id, server_id, year } = req.query;
 
     try {
         const query = `
@@ -119,12 +119,21 @@ app.get('/api/monthly-history', async (req, res) => {
                 SUM(hits) AS total_hits,
                 SUM(bandwidth) AS total_bandwidth
             FROM summary
-            WHERE year = ?
+            WHERE 
+                (? IS NULL OR website_id = ?) AND 
+                (? IS NULL OR server_id = ?) AND
+                year = ?
             GROUP BY month
             ORDER BY month;
         `;
 
-        const [results] = await pool.query(query, [year]);
+        const [results] = await pool.query(query, [
+            website_id === 'null' ? null : website_id, 
+            website_id === 'null' ? null : website_id,
+            server_id === 'null' ? null : server_id, 
+            server_id === 'null' ? null : server_id,
+            year
+        ]);
 
         res.json(results);
     } catch (err) {
