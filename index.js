@@ -113,11 +113,11 @@ app.get('/api/monthly-history', async (req, res) => {
         const query = `
             SELECT 
                 month,
-                SUM(CASE WHEN day = 0 THEN unique_visitors ELSE 0 END) AS unique_visitors,
-                SUM(number_of_visits) AS total_visits,
-                SUM(pages) AS total_pages,
-                SUM(hits) AS total_hits,
-                SUM(bandwidth) AS total_bandwidth
+                COALESCE(SUM(CASE WHEN day = 0 THEN unique_visitors ELSE 0 END), 0) AS unique_visitors,
+                COALESCE(SUM(number_of_visits), 0) AS total_visits,
+                COALESCE(SUM(pages), 0) AS total_pages,
+                COALESCE(SUM(hits), 0) AS total_hits,
+                COALESCE(SUM(bandwidth), 0) AS total_bandwidth
             FROM summary
             WHERE 
                 (? IS NULL OR website_id = ?) AND 
@@ -135,14 +135,14 @@ app.get('/api/monthly-history', async (req, res) => {
             year
         ]);
 
-        // Calculate totals
+        // Ensure all values are properly summed without null or invalid data
         const totals = monthlyResults.reduce(
             (acc, row) => {
-                acc.unique_visitors += row.unique_visitors || 0;
-                acc.total_visits += row.total_visits || 0;
-                acc.total_pages += row.total_pages || 0;
-                acc.total_hits += row.total_hits || 0;
-                acc.total_bandwidth += row.total_bandwidth || 0;
+                acc.unique_visitors += Number(row.unique_visitors) || 0;
+                acc.total_visits += Number(row.total_visits) || 0;
+                acc.total_pages += Number(row.total_pages) || 0;
+                acc.total_hits += Number(row.total_hits) || 0;
+                acc.total_bandwidth += Number(row.total_bandwidth) || 0;
                 return acc;
             },
             { unique_visitors: 0, total_visits: 0, total_pages: 0, total_hits: 0, total_bandwidth: 0 }
