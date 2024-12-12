@@ -181,6 +181,50 @@ app.get('/api/monthly-history', async (req, res) => {
     }
 });
 
+// API route to build "charts" in the summary stats area
+app.get('/api/chart-data', async (req, res) => {
+    const { metric } = req.query;
+
+    try {
+        const websiteQuery = `
+            SELECT name AS label, SUM(${metric}) AS value
+            FROM summary
+            JOIN websites ON summary.website_id = websites.id
+            GROUP BY name
+            ORDER BY value DESC
+            LIMIT 5
+        `;
+
+        const serverQuery = `
+            SELECT location AS label, SUM(${metric}) AS value
+            FROM summary
+            JOIN servers ON summary.server_id = servers.id
+            GROUP BY location
+            ORDER BY value DESC
+        `;
+
+        const [websiteData] = await pool.query(websiteQuery);
+        const [serverData] = await pool.query(serverQuery);
+
+        // Group "Other" websites
+        const totalWebsiteData = websiteData.reduce((acc, row) => acc + row.value, 0);
+        const otherWebsiteData = {
+            label: 'Other',
+            value: totalWebsiteData - websiteData.reduce((acc, row) => acc + row.value, 0)
+        };
+
+        const finalWebsiteData = [...websiteData, otherWebsiteData];
+
+        res.json({
+            website: finalWebsiteData,
+            server: serverData
+        });
+    } catch (err) {
+        console.error('Error fetching chart data:', err);
+        res.status(500).send('Server Error');
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Primary site running at http://localhost:${PORT}`);
 });
