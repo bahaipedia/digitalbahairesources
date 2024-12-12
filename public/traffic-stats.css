@@ -73,14 +73,12 @@ nav select {
 }
 .header-pages {
     background-color: #4477DD;
-    color: white; /* Ensures readability against the blue background */
 }
 .header-hits {
     background-color: #66DDEE;
 }
 .header-bandwidth {
     background-color: #2EA495;
-    color: white; /* Ensures readability against the teal background */
 }
 
 /* partials/traffic-summary.ejs */
@@ -104,17 +102,16 @@ nav select {
 
 /* partials/monthly-history.ejs */
 .monthly-history-table {
-    width: 100%;
+    margin: auto;
     border-collapse: collapse;
     text-align: center;
     table-layout: fixed;
 }
 .monthly-history-table th,
 .monthly-history-table td {
-    padding: 8px;
+    padding: 5px;
     border: 1px solid #ddd;
 }
 .monthly-history-table th {
-    background-color: #CCCCDD;
     font-weight: bold;
 }
