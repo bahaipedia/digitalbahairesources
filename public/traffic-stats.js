@@ -81,7 +81,24 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchData();
 });
 
-/* Code to build monthly traffic table */
+/* Build monthly traffic header */
+document.addEventListener('DOMContentLoaded', () => {
+    const yearSelect = document.getElementById('year-select');
+    const monthlyHistoryYear = document.getElementById('monthly-history-year');
+
+    const updateMonthlyHistoryHeading = () => {
+        const selectedYear = yearSelect.value;
+        monthlyHistoryYear.textContent = selectedYear;
+    };
+
+    // Attach event listener to the year dropdown
+    yearSelect.addEventListener('change', updateMonthlyHistoryHeading);
+
+    // Initial update on page load
+    updateMonthlyHistoryHeading();
+});
+
+/* Build monthly traffic table */
 document.addEventListener('DOMContentLoaded', () => {
     const websiteSelect = document.getElementById('website-select');
     const serverSelect = document.getElementById('server-select');
