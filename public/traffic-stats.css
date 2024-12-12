@@ -80,13 +80,13 @@ nav select {
 .traffic-summary-table {
     width: 100%;
     border-collapse: collapse;
-    text-align: left;
+    text-align: center;
+    table-layout: fixed;
 }
 .traffic-summary-table thead {
     font-weight: bold;
 }
 .traffic-summary-table th,
 .traffic-summary-table td {
-    text-align: center;
     border: 1px solid #ddd;
 }
