@@ -2,7 +2,9 @@ const express = require('express');
 const path = require('path');
 const mysql = require('mysql2/promise');
 const winston = require('winston');
-require('dotenv').config();
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3008;
