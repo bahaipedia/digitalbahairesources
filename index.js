@@ -94,41 +94,6 @@ app.get('/traffic-stats', async (req, res) => {
     }
 });
 
-// API route to fetch "summary" stats dynamically
-app.get('/api/traffic-stats', async (req, res) => {
-    const { website_id, server_id, year, month } = req.query;
-
-    try {
-        const query = `
-            SELECT 
-                SUM(CASE WHEN day = 0 THEN unique_visitors ELSE 0 END) AS unique_visitors,
-                SUM(number_of_visits) AS total_visits,
-                SUM(pages) AS total_pages,
-                SUM(hits) AS total_hits,
-                SUM(bandwidth) AS total_bandwidth
-            FROM summary
-            WHERE 
-                (? IS NULL OR website_id = ?) AND 
-                (? IS NULL OR server_id = ?) AND 
-                year = ? AND 
-                month = ?;
-        `;
-
-        const [results] = await pool.query(query, [
-            website_id === 'null' ? null : website_id, 
-            website_id === 'null' ? null : website_id,
-            server_id === 'null' ? null : server_id, 
-            server_id === 'null' ? null : server_id,
-            year, month
-        ]);
-
-        res.json(results[0] || {});
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error fetching traffic stats.' });
-    }
-});
-
 // API route to fetch filtered "monthly traffic" stats
 app.get('/api/traffic-stats', async (req, res) => {
     const { website_id, year, month } = req.query;
