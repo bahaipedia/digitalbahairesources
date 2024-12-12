@@ -46,10 +46,13 @@ app.get('/traffic-stats', async (req, res) => {
     try {
         // Fetch websites, excluding legacy/defunct sites, and ordering them
         const [websites] = await pool.query(`
-            SELECT id, name 
-            FROM websites 
+            SELECT id, name
+            FROM websites
             WHERE name NOT IN ('fr.bahai.works', 'bahaiconcordance.org') -- Exclude legacy/defunct sites
-            ORDER BY FIELD(name, 'bahaipedia.org', 'bahai.works', 'bahai.media', 'bahai9.com', 'bahai.quest') DESC, name ASC;
+            ORDER BY 
+                (FIELD(name, 'bahaipedia.org', 'bahai.works', 'bahai.media', 'bahai9.com', 'bahai.quest') > 0) DESC,
+                FIELD(name, 'bahaipedia.org', 'bahai.works', 'bahai.media', 'bahai9.com', 'bahai.quest'),
+                name ASC;
         `);
         const [servers] = await pool.query('SELECT id, location FROM servers ORDER BY location');
         
