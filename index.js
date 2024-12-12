@@ -46,9 +46,15 @@ app.get('/traffic-stats', async (req, res) => {
     try {
         // Fetch websites, excluding legacy/defunct sites, and ordering them
         const [websites] = await pool.query(`
-            SELECT id, name 
-            FROM websites 
+            SELECT DISTINCT 
+                CASE 
+                    WHEN name = 'bahaiconcordance.org' THEN 'bahai.quest'
+                    ELSE name
+                END AS name,
+                MIN(id) AS id -- Use the smallest ID for grouping
+            FROM websites
             WHERE name NOT IN ('fr.bahai.works') -- Exclude legacy/defunct sites
+            GROUP BY name
             ORDER BY FIELD(name, 'bahaipedia.org', 'bahai.works', 'bahai.media', 'bahai9.com', 'bahai.quest') DESC, name ASC
         `);
 
