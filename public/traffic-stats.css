@@ -84,7 +84,7 @@ nav select {
 /* partials/traffic-summary.ejs */
 #traffic-summary {
     margin: 20px 0;
-    font-family: Arial, sans-serif;
+    padding-bottom: 40px;
 }
 .traffic-summary-table {
     width: 100%;
@@ -101,6 +101,10 @@ nav select {
 }
 
 /* partials/monthly-history.ejs */
+#monthly-history {
+    margin: 20px 0;
+    padding-bottom: 40px;
+}
 .monthly-history-table {
     margin: auto;
     border-collapse: collapse;
