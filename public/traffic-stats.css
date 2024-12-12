@@ -99,6 +99,25 @@ nav select {
 .traffic-summary-table td {
     border: 1px solid #ddd;
 }
+.chart-header {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+}
+.chart-header h1 select {
+    font-size: 1rem;
+    margin-left: 5px;
+}
+.charts-container {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    margin-top: 20px;
+}
+#website-chart, #server-chart {
+    width: 400px;
+    height: 400px;
+}
 
 /* partials/monthly-history.ejs */
 #monthly-history {
