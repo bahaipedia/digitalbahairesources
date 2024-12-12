@@ -102,9 +102,9 @@ nav select {
 .chart-header {
     text-align: center;
     font-size: 1.5rem;
-    margin-bottom: 20px;
+    margin: 20px 0;
 }
-.chart-header h1 select {
+.chart-header select {
     font-size: 1rem;
     margin-left: 5px;
 }
