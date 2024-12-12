@@ -42,55 +42,45 @@ app.get('/current-activity', (req, res) => res.render('current-activity'));
 app.get('/contact', (req, res) => res.render('contact'));
 
 // Route to create the traffic stats page
-app.get('/traffic-stats', async (req, res) => {
+app.get('/api/traffic-stats', async (req, res) => {
+    const { website_id, year, month } = req.query;
+
     try {
-        // Fetch websites, excluding legacy/defunct sites, and ordering them
-        const [websites] = await pool.query(`
-            SELECT DISTINCT 
-                CASE 
-                    WHEN name = 'bahaiconcordance.org' THEN 'bahai.quest'
-                    ELSE name
-                END AS name,
-                MIN(id) AS id -- Use the smallest ID for grouping
-            FROM websites
-            WHERE name NOT IN ('fr.bahai.works') -- Exclude legacy/defunct sites
-            GROUP BY name
-            ORDER BY FIELD(name, 'bahaipedia.org', 'bahai.works', 'bahai.media', 'bahai9.com', 'bahai.quest') DESC, name ASC
-        `);
+        let query;
+        let params;
 
-        // Fetch servers and sort them by location
-        const [servers] = await pool.query('SELECT id, location FROM servers ORDER BY location');
+        // Combine data for bahaiconcordance.org and bahai.quest
+        if (website_id === '12') {
+            query = `
+                SELECT 
+                    SUM(CASE WHEN day = 0 THEN unique_visitors ELSE 0 END) AS unique_visitors,
+                    SUM(number_of_visits) AS total_visits,
+                    SUM(pages) AS total_pages,
+                    SUM(hits) AS total_hits,
+                    SUM(bandwidth) AS total_bandwidth
+                FROM summary
+                WHERE website_id IN (12, 3) AND year = ? AND month = ?;
+            `;
+            params = [year, month];
+        } else {
+            query = `
+                SELECT 
+                    SUM(CASE WHEN day = 0 THEN unique_visitors ELSE 0 END) AS unique_visitors,
+                    SUM(number_of_visits) AS total_visits,
+                    SUM(pages) AS total_pages,
+                    SUM(hits) AS total_hits,
+                    SUM(bandwidth) AS total_bandwidth
+                FROM summary
+                WHERE website_id = ? AND year = ? AND month = ?;
+            `;
+            params = [website_id, year, month];
+        }
 
-        // Fetch distinct years and months
-        const [yearResults] = await pool.query('SELECT DISTINCT year FROM summary ORDER BY year');
-        const years = yearResults.map(row => row.year);
-
-        const [monthResults] = await pool.query('SELECT DISTINCT month FROM summary ORDER BY month');
-        const months = monthResults.map(row => row.month);
-
-        // Combine websites (e.g., bahaiconcordance.org into bahai.quest)
-        const websiteMap = new Map();
-        websites.forEach(website => {
-            if (website.name === 'bahaiconcordance.org') {
-                websiteMap.set('bahai.quest', { id: website.id, name: 'bahai.quest' });
-            } else if (!websiteMap.has(website.name)) {
-                websiteMap.set(website.name, website);
-            }
-        });
-        const combinedWebsites = Array.from(websiteMap.values());
-
-        // Render the stats page
-        res.render('traffic-stats', {
-            websites: combinedWebsites,
-            servers: servers,
-            years: years,
-            months: months,
-            selectedYear: 2024, // Preselected value
-            selectedMonth: 12   // Preselected value
-        });
+        const [results] = await pool.query(query, params);
+        res.json(results[0] || {});
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).json({ error: 'Error fetching traffic stats.' });
     }
 });
 
