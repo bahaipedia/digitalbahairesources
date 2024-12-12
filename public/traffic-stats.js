@@ -83,6 +83,72 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchData();
 });
 
+/* Build summary pie charts */
+document.addEventListener('DOMContentLoaded', () => {
+    const metricSelect = document.getElementById('metric-select');
+    const websiteChartCanvas = document.getElementById('website-chart');
+    const serverChartCanvas = document.getElementById('server-chart');
+
+    let websiteChart;
+    let serverChart;
+
+    const fetchChartData = async () => {
+        const metric = metricSelect.value;
+        const params = new URLSearchParams({
+            metric
+        });
+
+        try {
+            const response = await fetch(`/api/chart-data?${params}`);
+            const data = await response.json();
+
+            updateChart(websiteChart, websiteChartCanvas, data.website, `Top 5 Websites (${metric})`);
+            updateChart(serverChart, serverChartCanvas, data.server, `All Servers (${metric})`);
+        } catch (err) {
+            console.error('Error fetching chart data:', err);
+        }
+    };
+
+    const updateChart = (chart, canvas, chartData, title) => {
+        if (chart) {
+            chart.destroy(); // Destroy existing chart
+        }
+
+        const labels = chartData.map(item => item.label);
+        const values = chartData.map(item => item.value);
+
+        return new Chart(canvas, {
+            type: 'pie',
+            data: {
+                labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#C9CBCF'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    title: {
+                        display: true,
+                        text: title
+                    }
+                }
+            }
+        });
+    };
+
+    metricSelect.addEventListener('change', fetchChartData);
+
+    // Initial Fetch
+    fetchChartData();
+});
+
 /* Build monthly traffic header */
 document.addEventListener('DOMContentLoaded', () => {
     const yearSelect = document.getElementById('year-select');
