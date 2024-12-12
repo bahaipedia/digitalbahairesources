@@ -57,14 +57,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* Code to build monthly traffic table */
 document.addEventListener('DOMContentLoaded', () => {
+    const websiteSelect = document.getElementById('website-select');
+    const serverSelect = document.getElementById('server-select');
     const yearSelect = document.getElementById('year-select');
     const monthlyTableBody = document.querySelector('#monthly-history .monthly-history-table tbody');
 
     const fetchMonthlyHistory = async () => {
         const year = yearSelect.value;
+        const websiteParam = websiteSelect.value !== 'all' ? websiteSelect.value : null;
+        const serverParam = serverSelect.value !== 'all' ? serverSelect.value : null;
 
         try {
-            const response = await fetch(`/api/monthly-history?year=${year}`);
+            const response = await fetch(
+                `/api/monthly-history?year=${year}&website_id=${websiteParam}&server_id=${serverParam}`
+            );
             const data = await response.json();
 
             if (data && data.length > 0) {
@@ -81,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 monthlyTableBody.innerHTML = `
                     <tr>
-                        <td colspan="6">No data available for the selected year.</td>
+                        <td colspan="6">No data available for the selected filters.</td>
                     </tr>
                 `;
             }
@@ -95,9 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Fetch monthly history when the year changes
+    // Fetch monthly history on changes to website, server, and year
+    websiteSelect.addEventListener('change', fetchMonthlyHistory);
+    serverSelect.addEventListener('change', fetchMonthlyHistory);
     yearSelect.addEventListener('change', fetchMonthlyHistory);
 
-    // Initial fetch for the default year
+    // Initial fetch
     fetchMonthlyHistory();
 });
