@@ -1,5 +1,12 @@
 <section id="traffic-summary">
-    <h2>Summary</h2>
+    <% 
+      const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      const monthName = monthNames[selectedMonth - 1];
+    %>
+    <h2>Summary for <%= monthName %>, <%= selectedYear %></h2>
     <table class="traffic-summary-table">
         <thead>
             <tr class="traffic-summary-header">
