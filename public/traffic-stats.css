@@ -1,0 +1,16 @@
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: #f2f2f2;
+            padding: 1rem;
+            font-family: Arial, sans-serif;
+        }
+
+        nav label {
+            font-weight: bold;
+        }
+
+        nav select {
+            padding: 0.3rem;
+        }
