@@ -1,3 +1,4 @@
+/* Code to build Summary table */
 document.addEventListener('DOMContentLoaded', () => {
     const websiteSelect = document.getElementById('website-select');
     const serverSelect = document.getElementById('server-select');
@@ -52,4 +53,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch data on page load
     fetchData();
+});
+
+/* Code to build monthly traffic table */
+document.addEventListener('DOMContentLoaded', () => {
+    const yearSelect = document.getElementById('year-select');
+    const monthlyTableBody = document.querySelector('#monthly-history .monthly-history-table tbody');
+
+    const fetchMonthlyHistory = async () => {
+        const year = yearSelect.value;
+
+        try {
+            const response = await fetch(`/api/monthly-history?year=${year}`);
+            const data = await response.json();
+
+            if (data && data.length > 0) {
+                monthlyTableBody.innerHTML = data.map(row => `
+                    <tr>
+                        <td>${new Date(2024, row.month - 1).toLocaleString('default', { month: 'short', year: 'numeric' })}</td>
+                        <td>${Number(row.unique_visitors).toLocaleString()}</td>
+                        <td>${Number(row.total_visits).toLocaleString()}</td>
+                        <td>${Number(row.total_pages).toLocaleString()}</td>
+                        <td>${Number(row.total_hits).toLocaleString()}</td>
+                        <td>${(Number(row.total_bandwidth) / 1024 / 1024 / 1024).toFixed(2)} GB</td>
+                    </tr>
+                `).join('');
+            } else {
+                monthlyTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6">No data available for the selected year.</td>
+                    </tr>
+                `;
+            }
+        } catch (err) {
+            console.error('Error fetching monthly history:', err);
+            monthlyTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6">Error loading data. Please try again later.</td>
+                </tr>
+            `;
+        }
+    };
+
+    // Fetch monthly history when the year changes
+    yearSelect.addEventListener('change', fetchMonthlyHistory);
+
+    // Initial fetch for the default year
+    fetchMonthlyHistory();
 });
