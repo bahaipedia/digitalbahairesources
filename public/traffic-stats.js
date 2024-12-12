@@ -1,4 +1,30 @@
-/* Code to build Summary table */
+/* Build the Summary header */
+document.addEventListener('DOMContentLoaded', () => {
+    const monthSelect = document.getElementById('month-select');
+    const yearSelect = document.getElementById('year-select');
+    const summaryHeading = document.querySelector('#traffic-summary h2');
+
+    const updateSummaryHeading = () => {
+        const monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+        const selectedMonth = monthSelect.value;
+        const selectedYear = yearSelect.value;
+
+        const monthName = monthNames[selectedMonth - 1];
+        summaryHeading.textContent = `Summary for ${monthName}, ${selectedYear}`;
+    };
+
+    // Attach event listeners to dropdowns
+    monthSelect.addEventListener('change', updateSummaryHeading);
+    yearSelect.addEventListener('change', updateSummaryHeading);
+
+    // Initial update on page load
+    updateSummaryHeading();
+});
+
+/* Build Summary table */
 document.addEventListener('DOMContentLoaded', () => {
     const websiteSelect = document.getElementById('website-select');
     const serverSelect = document.getElementById('server-select');
