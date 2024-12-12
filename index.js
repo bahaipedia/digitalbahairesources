@@ -6,6 +6,16 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3008;
 
+// Logger setup using Winston
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'combined.log' })
+    ]
+});
+
 // Create a MySQL connection pool
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
