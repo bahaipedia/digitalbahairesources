@@ -127,7 +127,7 @@ app.get('/api/monthly-history', async (req, res) => {
             ORDER BY month;
         `;
 
-        const [results] = await pool.query(query, [
+        const [monthlyResults] = await pool.query(query, [
             website_id === 'null' ? null : website_id, 
             website_id === 'null' ? null : website_id,
             server_id === 'null' ? null : server_id, 
@@ -135,7 +135,20 @@ app.get('/api/monthly-history', async (req, res) => {
             year
         ]);
 
-        res.json(results);
+        // Calculate totals
+        const totals = monthlyResults.reduce(
+            (acc, row) => {
+                acc.unique_visitors += row.unique_visitors || 0;
+                acc.total_visits += row.total_visits || 0;
+                acc.total_pages += row.total_pages || 0;
+                acc.total_hits += row.total_hits || 0;
+                acc.total_bandwidth += row.total_bandwidth || 0;
+                return acc;
+            },
+            { unique_visitors: 0, total_visits: 0, total_pages: 0, total_hits: 0, total_bandwidth: 0 }
+        );
+
+        res.json({ monthly: monthlyResults, totals });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error fetching monthly history.' });
