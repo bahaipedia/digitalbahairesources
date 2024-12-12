@@ -43,14 +43,14 @@ app.get('/contact', (req, res) => res.render('contact'));
 app.get('/traffic-stats', async (req, res) => {
     try {
         // Example pseudo-code: replace with your actual DB calls
-        const [websites] = await db.query('SELECT id, name FROM websites ORDER BY name');
-        const [servers] = await db.query('SELECT id, location FROM servers ORDER BY location');
+        const [websites] = await pool.query('SELECT id, name FROM websites ORDER BY name');
+        const [servers] = await pool.query('SELECT id, location FROM servers ORDER BY location');
         
         // For years and months, you might do something like:
-        const [yearResults] = await db.query('SELECT DISTINCT year FROM summary ORDER BY year');
+        const [yearResults] = await pool.query('SELECT DISTINCT year FROM summary ORDER BY year');
         const years = yearResults.map(row => row.year);
 
-        const [monthResults] = await db.query('SELECT DISTINCT month FROM summary ORDER BY month');
+        const [monthResults] = await pool.query('SELECT DISTINCT month FROM summary ORDER BY month');
         const months = monthResults.map(row => row.month);
 
         // Render the stats page
