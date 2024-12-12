@@ -32,6 +32,7 @@ const pool = mysql.createPool({
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/js', express.static(path.join(__dirname, 'node_modules/chart.js/dist')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
