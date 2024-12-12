@@ -4,43 +4,31 @@ body {
     font-family: Arial, sans-serif;
 }
 
-.container {
-    display: flex;
-    width: 100%;
-}
-
+/* Sidebar */
 .stats-sidebar {
     width: 200px;
     background-color: #f4f4f4;
     padding: 1rem;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
-
 .stats-sidebar-menu {
     list-style-type: none;
     padding: 0;
     margin: 0;
 }
-
 .stats-sidebar-menu li {
     margin: 0.5rem 0;
 }
-
 .stats-sidebar-menu li a {
     text-decoration: none;
     color: #333;
     font-weight: bold;
 }
-
 .stats-sidebar-menu li a:hover {
     color: #007BFF;
 }
 
-.main-content {
-    flex: 1;
-    padding: 1rem;
-}
-
+/* Navigation bar */
 nav {
     display: flex;
     align-items: center;
@@ -49,11 +37,56 @@ nav {
     padding: 1rem;
     font-family: Arial, sans-serif;
 }
-
 nav label {
     font-weight: bold;
 }
-
 nav select {
     padding: 0.3rem;
+}
+/* Main content */
+.main-content {
+    flex: 1;
+    padding: 1rem;
+}
+.container {
+    display: flex;
+    width: 100%;
+}
+
+/* partials/traffic-*ejs */
+.header-unique-visitors {
+    background-color: #FFAA66;
+}
+.header-number-visits {
+    background-color: #F4F090;
+}
+.header-pages {
+    background-color: #4477DD;
+    color: white; /* Ensures readability against the blue background */
+}
+.header-hits {
+    background-color: #66DDEE;
+}
+.header-bandwidth {
+    background-color: #2EA495;
+    color: white; /* Ensures readability against the teal background */
+}
+
+/* partials/traffic-summary.ejs */
+#traffic-summary {
+    margin: 20px 0;
+    font-family: Arial, sans-serif;
+}
+.traffic-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+.traffic-summary-table thead {
+    font-weight: bold;
+}
+.traffic-summary-table th,
+.traffic-summary-table td {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
 }
