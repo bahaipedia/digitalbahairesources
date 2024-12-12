@@ -44,25 +44,43 @@ app.get('/contact', (req, res) => res.render('contact'));
 // Route to create the traffic stats page
 app.get('/traffic-stats', async (req, res) => {
     try {
-        // Example pseudo-code: replace with your actual DB calls
-        const [websites] = await pool.query('SELECT id, name FROM websites ORDER BY name');
+        // Fetch websites, excluding legacy/defunct sites, and ordering them
+        const [websites] = await pool.query(`
+            SELECT id, name 
+            FROM websites 
+            WHERE name NOT IN ('fr.bahai.works') -- Exclude legacy/defunct sites
+            ORDER BY FIELD(name, 'bahaipedia.org', 'bahai.works', 'bahai.media', 'bahai9.com', 'bahai.quest') DESC, name ASC
+        `);
+
+        // Fetch servers and sort them by location
         const [servers] = await pool.query('SELECT id, location FROM servers ORDER BY location');
-        
-        // For years and months, you might do something like:
+
+        // Fetch distinct years and months
         const [yearResults] = await pool.query('SELECT DISTINCT year FROM summary ORDER BY year');
         const years = yearResults.map(row => row.year);
 
         const [monthResults] = await pool.query('SELECT DISTINCT month FROM summary ORDER BY month');
         const months = monthResults.map(row => row.month);
 
+        // Combine websites (e.g., bahaiconcordance.org into bahai.quest)
+        const websiteMap = new Map();
+        websites.forEach(website => {
+            if (website.name === 'bahaiconcordance.org') {
+                websiteMap.set('bahai.quest', { id: website.id, name: 'bahai.quest' });
+            } else if (!websiteMap.has(website.name)) {
+                websiteMap.set(website.name, website);
+            }
+        });
+        const combinedWebsites = Array.from(websiteMap.values());
+
         // Render the stats page
         res.render('traffic-stats', {
-            websites: websites,
+            websites: combinedWebsites,
             servers: servers,
             years: years,
             months: months,
-            selectedYear: 2024,   // Preselected value
-            selectedMonth: 12     // Preselected value
+            selectedYear: 2024, // Preselected value
+            selectedMonth: 12   // Preselected value
         });
     } catch (err) {
         console.error(err);
