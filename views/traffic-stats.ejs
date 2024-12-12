@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stats</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/traffic-stats.css">
+</head>
+<body>
+    <nav>
+        <!-- Website Dropdown -->
+        <label for="website-select">Website:</label>
+        <select id="website-select" name="website">
+            <option value="all">All</option>
+            <% websites.forEach(function(website) { %>
+                <option value="<%= website.id %>"><%= website.name %></option>
+            <% }) %>
+        </select>
+
+        <!-- Server Dropdown -->
+        <label for="server-select">Server:</label>
+        <select id="server-select" name="server">
+            <option value="all">All</option>
+            <% servers.forEach(function(server) { %>
+                <option value="<%= server.id %>"><%= server.location %></option>
+            <% }) %>
+        </select>
+
+        <!-- Year Dropdown -->
+        <label for="year-select">Year:</label>
+        <select id="year-select" name="year">
+            <% years.forEach(function(y) { %>
+                <option value="<%= y %>" <%= y === selectedYear ? 'selected' : '' %>><%= y %></option>
+            <% }) %>
+        </select>
+
+        <!-- Month Dropdown -->
+        <label for="month-select">Month:</label>
+        <select id="month-select" name="month">
+            <% months.forEach(function(m) { %>
+                <option value="<%= m %>" <%= m === selectedMonth ? 'selected' : '' %>><%= m %></option>
+            <% }) %>
+        </select>
+    </nav>
+
+    <h1>Stats</h1>
+    <!-- Future content: summary tables, charts, etc. -->
+</body>
+</html>
