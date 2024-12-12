@@ -84,18 +84,17 @@ app.get('/api/traffic-stats', async (req, res) => {
                 SUM(bandwidth) AS total_bandwidth
             FROM summary
             WHERE 
-                (? IS NULL OR website_id = ?) AND 
-                (? IS NULL OR server_id = ?) AND 
-                (? IS NULL OR year = ?) AND 
-                (? IS NULL OR month = ?)
+                (website_id = ? OR ? IS NULL) AND 
+                (server_id = ? OR ? IS NULL) AND 
+                (year = ?) AND 
+                (month = ?)
             GROUP BY year, month;
         `;
 
         const [results] = await pool.query(query, [
             website_id || null, website_id || null,
             server_id || null, server_id || null,
-            year || null, year || null,
-            month || null, month || null
+            year, month
         ]);
 
         res.json(results[0] || {});
