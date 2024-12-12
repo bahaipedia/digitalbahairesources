@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data && data.length > 0) {
                 monthlyTableBody.innerHTML = data.map(row => `
                     <tr>
-                        <td>${new Date(2024, row.month - 1).toLocaleString('default', { month: 'short', year: 'numeric' })}</td>
+                        <td>${new Date(year, row.month - 1).toLocaleString('default', { month: 'short', year: 'numeric' })}</td>
                         <td>${Number(row.unique_visitors).toLocaleString()}</td>
                         <td>${Number(row.total_visits).toLocaleString()}</td>
                         <td>${Number(row.total_pages).toLocaleString()}</td>
