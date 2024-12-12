@@ -116,10 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(
                 `/api/monthly-history?year=${year}&website_id=${websiteParam}&server_id=${serverParam}`
             );
-            const data = await response.json();
+            const { monthly, totals } = await response.json();
 
-            if (data && data.length > 0) {
-                monthlyTableBody.innerHTML = data.map(row => `
+            if (monthly && monthly.length > 0) {
+                const rows = monthly.map(row => `
                     <tr>
                         <td>${new Date(year, row.month - 1).toLocaleString('default', { month: 'short', year: 'numeric' })}</td>
                         <td>${Number(row.unique_visitors).toLocaleString()}</td>
@@ -129,6 +129,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${(Number(row.total_bandwidth) / 1024 / 1024 / 1024).toFixed(2)} GB</td>
                     </tr>
                 `).join('');
+
+                const totalRow = `
+                    <tr class="totals-row">
+                        <td>Total</td>
+                        <td>${Number(totals.unique_visitors).toLocaleString()}</td>
+                        <td>${Number(totals.total_visits).toLocaleString()}</td>
+                        <td>${Number(totals.total_pages).toLocaleString()}</td>
+                        <td>${Number(totals.total_hits).toLocaleString()}</td>
+                        <td>${(Number(totals.total_bandwidth) / 1024 / 1024 / 1024).toFixed(2)} GB</td>
+                    </tr>
+                `;
+
+                monthlyTableBody.innerHTML = rows + totalRow;
             } else {
                 monthlyTableBody.innerHTML = `
                     <tr>
