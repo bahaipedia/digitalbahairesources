@@ -70,7 +70,7 @@ app.get('/traffic-stats', async (req, res) => {
     }
 });
 
-// API route to fetch filtered traffic stats dynamically
+// API route to fetch "summary" stats dynamically
 app.get('/api/traffic-stats', async (req, res) => {
     const { website_id, server_id, year, month } = req.query;
 
@@ -102,6 +102,34 @@ app.get('/api/traffic-stats', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error fetching traffic stats.' });
+    }
+});
+
+// API route to fetch filtered "monthly traffic" stats
+app.get('/api/monthly-history', async (req, res) => {
+    const { year } = req.query;
+
+    try {
+        const query = `
+            SELECT 
+                month,
+                SUM(CASE WHEN day = 0 THEN unique_visitors ELSE 0 END) AS unique_visitors,
+                SUM(number_of_visits) AS total_visits,
+                SUM(pages) AS total_pages,
+                SUM(hits) AS total_hits,
+                SUM(bandwidth) AS total_bandwidth
+            FROM summary
+            WHERE year = ?
+            GROUP BY month
+            ORDER BY month;
+        `;
+
+        const [results] = await pool.query(query, [year]);
+
+        res.json(results);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error fetching monthly history.' });
     }
 });
 
