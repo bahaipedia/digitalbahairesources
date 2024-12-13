@@ -168,6 +168,34 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchMonthlyHistory();
 });
 
+/* Build daily traffic table header */
+document.addEventListener('DOMContentLoaded', () => {
+    const yearSelect = document.getElementById('year-select');
+    const monthSelect = document.getElementById('month-select');
+    const dailyMonthSpan = document.getElementById('daily-month');
+    const dailyYearSpan = document.getElementById('daily-year');
+
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    const updateDailyHistoryHeading = () => {
+        const selectedMonth = monthSelect.value;
+        const selectedYear = yearSelect.value;
+
+        dailyMonthSpan.textContent = monthNames[selectedMonth - 1];
+        dailyYearSpan.textContent = selectedYear;
+    };
+
+    // Attach event listeners to both year and month dropdowns
+    yearSelect.addEventListener('change', updateDailyHistoryHeading);
+    monthSelect.addEventListener('change', updateDailyHistoryHeading);
+
+    // Initial update on page load
+    updateDailyHistoryHeading();
+});
+
 /* Build daily traffic table */
 document.addEventListener('DOMContentLoaded', () => {
     const websiteSelect = document.getElementById('website-select');
