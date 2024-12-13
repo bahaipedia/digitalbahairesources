@@ -1,4 +1,4 @@
-/* Build the Summary header */
+/* Build the summary header */
 document.addEventListener('DOMContentLoaded', () => {
     const monthSelect = document.getElementById('month-select');
     const yearSelect = document.getElementById('year-select');
