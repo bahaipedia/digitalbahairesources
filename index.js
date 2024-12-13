@@ -259,8 +259,6 @@ app.get('/api/chart-data', async (req, res) => {
             FROM summary
             JOIN websites ON summary.website_id = websites.id
             GROUP BY name
-            ORDER BY value DESC
-            LIMIT 5
         `;
 
         const serverQuery = `
@@ -271,20 +269,25 @@ app.get('/api/chart-data', async (req, res) => {
             ORDER BY value DESC
         `;
 
-        const [websiteData] = await pool.query(websiteQuery);
+        const [allWebsiteData] = await pool.query(websiteQuery);
         const [serverData] = await pool.query(serverQuery);
 
-        // Group "Other" websites
-        const totalWebsiteData = websiteData.reduce((acc, row) => acc + row.value, 0);
-        const otherWebsiteData = {
-            label: 'Other',
-            value: totalWebsiteData - websiteData.reduce((acc, row) => acc + row.value, 0)
-        };
+        // Sort websites in descending order by value
+        allWebsiteData.sort((a, b) => b.value - a.value);
 
-        const finalWebsiteData = [...websiteData, otherWebsiteData];
+        const topFive = allWebsiteData.slice(0, 5);
+        const others = allWebsiteData.slice(5);
+
+        const otherTotal = others.reduce((acc, row) => acc + row.value, 0);
+        if (otherTotal > 0) {
+            topFive.push({
+                label: 'Other',
+                value: otherTotal
+            });
+        }
 
         res.json({
-            website: finalWebsiteData,
+            website: topFive,
             server: serverData
         });
     } catch (err) {
