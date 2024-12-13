@@ -125,6 +125,34 @@ nav select {
 .totals-row {
     background-color: #f2f2f2;
 }
+
+/* partials/daily-history.ejs */
+#daily-history {
+    margin: 20px 0;
+    padding-bottom: 40px;
+}
+.daily-history-table {
+    margin: auto;
+    border-collapse: collapse;
+    text-align: center;
+    table-layout: fixed;
+}
+.daily-history-table th,
+.daily-history-table td {
+    padding: 5px;
+    border: 1px solid #ddd;
+}
+.daily-history-table th {
+    font-weight: bold;
+}
+.daily-average-row {
+    background-color: #f2f2f2;
+}
+.daily-totals-row {
+    background-color: #f2f2f2;
+}
+
+/* partials/pie-charts.ejs */
 .chart-header {
     text-align: center;
     font-size: 1.5rem;
