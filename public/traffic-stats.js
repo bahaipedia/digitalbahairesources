@@ -102,8 +102,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             // Update the charts with live data
-            websiteChart = updateChart(websiteChart, websiteChartCanvas, data.website, `Top 5 Websites (${metric})`);
-            serverChart = updateChart(serverChart, serverChartCanvas, data.server, `All Servers (${metric})`);
+            websiteChart = updateChart(websiteChart, websiteChartCanvas, data.website, `Top 5 Websites`);
+            serverChart = updateChart(serverChart, serverChartCanvas, data.server, `Servers`);
         } catch (err) {
             console.error('Error fetching chart data:', err);
         }
