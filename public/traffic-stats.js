@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 responsive: false, 
                 maintainAspectRatio: true, 
                 plugins: {
-                    legend: { position: 'top' },
+                    legend: { position: 'right' },
                     title: { display: true, text: title }
                 },
                 layout: {
