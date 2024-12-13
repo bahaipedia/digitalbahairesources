@@ -257,32 +257,40 @@ app.get('/api/chart-data', async (req, res) => {
         const websiteQuery = `
             SELECT 
                 name AS label, 
-                COALESCE(SUM(CASE WHEN day = 0 AND ? = 'unique_visitors' THEN ${metric} ELSE 0 END), 0) AS value
+                COALESCE(SUM(
+                    CASE 
+                        WHEN day = 0 AND ? = 'unique_visitors' THEN ${metric}
+                        WHEN day > 0 AND ? != 'unique_visitors' THEN ${metric}
+                        ELSE 0
+                    END
+                ), 0) AS value
             FROM summary
             JOIN websites ON summary.website_id = websites.id
-            WHERE 
-                (? != 'unique_visitors' AND day > 0) OR 
-                (? = 'unique_visitors' AND day = 0)
             GROUP BY name
+            ORDER BY value DESC;
         `;
 
         const serverQuery = `
             SELECT 
                 location AS label, 
-                COALESCE(SUM(CASE WHEN day = 0 AND ? = 'unique_visitors' THEN ${metric} ELSE 0 END), 0) AS value
+                COALESCE(SUM(
+                    CASE 
+                        WHEN day = 0 AND ? = 'unique_visitors' THEN ${metric}
+                        WHEN day > 0 AND ? != 'unique_visitors' THEN ${metric}
+                        ELSE 0
+                    END
+                ), 0) AS value
             FROM summary
             JOIN servers ON summary.server_id = servers.id
-            WHERE 
-                (? != 'unique_visitors' AND day > 0) OR 
-                (? = 'unique_visitors' AND day = 0)
             GROUP BY location
+            ORDER BY value DESC;
         `;
 
-        const [websiteData] = await pool.query(websiteQuery, [metric, metric, metric]);
-        const [serverData] = await pool.query(serverQuery, [metric, metric, metric]);
+        const [allWebsiteData] = await pool.query(websiteQuery, [metric, metric]);
+        const [serverData] = await pool.query(serverQuery, [metric, metric]);
 
         // Sort and calculate top 5 + "Other"
-        const sortedWebsiteData = websiteData.sort((a, b) => b.value - a.value);
+        const sortedWebsiteData = allWebsiteData.sort((a, b) => b.value - a.value);
         const topFive = sortedWebsiteData.slice(0, 5);
         const otherTotal = sortedWebsiteData.slice(5).reduce((acc, row) => acc + (Number(row.value) || 0), 0);
 
