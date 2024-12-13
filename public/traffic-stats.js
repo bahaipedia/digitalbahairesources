@@ -1,29 +1,39 @@
-/* Build the Summary header */
+/* Build the dynamic headers */
 document.addEventListener('DOMContentLoaded', () => {
     const monthSelect = document.getElementById('month-select');
     const yearSelect = document.getElementById('year-select');
-    const summaryMonth = document.getElementById('summary-month');
-    const summaryYear = document.getElementById('summary-year');
-
     const monthNames = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ];
 
-    const updateSummaryHeading = () => {
+    const updateHeaders = () => {
         const selectedMonth = monthSelect.value;
         const selectedYear = yearSelect.value;
 
-        summaryMonth.textContent = monthNames[selectedMonth - 1];
-        summaryYear.textContent = selectedYear;
+        // Update all header-month elements
+        document.querySelectorAll('.header-month').forEach(element => {
+            const section = element.dataset.section; // Identify the section
+            if (section) {
+                element.textContent = monthNames[selectedMonth - 1];
+            }
+        });
+
+        // Update all header-year elements
+        document.querySelectorAll('.header-year').forEach(element => {
+            const section = element.dataset.section; // Identify the section
+            if (section) {
+                element.textContent = selectedYear;
+            }
+        });
     };
 
     // Attach event listeners
-    monthSelect.addEventListener('change', updateSummaryHeading);
-    yearSelect.addEventListener('change', updateSummaryHeading);
+    monthSelect.addEventListener('change', updateHeaders);
+    yearSelect.addEventListener('change', updateHeaders);
 
     // Initial update on page load
-    updateSummaryHeading();
+    updateHeaders();
 });
 
 /* Build Summary table */
@@ -81,23 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch data on page load
     fetchData();
-});
-
-/* Build monthly traffic header */
-document.addEventListener('DOMContentLoaded', () => {
-    const yearSelect = document.getElementById('year-select');
-    const monthlyHistoryYear = document.getElementById('monthly-history-year');
-
-    const updateMonthlyHistoryHeading = () => {
-        const selectedYear = yearSelect.value;
-        monthlyHistoryYear.textContent = selectedYear;
-    };
-
-    // Attach event listener to the year dropdown
-    yearSelect.addEventListener('change', updateMonthlyHistoryHeading);
-
-    // Initial update on page load
-    updateMonthlyHistoryHeading();
 });
 
 /* Build monthly traffic table */
@@ -166,34 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial fetch
     fetchMonthlyHistory();
-});
-
-/* Build daily traffic table header */
-document.addEventListener('DOMContentLoaded', () => {
-    const yearSelect = document.getElementById('year-select');
-    const monthSelect = document.getElementById('month-select');
-    const dailyMonthSpan = document.getElementById('daily-month');
-    const dailyYearSpan = document.getElementById('daily-year');
-
-    const monthNames = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ];
-
-    const updateDailyHistoryHeading = () => {
-        const selectedMonth = monthSelect.value;
-        const selectedYear = yearSelect.value;
-
-        dailyMonthSpan.textContent = monthNames[selectedMonth - 1];
-        dailyYearSpan.textContent = selectedYear;
-    };
-
-    // Attach event listeners to both year and month dropdowns
-    yearSelect.addEventListener('change', updateDailyHistoryHeading);
-    monthSelect.addEventListener('change', updateDailyHistoryHeading);
-
-    // Initial update on page load
-    updateDailyHistoryHeading();
 });
 
 /* Build daily traffic table */
