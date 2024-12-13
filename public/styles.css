@@ -20,7 +20,6 @@ header {
     background-color: #f9f9f9; 
     color: #333;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
-    position: sticky;
     top: 0;
     z-index: 1000;
     padding: 25px 0;
@@ -37,7 +36,6 @@ header {
     background-color: #f9f9f9;
     color: #333;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: sticky;
     top: 0;
     z-index: 1000;
     padding: 10px 0; 
