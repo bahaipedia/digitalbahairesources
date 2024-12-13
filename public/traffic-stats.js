@@ -202,32 +202,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const serverSelect = document.getElementById('server-select');
     const yearSelect = document.getElementById('year-select');
     const monthSelect = document.getElementById('month-select');
-    const dailyTableBody = document.querySelector('.daily-history-table tbody');
+    const dailyTableBody = document.querySelector('#daily-history .daily-history-table tbody');
 
     const fetchDailyHistory = async () => {
-        const params = new URLSearchParams({
-            website_id: websiteSelect.value !== 'all' ? websiteSelect.value : null,
-            server_id: serverSelect.value !== 'all' ? serverSelect.value : null,
-            year: yearSelect.value,
-            month: monthSelect.value
-        });
+        const year = yearSelect.value;
+        const month = monthSelect.value;
+        const websiteParam = websiteSelect.value !== 'all' ? websiteSelect.value : null;
+        const serverParam = serverSelect.value !== 'all' ? serverSelect.value : null;
 
         try {
-            const response = await fetch(`/api/daily-history?${params}`);
-            const data = await response.json();
+            const response = await fetch(
+                `/api/daily-history?year=${year}&month=${month}&website_id=${websiteParam}&server_id=${serverParam}`
+            );
+            const { daily, totals } = await response.json();
 
-            if (data && data.length > 0) {
-                dailyTableBody.innerHTML = data
-                    .map(row => `
-                        <tr>
-                            <td>${row.day}</td>
-                            <td>${Number(row.number_of_visits).toLocaleString()}</td>
-                            <td>${Number(row.pages).toLocaleString()}</td>
-                            <td>${Number(row.hits).toLocaleString()}</td>
-                            <td>${(Number(row.bandwidth) / 1024 / 1024).toFixed(2)} MB</td>
-                        </tr>
-                    `)
-                    .join('');
+            if (daily && daily.length > 0) {
+                const rows = daily.map(row => `
+                    <tr>
+                        <td>${row.day}</td>
+                        <td>${Number(row.number_of_visits).toLocaleString()}</td>
+                        <td>${Number(row.pages).toLocaleString()}</td>
+                        <td>${Number(row.hits).toLocaleString()}</td>
+                        <td>${(Number(row.bandwidth) / 1024 / 1024).toFixed(2)} MB</td>
+                    </tr>
+                `).join('');
+
+                const totalRow = `
+                    <tr class="totals-row">
+                        <td>Total</td>
+                        <td>${Number(totals.number_of_visits).toLocaleString()}</td>
+                        <td>${Number(totals.pages).toLocaleString()}</td>
+                        <td>${Number(totals.hits).toLocaleString()}</td>
+                        <td>${(Number(totals.bandwidth) / 1024 / 1024).toFixed(2)} MB</td>
+                    </tr>
+                `;
+
+                dailyTableBody.innerHTML = rows + totalRow;
             } else {
                 dailyTableBody.innerHTML = `
                     <tr>
@@ -245,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Add event listeners to dropdowns
+    // Attach event listeners to dropdowns
     [websiteSelect, serverSelect, yearSelect, monthSelect].forEach(select => {
         select.addEventListener('change', fetchDailyHistory);
     });
