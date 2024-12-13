@@ -36,8 +36,8 @@ header {
     background-color: #f9f9f9;
     color: #333;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    top: 0;
-    z-index: 1000;
+    max-width: none;
+    margin: 0 50px;
     padding: 10px 0; 
 }
 .mini-header .header-container {
