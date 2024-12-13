@@ -192,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 dailyTableBody.innerHTML = data
                     .map(row => `
                         <tr>
-                            <td>${new Date(yearSelect.value, monthSelect.value - 1, row.day).toLocaleDateString('default', { day: '2-digit' })}</td>
                             <td>${row.day}</td>
                             <td>${Number(row.number_of_visits).toLocaleString()}</td>
                             <td>${Number(row.pages).toLocaleString()}</td>
