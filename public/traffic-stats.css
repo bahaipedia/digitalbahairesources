@@ -126,7 +126,7 @@ nav select {
 /* partials/daily-history.ejs */
 #daily-history {
     margin: 20px 0;
-    padding-bottom: 100px;
+    padding-bottom: 60px;
 }
 .daily-history-table {
     margin: auto;
