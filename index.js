@@ -257,7 +257,7 @@ app.get('/api/chart-data', async (req, res) => {
         const websiteQuery = `
             SELECT 
                 name AS label, 
-                SUM(CASE WHEN day = 0 AND ? = 'unique_visitors' THEN ${metric} ELSE 0 END) AS value
+                COALESCE(SUM(CASE WHEN day = 0 AND ? = 'unique_visitors' THEN ${metric} ELSE 0 END), 0) AS value
             FROM summary
             JOIN websites ON summary.website_id = websites.id
             WHERE 
@@ -269,7 +269,7 @@ app.get('/api/chart-data', async (req, res) => {
         const serverQuery = `
             SELECT 
                 location AS label, 
-                SUM(CASE WHEN day = 0 AND ? = 'unique_visitors' THEN ${metric} ELSE 0 END) AS value
+                COALESCE(SUM(CASE WHEN day = 0 AND ? = 'unique_visitors' THEN ${metric} ELSE 0 END), 0) AS value
             FROM summary
             JOIN servers ON summary.server_id = servers.id
             WHERE 
@@ -281,10 +281,10 @@ app.get('/api/chart-data', async (req, res) => {
         const [websiteData] = await pool.query(websiteQuery, [metric, metric, metric]);
         const [serverData] = await pool.query(serverQuery, [metric, metric, metric]);
 
-        // Group "Other" websites
+        // Sort and calculate top 5 + "Other"
         const sortedWebsiteData = websiteData.sort((a, b) => b.value - a.value);
         const topFive = sortedWebsiteData.slice(0, 5);
-        const otherTotal = sortedWebsiteData.slice(5).reduce((acc, row) => acc + row.value, 0);
+        const otherTotal = sortedWebsiteData.slice(5).reduce((acc, row) => acc + (Number(row.value) || 0), 0);
 
         if (otherTotal > 0) {
             topFive.push({ label: 'Other', value: otherTotal });
