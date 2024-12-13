@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/traffic-stats.css">
 </head>
 <body>
+    <%- include('partials/header') %>
     <div class="container">
         <!-- Include Sidebar -->
         <%- include('partials/traffic-sidebar') %>
@@ -56,5 +57,6 @@
     </div>
     <script src="/traffic-stats.js"></script>
     <script src="/js/chart.umd.js"></script>
+    <%- include('partials/footer') %>
 </body>
 </html>
