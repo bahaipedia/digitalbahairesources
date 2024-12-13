@@ -189,22 +189,37 @@ app.get('/api/daily-history', async (req, res) => {
         const query = `
             SELECT 
                 day,
-                SUM(number_of_visits) AS number_of_visits,
-                SUM(pages) AS pages,
-                SUM(hits) AS hits,
-                SUM(bandwidth) AS bandwidth
+                COALESCE(SUM(number_of_visits), 0) AS number_of_visits,
+                COALESCE(SUM(pages), 0) AS pages,
+                COALESCE(SUM(hits), 0) AS hits,
+                COALESCE(SUM(bandwidth), 0) AS bandwidth
             FROM summary
             WHERE 
                 day > 0 AND -- Exclude day 0
                 (? IS NULL OR website_id = ?) AND 
-                (? IS NULL OR server_id = ?) AND 
+                (? IS NULL OR server_id = ?) AND
                 year = ? AND 
                 month = ?
             GROUP BY day
             ORDER BY day;
         `;
 
-        const [results] = await pool.query(query, [
+        const totalsQuery = `
+            SELECT 
+                COALESCE(SUM(number_of_visits), 0) AS number_of_visits,
+                COALESCE(SUM(pages), 0) AS pages,
+                COALESCE(SUM(hits), 0) AS hits,
+                COALESCE(SUM(bandwidth), 0) AS bandwidth
+            FROM summary
+            WHERE 
+                day > 0 AND -- Exclude day 0
+                (? IS NULL OR website_id = ?) AND 
+                (? IS NULL OR server_id = ?) AND
+                year = ? AND 
+                month = ?;
+        `;
+
+        const [dailyResults] = await pool.query(query, [
             website_id === 'null' ? null : website_id, 
             website_id === 'null' ? null : website_id,
             server_id === 'null' ? null : server_id, 
@@ -212,7 +227,22 @@ app.get('/api/daily-history', async (req, res) => {
             year, month
         ]);
 
-        res.json(results || []);
+        const [totalsResult] = await pool.query(totalsQuery, [
+            website_id === 'null' ? null : website_id, 
+            website_id === 'null' ? null : website_id,
+            server_id === 'null' ? null : server_id, 
+            server_id === 'null' ? null : server_id,
+            year, month
+        ]);
+
+        const totals = totalsResult[0] || {
+            number_of_visits: 0,
+            pages: 0,
+            hits: 0,
+            bandwidth: 0
+        };
+
+        res.json({ daily: dailyResults, totals });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error fetching daily history.' });
