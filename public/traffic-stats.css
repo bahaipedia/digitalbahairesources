@@ -144,41 +144,33 @@ nav select {
     width: 400px;
     height: 400px;
 }
-
-
 .styled-select {
-    appearance: none; /* Remove default styling */
-    -webkit-appearance: none; /* Remove default styling for Safari */
-    -moz-appearance: none; /* Remove default styling for Firefox */
-    background-color: #f3f4f6; /* Light background */
-    border: 1px solid #d1d5db; /* Light gray border */
-    border-radius: 8px; /* Rounded corners */
-    padding: 10px 12px; /* Padding inside */
-    font-size: 16px; /* Increase font size */
-    color: #111827; /* Dark text */
+    appearance: none; 
+    -webkit-appearance: none; 
+    -moz-appearance: none;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db; 
+    border-radius: 8px; 
+    padding: 10px 12px;
+    font-size: 16px; 
+    color: #111827;
     cursor: pointer;
-    outline: none; /* Remove outline on focus */
-    width: 100%; /* Full-width */
-    max-width: 300px; /* Optional: Set a maximum width */
+    outline: none;
+    width: 100%;
+    max-width: 215px;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
-
-/* Hover and focus styles */
 .styled-select:hover,
 .styled-select:focus {
-    border-color: #6366f1; /* Purple border on hover/focus */
-    box-shadow: 0 0 4px rgba(99, 102, 241, 0.5); /* Subtle shadow */
+    border-color: #6366f1; 
+    box-shadow: 0 0 4px rgba(99, 102, 241, 0.5);
 }
-
-/* Add a custom dropdown arrow */
 .styled-select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 16px;
 }
-
-/* Disable option styling */
 .styled-select option {
     font-size: 16px;
     color: #111827;
