@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 const updateChart = (chart, canvas, chartData, title) => {
-    if (chart) chart.destroy(); // Destroy the existing chart
+    if (chart) chart.destroy(); // Destroy existing chart
 
     // Prevent rendering if no data is available
     if (!chartData || chartData.length === 0) {
@@ -124,16 +124,19 @@ const updateChart = (chart, canvas, chartData, title) => {
         data: {
             labels: chartData.map(item => item.label),
             datasets: [{
-                data: chartData.map(item => Number(item.value)), // Ensure numeric values
+                data: chartData.map(item => item.value),
                 backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#C9CBCF']
             }]
         },
         options: {
             responsive: true, // Enable responsive scaling
-            maintainAspectRatio: true, // Enforce proper aspect ratio
+            maintainAspectRatio: false, // Prevent scaling issues
             plugins: {
                 legend: { position: 'bottom' },
                 title: { display: true, text: title }
+            },
+            layout: {
+                padding: 10 // Ensure proper spacing
             }
         }
     });
