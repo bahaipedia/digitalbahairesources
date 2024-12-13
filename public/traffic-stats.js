@@ -129,9 +129,9 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             options: {
                 responsive: false, 
-                maintainAspectRatio: false, 
+                maintainAspectRatio: true, 
                 plugins: {
-                    legend: { position: 'bottom' },
+                    legend: { position: 'top' },
                     title: { display: true, text: title }
                 },
                 layout: {
