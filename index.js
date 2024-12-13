@@ -255,35 +255,39 @@ app.get('/api/chart-data', async (req, res) => {
 
     try {
         const websiteQuery = `
-            SELECT name AS label, SUM(${metric}) AS value
+            SELECT 
+                name AS label, 
+                SUM(CASE WHEN day = 0 AND ? = 'unique_visitors' THEN ${metric} ELSE 0 END) AS value
             FROM summary
             JOIN websites ON summary.website_id = websites.id
+            WHERE 
+                (? != 'unique_visitors' AND day > 0) OR 
+                (? = 'unique_visitors' AND day = 0)
             GROUP BY name
         `;
 
         const serverQuery = `
-            SELECT location AS label, SUM(${metric}) AS value
+            SELECT 
+                location AS label, 
+                SUM(CASE WHEN day = 0 AND ? = 'unique_visitors' THEN ${metric} ELSE 0 END) AS value
             FROM summary
             JOIN servers ON summary.server_id = servers.id
+            WHERE 
+                (? != 'unique_visitors' AND day > 0) OR 
+                (? = 'unique_visitors' AND day = 0)
             GROUP BY location
-            ORDER BY value DESC
         `;
 
-        const [allWebsiteData] = await pool.query(websiteQuery);
-        const [serverData] = await pool.query(serverQuery);
+        const [websiteData] = await pool.query(websiteQuery, [metric, metric, metric]);
+        const [serverData] = await pool.query(serverQuery, [metric, metric, metric]);
 
-        // Sort websites in descending order by value
-        allWebsiteData.sort((a, b) => b.value - a.value);
+        // Group "Other" websites
+        const sortedWebsiteData = websiteData.sort((a, b) => b.value - a.value);
+        const topFive = sortedWebsiteData.slice(0, 5);
+        const otherTotal = sortedWebsiteData.slice(5).reduce((acc, row) => acc + row.value, 0);
 
-        const topFive = allWebsiteData.slice(0, 5);
-        const others = allWebsiteData.slice(5);
-
-        const otherTotal = others.reduce((acc, row) => acc + row.value, 0);
         if (otherTotal > 0) {
-            topFive.push({
-                label: 'Other',
-                value: otherTotal
-            });
+            topFive.push({ label: 'Other', value: otherTotal });
         }
 
         res.json({
