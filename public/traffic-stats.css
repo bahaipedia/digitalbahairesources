@@ -40,7 +40,7 @@ h2 {
 }
 
 /* Navigation bar */
-nav {
+.traffic-nav {
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -48,12 +48,13 @@ nav {
     padding: 1rem;
     font-family: Arial, sans-serif;
 }
-nav label {
+.traffic-nav label {
     font-weight: bold;
 }
-nav select {
+.traffic-nav select {
     padding: 0.3rem;
 }
+
 /* Main content */
 .main-content {
     flex: 1;
