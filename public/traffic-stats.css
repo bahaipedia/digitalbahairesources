@@ -20,6 +20,7 @@ h2 {
     width: 200px;
     background-color: #f4f4f4;
     padding: 1rem;
+    margin-top: 16px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
 .stats-sidebar-menu {
