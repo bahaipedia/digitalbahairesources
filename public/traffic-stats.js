@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             options: {
                 responsive: false, 
-                maintainAspectRatio: true, 
+                maintainAspectRatio: false, 
                 plugins: {
                     legend: { position: 'bottom' },
                     title: { display: true, text: title }
