@@ -17,4 +17,23 @@
             </tr>
         </tbody>
     </table>
+
+    <div class="chart-header">
+        <h1>
+            Breakdown of 
+            <select id="metric-select" name="metric">
+                <option value="unique_visitors">Unique Visitors</option>
+                <option value="number_of_visits">Number of Visits</option>
+                <option value="pages">Pages</option>
+                <option value="hits">Hits</option>
+                <option value="bandwidth">Bandwidth</option>
+            </select>
+            per website and per server
+        </h1>
+    </div>
+
+    <div class="charts-container">
+        <canvas id="website-chart" width="400" height="400"></canvas>
+        <canvas id="server-chart" width="400" height="400"></canvas>
+    </div>
 </section>
