@@ -16,28 +16,46 @@ h2 {
 }
 
 /* Sidebar */
+/* Sidebar */
 .stats-sidebar {
-    width: 200px;
-    background-color: #f4f4f4;
+    width: 250px;
+    background-color: #ffffff; /* Bright background */
     padding: 1rem;
     margin-top: 16px;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Softer shadow */
+    border-radius: 8px; /* Rounded corners */
+    font-family: 'Arial', sans-serif;
 }
+
+/* Sidebar Menu */
 .stats-sidebar-menu {
     list-style-type: none;
     padding: 0;
     margin: 0;
 }
 .stats-sidebar-menu li {
-    margin: 0.5rem 0;
+    margin: 0.75rem 0;
 }
 .stats-sidebar-menu li a {
     text-decoration: none;
     color: #333;
     font-weight: bold;
+    padding: 10px 15px;
+    display: block;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 .stats-sidebar-menu li a:hover {
-    color: #007BFF;
+    background-color: #007BFF; /* Blue background */
+    color: #ffffff; /* White text */
+}
+.stats-sidebar-menu li a.active {
+    background-color: #0056b3; /* Darker blue for active */
+    color: #ffffff;
+}
+.stats-sidebar-menu li a:focus {
+    outline: 2px solid #007BFF;
+    outline-offset: 2px;
 }
 
 /* Navigation bar */
