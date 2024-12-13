@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${Number(row.number_of_visits).toLocaleString()}</td>
                         <td>${Number(row.pages).toLocaleString()}</td>
                         <td>${Number(row.hits).toLocaleString()}</td>
-                        <td>${(Number(row.bandwidth) / 1024 / 1024).toFixed(2)} MB</td>
+                        <td>${(Number(row.bandwidth) / 1024 / 1024 / 1024).toFixed(2)} GB</td>
                     </tr>
                 `).join('');
 
@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${Number(totals.number_of_visits).toLocaleString()}</td>
                         <td>${Number(totals.pages).toLocaleString()}</td>
                         <td>${Number(totals.hits).toLocaleString()}</td>
-                        <td>${(Number(totals.bandwidth) / 1024 / 1024).toFixed(2)} MB</td>
+                        <td>${(Number(totals.bandwidth) / 1024 / 1024 / 1024).toFixed(2)} GB</td>
                     </tr>
                 `;
 
