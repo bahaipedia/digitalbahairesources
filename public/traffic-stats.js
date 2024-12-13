@@ -50,11 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data && Object.keys(data).length > 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td>${Number(data.unique_visitors)?.toLocaleString() || 'N/A'}</td>
-                        <td>${Number(data.total_visits)?.toLocaleString() || 0}</td>
-                        <td>${Number(data.total_pages)?.toLocaleString() || 0}</td>
-                        <td>${Number(data.total_hits)?.toLocaleString() || 0}</td>
-                        <td>${(Number(data.total_bandwidth) / 1024 / 1024).toFixed(2).toLocaleString()} MB</td>
+                        <td>${new Date(year, row.month - 1).toLocaleString('default', { month: 'short', year: 'numeric' })}</td>
+                        <td>${Number(row.unique_visitors).toLocaleString()}</td>
+                        <td>${Number(row.number_of_visits).toLocaleString()}</td>
+                        <td>${Number(row.pages).toLocaleString()}</td>
+                        <td>${Number(row.hits).toLocaleString()}</td>
+                        <td>${(Number(row.bandwidth) / 1024 / 1024 / 1024).toFixed(2)} GB</td>
                     </tr>
                 `;
             } else {
