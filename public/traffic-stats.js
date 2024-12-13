@@ -92,56 +92,56 @@ document.addEventListener('DOMContentLoaded', () => {
     let websiteChart;
     let serverChart;
 
+    // Fetch chart data and update charts
     const fetchChartData = async () => {
-        const metric = metricSelect.value;
-        const params = new URLSearchParams({
-            metric
-        });
+        const metric = metricSelect.value; // Get selected metric
+        const params = new URLSearchParams({ metric });
 
         try {
             const response = await fetch(`/api/chart-data?${params}`);
             const data = await response.json();
 
-            updateChart(websiteChart, websiteChartCanvas, data.website, `Top 5 Websites (${metric})`);
-            updateChart(serverChart, serverChartCanvas, data.server, `All Servers (${metric})`);
+            // Update the charts with live data
+            websiteChart = updateChart(websiteChart, websiteChartCanvas, data.website, `Top 5 Websites (${metric})`);
+            serverChart = updateChart(serverChart, serverChartCanvas, data.server, `All Servers (${metric})`);
         } catch (err) {
             console.error('Error fetching chart data:', err);
         }
     };
 
-const updateChart = (chart, canvas, chartData, title) => {
-    if (chart) chart.destroy(); // Destroy existing chart
+    // Update a chart with the provided data
+    const updateChart = (chart, canvas, chartData, title) => {
+        if (chart) chart.destroy(); // Destroy existing chart
 
-    // Use hard-coded data for testing
-    const hardCodedData = {
-        labels: ['Website A', 'Website B', 'Website C', 'Website D', 'Other'],
-        values: [400, 300, 200, 100, 50]
+        if (!chartData || chartData.length === 0) {
+            canvas.parentElement.innerHTML = `<p>No data available for ${title}</p>`;
+            return null;
+        }
+
+        return new Chart(canvas, {
+            type: 'pie',
+            data: {
+                labels: chartData.map(item => item.label), 
+                datasets: [{
+                    data: chartData.map(item => Number(item.value) || 0),
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#C9CBCF']
+                }]
+            },
+            options: {
+                responsive: false, 
+                maintainAspectRatio: true, 
+                plugins: {
+                    legend: { position: 'bottom' },
+                    title: { display: true, text: title }
+                },
+                layout: {
+                    padding: 10
+                }
+            }
+        });
     };
 
-    return new Chart(canvas, {
-        type: 'pie',
-        data: {
-            labels: hardCodedData.labels, // Use hard-coded labels
-            datasets: [{
-                data: hardCodedData.values, // Use hard-coded values
-                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#C9CBCF']
-            }]
-        },
-        options: {
-            responsive: false,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: { position: 'bottom' },
-                title: { display: true, text: title || 'Test Chart' }
-            },
-            layout: {
-                padding: 10
-            }
-        }
-    });
-};
-
-
+    // Event listener for metric dropdown change
     metricSelect.addEventListener('change', fetchChartData);
 
     // Initial Fetch
