@@ -70,18 +70,18 @@ header {
     color: #003f8c;
 }
 
-/* Navigation Bar */
-.nav-bar ul {
+/* Header Navigation Bar */
+.header-nav-bar ul {
     list-style: none;
     display: flex;
     gap: 15px;
     margin: 0;
     padding: 0;
 }
-.nav-bar li {
+.header-nav-bar li {
     margin: 0;
 }
-.nav-bar a {
+.header-nav-bar a {
     text-decoration: none;
     color: #333;
     font-size: 1rem;
@@ -89,11 +89,11 @@ header {
     transition: color 0.3s ease, background-color 0.3s ease;
     border-radius: 3px;
 }
-.nav-bar a:hover {
+.header-nav-bar a:hover {
     background-color: #005bb5; /* Subtle highlight effect */
     color: white;
 }
-.nav-bar .active {
+.header-nav-bar .active {
     background-color: #005bb5;
     color: white;
     font-weight: bold;
