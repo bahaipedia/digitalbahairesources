@@ -83,71 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchData();
 });
 
-/* Build summary pie charts */
-document.addEventListener('DOMContentLoaded', () => {
-    const metricSelect = document.getElementById('metric-select');
-    const websiteChartCanvas = document.getElementById('website-chart');
-    const serverChartCanvas = document.getElementById('server-chart');
-
-    let websiteChart;
-    let serverChart;
-
-    // Fetch chart data and update charts
-    const fetchChartData = async () => {
-        const metric = metricSelect.value; // Get selected metric
-        const params = new URLSearchParams({ metric });
-
-        try {
-            const response = await fetch(`/api/chart-data?${params}`);
-            const data = await response.json();
-
-            // Update the charts with live data
-            websiteChart = updateChart(websiteChart, websiteChartCanvas, data.website, `Top 5 Websites`);
-            serverChart = updateChart(serverChart, serverChartCanvas, data.server, `Servers`);
-        } catch (err) {
-            console.error('Error fetching chart data:', err);
-        }
-    };
-
-    // Update a chart with the provided data
-    const updateChart = (chart, canvas, chartData, title) => {
-        if (chart) chart.destroy(); // Destroy existing chart
-
-        if (!chartData || chartData.length === 0) {
-            canvas.parentElement.innerHTML = `<p>No data available for ${title}</p>`;
-            return null;
-        }
-
-        return new Chart(canvas, {
-            type: 'pie',
-            data: {
-                labels: chartData.map(item => item.label), 
-                datasets: [{
-                    data: chartData.map(item => Number(item.value) || 0),
-                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#C9CBCF']
-                }]
-            },
-            options: {
-                responsive: false, 
-                maintainAspectRatio: true, 
-                plugins: {
-                    legend: { position: 'right' },
-                    title: { display: true, text: title }
-                },
-                layout: {
-                    padding: 10
-                }
-            }
-        });
-    };
-
-    // Event listener for metric dropdown change
-    metricSelect.addEventListener('change', fetchChartData);
-
-    // Initial Fetch
-    fetchChartData();
-});
-
 /* Build monthly traffic header */
 document.addEventListener('DOMContentLoaded', () => {
     const yearSelect = document.getElementById('year-select');
@@ -231,4 +166,128 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial fetch
     fetchMonthlyHistory();
+});
+
+/* Build daily traffic table */
+document.addEventListener('DOMContentLoaded', () => {
+    const websiteSelect = document.getElementById('website-select');
+    const serverSelect = document.getElementById('server-select');
+    const yearSelect = document.getElementById('year-select');
+    const monthSelect = document.getElementById('month-select');
+    const dailyTableBody = document.querySelector('.daily-history-table tbody');
+
+    const fetchDailyHistory = async () => {
+        const params = new URLSearchParams({
+            website_id: websiteSelect.value !== 'all' ? websiteSelect.value : null,
+            server_id: serverSelect.value !== 'all' ? serverSelect.value : null,
+            year: yearSelect.value,
+            month: monthSelect.value
+        });
+
+        try {
+            const response = await fetch(`/api/daily-history?${params}`);
+            const data = await response.json();
+
+            if (data && data.length > 0) {
+                dailyTableBody.innerHTML = data
+                    .map(row => `
+                        <tr>
+                            <td>${new Date(yearSelect.value, monthSelect.value - 1, row.day).toLocaleDateString('default', { day: '2-digit' })}</td>
+                            <td>${row.day}</td>
+                            <td>${Number(row.number_of_visits).toLocaleString()}</td>
+                            <td>${Number(row.pages).toLocaleString()}</td>
+                            <td>${Number(row.hits).toLocaleString()}</td>
+                            <td>${(Number(row.bandwidth) / 1024 / 1024).toFixed(2)} MB</td>
+                        </tr>
+                    `)
+                    .join('');
+            } else {
+                dailyTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6">No data available for the selected filters.</td>
+                    </tr>
+                `;
+            }
+        } catch (err) {
+            console.error('Error fetching daily history:', err);
+            dailyTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6">Error loading data. Please try again later.</td>
+                </tr>
+            `;
+        }
+    };
+
+    // Add event listeners to dropdowns
+    [websiteSelect, serverSelect, yearSelect, monthSelect].forEach(select => {
+        select.addEventListener('change', fetchDailyHistory);
+    });
+
+    // Fetch data on page load
+    fetchDailyHistory();
+});
+
+/* Build traffic pie charts */
+document.addEventListener('DOMContentLoaded', () => {
+    const metricSelect = document.getElementById('metric-select');
+    const websiteChartCanvas = document.getElementById('website-chart');
+    const serverChartCanvas = document.getElementById('server-chart');
+
+    let websiteChart;
+    let serverChart;
+
+    // Fetch chart data and update charts
+    const fetchChartData = async () => {
+        const metric = metricSelect.value; // Get selected metric
+        const params = new URLSearchParams({ metric });
+
+        try {
+            const response = await fetch(`/api/chart-data?${params}`);
+            const data = await response.json();
+
+            // Update the charts with live data
+            websiteChart = updateChart(websiteChart, websiteChartCanvas, data.website, `Top 5 Websites`);
+            serverChart = updateChart(serverChart, serverChartCanvas, data.server, `Servers`);
+        } catch (err) {
+            console.error('Error fetching chart data:', err);
+        }
+    };
+
+    // Update a chart with the provided data
+    const updateChart = (chart, canvas, chartData, title) => {
+        if (chart) chart.destroy(); // Destroy existing chart
+
+        if (!chartData || chartData.length === 0) {
+            canvas.parentElement.innerHTML = `<p>No data available for ${title}</p>`;
+            return null;
+        }
+
+        return new Chart(canvas, {
+            type: 'pie',
+            data: {
+                labels: chartData.map(item => item.label), 
+                datasets: [{
+                    data: chartData.map(item => Number(item.value) || 0),
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#C9CBCF']
+                }]
+            },
+            options: {
+                responsive: false, 
+                maintainAspectRatio: true, 
+                plugins: {
+                    legend: { position: 'right' },
+                    title: { display: true, text: title }
+                },
+                layout: {
+                    padding: 10
+                }
+            }
+        });
+    };
+
+    // Event listener for metric dropdown change
+    metricSelect.addEventListener('change', fetchChartData);
+
+    // Initial Fetch
+    fetchChartData();
 });
