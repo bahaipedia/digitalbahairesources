@@ -112,17 +112,18 @@ document.addEventListener('DOMContentLoaded', () => {
 const updateChart = (chart, canvas, chartData, title) => {
     if (chart) chart.destroy(); // Destroy existing chart
 
-    if (!chartData || chartData.length === 0) {
-        canvas.parentElement.innerHTML = `<p>No data available for ${title}</p>`;
-        return null;
-    }
+    // Use hard-coded data for testing
+    const hardCodedData = {
+        labels: ['Website A', 'Website B', 'Website C', 'Website D', 'Other'],
+        values: [400, 300, 200, 100, 50]
+    };
 
     return new Chart(canvas, {
         type: 'pie',
         data: {
-            labels: chartData.map(item => item.label),
+            labels: hardCodedData.labels, // Use hard-coded labels
             datasets: [{
-                data: chartData.map(item => Number(item.value)),
+                data: hardCodedData.values, // Use hard-coded values
                 backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#C9CBCF']
             }]
         },
@@ -131,7 +132,7 @@ const updateChart = (chart, canvas, chartData, title) => {
             maintainAspectRatio: true,
             plugins: {
                 legend: { position: 'bottom' },
-                title: { display: true, text: title }
+                title: { display: true, text: title || 'Test Chart' }
             },
             layout: {
                 padding: 10
@@ -139,7 +140,6 @@ const updateChart = (chart, canvas, chartData, title) => {
         }
     });
 };
-
 
 
     metricSelect.addEventListener('change', fetchChartData);
