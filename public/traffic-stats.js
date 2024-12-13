@@ -109,38 +109,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-const updateChart = (chart, canvas, chartData, title) => {
-    if (chart) chart.destroy(); // Destroy existing chart
-
-    // Use hard-coded data for testing
-    const hardCodedData = {
-        labels: ['Website A', 'Website B', 'Website C', 'Website D', 'Other'],
-        values: [400, 300, 200, 100, 50]
-    };
-
-    return new Chart(canvas, {
-        type: 'pie',
-        data: {
-            labels: hardCodedData.labels, // Use hard-coded labels
-            datasets: [{
-                data: hardCodedData.values, // Use hard-coded values
-                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#C9CBCF']
-            }]
+return new Chart(canvas, {
+    type: 'pie',
+    data: {
+        labels: hardCodedData.labels,
+        datasets: [{
+            data: hardCodedData.values,
+            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#C9CBCF']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 1, // Force a 1:1 aspect ratio
+        plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: title || 'Test Chart' }
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: { position: 'bottom' },
-                title: { display: true, text: title || 'Test Chart' }
-            },
-            layout: {
-                padding: 10
-            }
+        layout: {
+            padding: 10
         }
-    });
-};
-
+    }
+});
 
     metricSelect.addEventListener('change', fetchChartData);
 
