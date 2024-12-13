@@ -195,6 +195,7 @@ app.get('/api/daily-history', async (req, res) => {
                 SUM(bandwidth) AS bandwidth
             FROM summary
             WHERE 
+                day > 0 AND -- Exclude day 0
                 (? IS NULL OR website_id = ?) AND 
                 (? IS NULL OR server_id = ?) AND 
                 year = ? AND 
