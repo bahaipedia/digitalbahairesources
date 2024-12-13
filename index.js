@@ -181,6 +181,43 @@ app.get('/api/monthly-history', async (req, res) => {
     }
 });
 
+// API route to fetch "daily history" stats dynamically
+app.get('/api/daily-history', async (req, res) => {
+    const { website_id, server_id, year, month } = req.query;
+
+    try {
+        const query = `
+            SELECT 
+                day,
+                SUM(number_of_visits) AS number_of_visits,
+                SUM(pages) AS pages,
+                SUM(hits) AS hits,
+                SUM(bandwidth) AS bandwidth
+            FROM summary
+            WHERE 
+                (? IS NULL OR website_id = ?) AND 
+                (? IS NULL OR server_id = ?) AND 
+                year = ? AND 
+                month = ?
+            GROUP BY day
+            ORDER BY day;
+        `;
+
+        const [results] = await pool.query(query, [
+            website_id === 'null' ? null : website_id, 
+            website_id === 'null' ? null : website_id,
+            server_id === 'null' ? null : server_id, 
+            server_id === 'null' ? null : server_id,
+            year, month
+        ]);
+
+        res.json(results || []);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error fetching daily history.' });
+    }
+});
+
 // API route to build "charts" in the summary stats area
 app.get('/api/chart-data', async (req, res) => {
     const { metric } = req.query;
