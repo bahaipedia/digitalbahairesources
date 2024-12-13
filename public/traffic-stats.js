@@ -109,39 +109,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const updateChart = (chart, canvas, chartData, title) => {
-        if (chart) {
-            chart.destroy(); // Destroy existing chart
-        }
+const updateChart = (chart, canvas, chartData, title) => {
+    if (chart) chart.destroy(); // Destroy existing chart
 
-        const labels = chartData.map(item => item.label);
-        const values = chartData.map(item => item.value);
+    // Prevent rendering if no data is available
+    if (!chartData || chartData.length === 0) {
+        canvas.parentElement.innerHTML = `<p>No data available for ${title}</p>`;
+        return null;
+    }
 
-        return new Chart(canvas, {
-            type: 'pie',
-            data: {
-                labels,
-                datasets: [{
-                    data: values,
-                    backgroundColor: [
-                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#C9CBCF'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    },
-                    title: {
-                        display: true,
-                        text: title
-                    }
-                }
+    // Initialize the chart
+    return new Chart(canvas, {
+        type: 'pie',
+        data: {
+            labels: chartData.map(item => item.label),
+            datasets: [{
+                data: chartData.map(item => Number(item.value)), // Ensure values are numeric
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#C9CBCF']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Prevent unwanted scaling
+            plugins: {
+                legend: { position: 'bottom' },
+                title: { display: true, text: title }
             }
-        });
-    };
+        }
+    });
+};
+
 
     metricSelect.addEventListener('change', fetchChartData);
 
