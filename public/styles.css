@@ -33,6 +33,22 @@ header {
     margin: 0 auto;
     padding: 0 20px;
 }
+.mini-header {
+    background-color: #f9f9f9;
+    color: #333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 10px 0; 
+}
+.mini-header .header-container {
+    max-width: 1000px; 
+    padding: 0 15px;
+}
+.mini-header .logo-text {
+    font-size: 0.9em;
+}
 
 /* Logo Styling */
 .logo-text {
