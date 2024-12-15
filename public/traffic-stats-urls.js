@@ -1,10 +1,11 @@
-/* Build top 10 urls view */
+/* Top URLs page */
 document.addEventListener('DOMContentLoaded', () => {
     const websiteSelect = document.getElementById('website-select');
     const serverSelect = document.getElementById('server-select');
     const yearSelect = document.getElementById('year-select');
     const monthSelect = document.getElementById('month-select');
-    const tableBody = document.querySelector('#urls-highlight tbody');
+    const tableHeader = document.querySelector('#urls-table-header');
+    const tableBody = document.querySelector('#urls-table-body');
 
     const fetchData = async () => {
         const params = new URLSearchParams({
@@ -18,23 +19,55 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`/api/traffic-stats/urls?${params}`);
             const data = await response.json();
 
+            // Update table header dynamically
+            if (websiteSelect.value === 'all') {
+                tableHeader.innerHTML = `
+                    <tr>
+                        <th>Website</th>
+                        <th>URL</th>
+                        <th>Hits</th>
+                    </tr>
+                `;
+            } else {
+                tableHeader.innerHTML = `
+                    <tr>
+                        <th>URL</th>
+                        <th>Hits</th>
+                        <th>Entry</th>
+                        <th>Exit</th>
+                    </tr>
+                `;
+            }
+
+            // Update table body with data
             tableBody.innerHTML = '';
             if (data.length > 0) {
                 data.forEach(row => {
-                    tableBody.innerHTML += `
-                        <tr>
-                            <td>${row.website_name}</td>
-                            <td>${row.url}</td>
-                            <td>${Number(row.total_hits)?.toLocaleString() || 0}</td>
-                            <td>${Number(row.total_entry)?.toLocaleString() || 0}</td>
-                            <td>${Number(row.total_exit)?.toLocaleString() || 0}</td>
-                        </tr>
-                    `;
+                    if (websiteSelect.value === 'all') {
+                        // Display Website, URL, Hits
+                        tableBody.innerHTML += `
+                            <tr>
+                                <td>${row.website_name}</td>
+                                <td>${row.url}</td>
+                                <td>${Number(row.total_hits)?.toLocaleString() || 0}</td>
+                            </tr>
+                        `;
+                    } else {
+                        // Display URL, Hits, Entry, Exit
+                        tableBody.innerHTML += `
+                            <tr>
+                                <td>${row.url}</td>
+                                <td>${Number(row.total_hits)?.toLocaleString() || 0}</td>
+                                <td>${Number(row.total_entry)?.toLocaleString() || 0}</td>
+                                <td>${Number(row.total_exit)?.toLocaleString() || 0}</td>
+                            </tr>
+                        `;
+                    }
                 });
             } else {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="5">No data available for the selected filters.</td>
+                        <td colspan="${websiteSelect.value === 'all' ? 3 : 4}">No data available for the selected filters.</td>
                     </tr>
                 `;
             }
@@ -42,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error fetching data:', err);
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="5">Error loading data. Please try again later.</td>
+                    <td colspan="${websiteSelect.value === 'all' ? 3 : 4}">Error loading data. Please try again later.</td>
                 </tr>
             `;
         }
