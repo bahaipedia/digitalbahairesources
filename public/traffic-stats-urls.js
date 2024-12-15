@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const formattedUrl = row.url.replace(/_/g, ' '); // Replace underscores with spaces
 
                     if (websiteSelect.value === 'all') {
+                        const websiteName = websiteSelect.options[websiteSelect.selectedIndex].text;
                         tableBody.innerHTML += `
                             <tr>
                                 <td class="rank-data">${rank}</td>
@@ -76,7 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             </tr>
                         `;
                     } else {
-                        const websiteName = websiteSelect.options[websiteSelect.selectedIndex].text; // Get the selected website name
                         tableBody.innerHTML += `
                             <tr>
                                 <td class="rank-data">${rank}</td>
