@@ -53,9 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             </tr>
                         `;
                     } else {
+                        const websiteName = websiteSelect.options[websiteSelect.selectedIndex].text; // Get the selected website name
                         tableBody.innerHTML += `
                             <tr>
-                                <td><a href="https://${row.website_name}/${row.url}" target="_blank">${formattedUrl}</a></td>
+                                <td><a href="https://${websiteName}/${row.url}" target="_blank">${formattedUrl}</a></td>
                                 <td>${Number(row.total_hits)?.toLocaleString() || 0}</td>
                                 <td>${Number(row.total_entry)?.toLocaleString() || 0}</td>
                                 <td>${Number(row.total_exit)?.toLocaleString() || 0}</td>
