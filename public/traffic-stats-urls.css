@@ -8,16 +8,67 @@
     width: 100%;
 }
 
-/* URL styling */
-.urls-highlight table {
+/* General Table Styling */
+#urls-highlight table {
     width: 100%;
     border-collapse: collapse;
-}
-.urls-highlight th, .urls-highlight td {
-    border: 1px solid #ccc;
-    padding: 8px;
+    margin: 1rem 0;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
     text-align: left;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
 }
-.urls-highlight th {
-    background-color: #f5f5f5;
+
+/* Header Styling */
+#urls-highlight th {
+    background-color: #f2f2f2;
+    color: #333;
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+/* Row Styling */
+#urls-highlight td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    word-wrap: break-word;
+}
+
+/* Alternating Row Colors */
+#urls-highlight tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+#urls-highlight tbody tr:nth-child(even) {
+    background-color: #f7f7f7;
+}
+
+/* Hover Effect for Rows */
+#urls-highlight tbody tr:hover {
+    background-color: #e9f5ff;
+}
+
+/* Center Align Hits, Entry, and Exit Columns */
+#urls-highlight td:nth-child(3), /* Hits */
+#urls-highlight td:nth-child(4), /* Entry */
+#urls-highlight td:nth-child(5)  /* Exit */ {
+    text-align: center;
+}
+
+/* No Data Row Styling */
+#urls-highlight tbody tr td[colspan] {
+    text-align: center;
+    font-style: italic;
+    color: #777;
+}
+
+/* Responsive Table */
+@media (max-width: 768px) {
+    #urls-highlight table {
+        font-size: 12px;
+    }
+    #urls-highlight th, #urls-highlight td {
+        padding: 8px;
+    }
 }
