@@ -32,11 +32,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                 });
             } else {
-                tableBody.innerHTML = `<tr><td colspan="5">No data available for the selected filters.</td></tr>`;
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5">No data available for the selected filters.</td>
+                    </tr>
+                `;
             }
         } catch (err) {
             console.error('Error fetching data:', err);
-            tableBody.innerHTML = `<tr><td colspan="5">Error loading data. Please try again later.</td></tr>`;
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5">Error loading data. Please try again later.</td>
+                </tr>
+            `;
         }
     };
 
