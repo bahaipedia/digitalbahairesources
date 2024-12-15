@@ -311,7 +311,7 @@ app.get('/api/chart-data', async (req, res) => {
 /* Route to build traffic-stats/urls page and get top 10 urls */
 app.get('/traffic-stats/urls', async (req, res) => {
     try {
-        // Fetch websites, excluding legacy/defunct sites, and ordering them
+        // Fetch websites and servers for dropdowns
         const [websites] = await pool.query(`
             SELECT id, name
             FROM websites
@@ -329,30 +329,37 @@ app.get('/traffic-stats/urls', async (req, res) => {
             frankfurt: 'Frankfurt',
             saopaulo: 'São Paulo'
         };
-        const transformedServers = servers
-            .map(server => ({
-                id: server.id,
-                location: serverNameMapping[server.location.toLowerCase()] || server.location
-            }))
-            .sort((a, b) => {
-                const customOrder = ['United States', 'Singapore', 'Frankfurt', 'São Paulo'];
-                return customOrder.indexOf(a.location) - customOrder.indexOf(b.location);
-            });
+        const transformedServers = servers.map(server => ({
+            id: server.id,
+            location: serverNameMapping[server.location.toLowerCase()] || server.location
+        }));
 
-        // Fetch distinct years and months from website_url_stats (instead of summary)
         const [yearResults] = await pool.query('SELECT DISTINCT year FROM website_url_stats ORDER BY year');
         const years = yearResults.map(row => row.year);
 
         const [monthResults] = await pool.query('SELECT DISTINCT month FROM website_url_stats ORDER BY month');
         const months = monthResults.map(row => row.month);
 
-        // For simplicity, use the latest available year/month from the tables or default values
-        // Adjust logic as needed (could also get from query params)
-        const selectedYear = years.includes(2024) ? 2024 : years[years.length - 1];
-        const selectedMonth = months.includes(12) ? 12 : months[months.length - 1];
+        // Render the initial page
+        res.render('traffic-stats-urls', {
+            websites,
+            servers: transformedServers,
+            years,
+            months
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
 
-        // Fetch top 10 URLs by hits
-        const [topUrls] = await pool.query(`
+// Serve the dynamic data for URLs
+app.get('/api/traffic-stats/urls', async (req, res) => {
+    try {
+        const { website_id, server_id, year, month } = req.query;
+
+        // Base query for URL stats
+        let query = `
             SELECT w.name AS website_name, wu.url, SUM(wus.hits) AS total_hits,
                    SUM(wus.entry_count) AS total_entry, SUM(wus.exit_count) AS total_exit
             FROM website_url_stats wus
@@ -360,24 +367,30 @@ app.get('/traffic-stats/urls', async (req, res) => {
             JOIN websites w ON wu.website_id = w.id
             WHERE w.name NOT IN ('fr.bahai.works', 'bahaiconcordance.org')
               AND wus.year = ? AND wus.month = ?
+        `;
+        const params = [year, month];
+
+        // Add filters for website and server if provided
+        if (website_id) {
+            query += ' AND wu.website_id = ?';
+            params.push(website_id);
+        }
+        if (server_id) {
+            query += ' AND wus.server_id = ?';
+            params.push(server_id);
+        }
+
+        query += `
             GROUP BY w.name, wu.url
             ORDER BY total_hits DESC
             LIMIT 10
-        `, [selectedYear, selectedMonth]);
+        `;
 
-        // Render the traffic-stats-urls page
-        res.render('traffic-stats-urls', {
-            websites: websites,
-            servers: transformedServers,
-            years: years,
-            months: months,
-            selectedYear: selectedYear,
-            selectedMonth: selectedMonth,
-            topUrls: topUrls
-        });
+        const [results] = await pool.query(query, params);
+        res.json(results);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Error fetching URL stats.');
     }
 });
 
