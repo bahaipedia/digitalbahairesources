@@ -42,11 +42,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update table body with data
             tableBody.innerHTML = '';
             if (data.length > 0) {
-                data.forEach(row => {
+                data.forEach((row, index) => {
+                    const rank = index + 1; // Calculate rank
                     const formattedUrl = row.url.replace(/_/g, ' '); // Replace underscores with spaces
+
                     if (websiteSelect.value === 'all') {
                         tableBody.innerHTML += `
                             <tr>
+                                <td>${rank}</td> <!-- Add Rank -->
                                 <td>${row.website_name}</td>
                                 <td><a href="https://${row.website_name}/${row.url}" target="_blank">${formattedUrl}</a></td>
                                 <td>${Number(row.total_hits)?.toLocaleString() || 0}</td>
@@ -56,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const websiteName = websiteSelect.options[websiteSelect.selectedIndex].text; // Get the selected website name
                         tableBody.innerHTML += `
                             <tr>
+                                <td>${rank}</td> <!-- Add Rank -->
                                 <td><a href="https://${websiteName}/${row.url}" target="_blank">${formattedUrl}</a></td>
                                 <td>${Number(row.total_hits)?.toLocaleString() || 0}</td>
                                 <td>${Number(row.total_entry)?.toLocaleString() || 0}</td>
