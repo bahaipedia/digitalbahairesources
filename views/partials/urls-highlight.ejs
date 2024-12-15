@@ -1,0 +1,31 @@
+<div class="urls-highlight">
+    <h2>Top 10 URLs</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Website</th>
+                <th>URL</th>
+                <th>Hits</th>
+                <th>Entry</th>
+                <th>Exit</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (topUrls && topUrls.length > 0) { %>
+                <% topUrls.forEach(function(row) { %>
+                    <tr>
+                        <td><%= row.website_name %></td>
+                        <td><%= row.url %></td>
+                        <td><%= row.total_hits %></td>
+                        <td><%= row.total_entry %></td>
+                        <td><%= row.total_exit %></td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr>
+                    <td colspan="5">No data available</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
