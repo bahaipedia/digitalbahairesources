@@ -1,33 +1,9 @@
-/* Basic styling similar to traffic-stats.css, adjust as needed */
-
-.container {
-    display: flex;
-}
-
-.main-content {
-    flex: 1;
-    padding: 20px;
-}
-
-.traffic-nav {
-    margin-bottom: 20px;
-}
-
-.traffic-nav select {
-    margin-right: 10px;
-}
-
-.urls-highlight {
-    margin-top: 20px;
-}
-
 .urls-highlight table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.urls-highlight th,
-.urls-highlight td {
+.urls-highlight th, .urls-highlight td {
     border: 1px solid #ccc;
     padding: 8px;
     text-align: left;
