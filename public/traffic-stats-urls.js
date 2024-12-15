@@ -23,20 +23,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (websiteSelect.value === 'all') {
                 tableHeader.innerHTML = `
                     <tr>
-                        <th>Rank</th> <!-- Add Rank -->
+                        <th class="rank-header">Rank</th>
                         <th>Website</th>
                         <th>URL</th>
-                        <th>Hits</th>
+                        <th class="hits-header">Hits</th>
                     </tr>
                 `;
             } else {
                 tableHeader.innerHTML = `
                     <tr>
-                        <th>Rank</th> <!-- Add Rank -->
+                        <th class="rank-header">Rank</th>
                         <th>URL</th>
-                        <th>Hits</th>
-                        <th>Entry</th>
-                        <th>Exit</th>
+                        <th class="hits-header">Hits</th>
+                        <th class="entry-header">Entry</th>
+                        <th class="exit-header">Exit</th>
                     </tr>
                 `;
             }
@@ -51,21 +51,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (websiteSelect.value === 'all') {
                         tableBody.innerHTML += `
                             <tr>
-                                <td>${rank}</td> <!-- Add Rank -->
+                                <td class="rank-data">${rank}</td>
                                 <td>${row.website_name}</td>
                                 <td><a href="https://${row.website_name}/${row.url}" target="_blank">${formattedUrl}</a></td>
-                                <td>${Number(row.total_hits)?.toLocaleString() || 0}</td>
+                                <td class="hits-data">${Number(row.total_hits)?.toLocaleString() || 0}</td>
                             </tr>
                         `;
                     } else {
                         const websiteName = websiteSelect.options[websiteSelect.selectedIndex].text; // Get the selected website name
                         tableBody.innerHTML += `
                             <tr>
-                                <td>${rank}</td> <!-- Add Rank -->
+                                <td class="rank-data">${rank}</td>
                                 <td><a href="https://${websiteName}/${row.url}" target="_blank">${formattedUrl}</a></td>
-                                <td>${Number(row.total_hits)?.toLocaleString() || 0}</td>
-                                <td>${Number(row.total_entry)?.toLocaleString() || 0}</td>
-                                <td>${Number(row.total_exit)?.toLocaleString() || 0}</td>
+                                <td class="hits-data">${Number(row.total_hits)?.toLocaleString() || 0}</td>
+                                <td class="entry-data">${Number(row.total_entry)?.toLocaleString() || 0}</td>
+                                <td class="exit-data">${Number(row.total_exit)?.toLocaleString() || 0}</td>
                             </tr>
                         `;
                     }
