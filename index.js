@@ -347,7 +347,7 @@ app.get('/traffic-stats/urls', async (req, res) => {
             years,
             months,
             selectedYear: 2024,
-            selectedMonth: 12
+            selectedMonth: 11
         });
     } catch (err) {
         console.error(err);
