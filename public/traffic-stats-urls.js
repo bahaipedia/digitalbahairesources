@@ -1,4 +1,22 @@
-/* Top URLs page */
+/* Dynamic h2 */
+document.addEventListener('DOMContentLoaded', () => {
+    const websiteSelect = document.getElementById('website-select');
+    const header = document.querySelector('#urls-highlight h2');
+
+    const updateHeader = () => {
+        if (websiteSelect.value === 'all') {
+            header.textContent = 'Top 25 URLs (All sites)';
+        } else {
+            header.textContent = `Top 200 URLs (${websiteSelect.options[websiteSelect.selectedIndex].text})`;
+        }
+    };
+
+    // Update header on page load and when website selection changes
+    updateHeader();
+    websiteSelect.addEventListener('change', updateHeader);
+});
+
+/* Content area */
 document.addEventListener('DOMContentLoaded', () => {
     const websiteSelect = document.getElementById('website-select');
     const serverSelect = document.getElementById('server-select');
