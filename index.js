@@ -308,6 +308,79 @@ app.get('/api/chart-data', async (req, res) => {
     }
 });
 
+/* Route to build traffic-stats/urls page and get top 10 urls */
+app.get('/traffic-stats/urls', async (req, res) => {
+    try {
+        // Fetch websites, excluding legacy/defunct sites, and ordering them
+        const [websites] = await pool.query(`
+            SELECT id, name
+            FROM websites
+            WHERE name NOT IN ('fr.bahai.works', 'bahaiconcordance.org')
+            ORDER BY 
+                (FIELD(name, 'bahaipedia.org', 'bahai.works', 'bahai.media', 'bahai9.com', 'bahai.quest') > 0) DESC,
+                FIELD(name, 'bahaipedia.org', 'bahai.works', 'bahai.media', 'bahai9.com', 'bahai.quest'),
+                name ASC;
+        `);
+
+        const [servers] = await pool.query('SELECT id, location FROM servers ORDER BY location');
+        const serverNameMapping = {
+            usa: 'United States',
+            singapore: 'Singapore',
+            frankfurt: 'Frankfurt',
+            saopaulo: 'São Paulo'
+        };
+        const transformedServers = servers
+            .map(server => ({
+                id: server.id,
+                location: serverNameMapping[server.location.toLowerCase()] || server.location
+            }))
+            .sort((a, b) => {
+                const customOrder = ['United States', 'Singapore', 'Frankfurt', 'São Paulo'];
+                return customOrder.indexOf(a.location) - customOrder.indexOf(b.location);
+            });
+
+        // Fetch distinct years and months from website_url_stats (instead of summary)
+        const [yearResults] = await pool.query('SELECT DISTINCT year FROM website_url_stats ORDER BY year');
+        const years = yearResults.map(row => row.year);
+
+        const [monthResults] = await pool.query('SELECT DISTINCT month FROM website_url_stats ORDER BY month');
+        const months = monthResults.map(row => row.month);
+
+        // For simplicity, use the latest available year/month from the tables or default values
+        // Adjust logic as needed (could also get from query params)
+        const selectedYear = years.includes(2024) ? 2024 : years[years.length - 1];
+        const selectedMonth = months.includes(12) ? 12 : months[months.length - 1];
+
+        // Fetch top 10 URLs by hits
+        const [topUrls] = await pool.query(`
+            SELECT w.name AS website_name, wu.url, SUM(wus.hits) AS total_hits,
+                   SUM(wus.entry_count) AS total_entry, SUM(wus.exit_count) AS total_exit
+            FROM website_url_stats wus
+            JOIN website_url wu ON wus.website_url_id = wu.id
+            JOIN websites w ON wu.website_id = w.id
+            WHERE w.name NOT IN ('fr.bahai.works', 'bahaiconcordance.org')
+              AND wus.year = ? AND wus.month = ?
+            GROUP BY w.name, wu.url
+            ORDER BY total_hits DESC
+            LIMIT 10
+        `, [selectedYear, selectedMonth]);
+
+        // Render the traffic-stats-urls page
+        res.render('traffic-stats-urls', {
+            websites: websites,
+            servers: transformedServers,
+            years: years,
+            months: months,
+            selectedYear: selectedYear,
+            selectedMonth: selectedMonth,
+            topUrls: topUrls
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Primary site running at http://localhost:${PORT}`);
 });
