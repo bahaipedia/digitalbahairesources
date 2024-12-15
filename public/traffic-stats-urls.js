@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <tr>
                                 <td class="rank-data">${rank}</td>
                                 <td>${row.website_name}</td>
-                                <td><a href="https://${row.website_name}/${row.url}" target="_blank">${formattedUrl}</a></td>
+                                <td><a href="https://${row.website_name}/${websiteName === 'bahai9.com' ? 'wiki/' : ''}${row.url}" target="_blank">${formattedUrl}</a></td>
                                 <td class="hits-data">${Number(row.total_hits)?.toLocaleString() || 0}</td>
                             </tr>
                         `;
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         tableBody.innerHTML += `
                             <tr>
                                 <td class="rank-data">${rank}</td>
-                                <td><a href="https://${websiteName}/${row.url}" target="_blank">${formattedUrl}</a></td>
+                                <td><a href="https://${websiteName}/${websiteName === 'bahai9.com' ? 'wiki/' : ''}${row.url}" target="_blank">${formattedUrl}</a></td>
                                 <td class="hits-data">${Number(row.total_hits)?.toLocaleString() || 0}</td>
                                 <td class="entry-data">${Number(row.total_entry)?.toLocaleString() || 0}</td>
                                 <td class="exit-data">${Number(row.total_exit)?.toLocaleString() || 0}</td>
