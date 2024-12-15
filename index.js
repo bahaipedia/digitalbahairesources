@@ -382,9 +382,11 @@ app.get('/api/traffic-stats/urls', async (req, res) => {
             ORDER BY total_hits DESC
         `;
 
-        // Add limit for "all" websites
+        // Add limits
         if (website_id === 'null') {
-            query += ' LIMIT 25';
+            query += ' LIMIT 25'; // Top 25 URLs for "all" websites
+        } else {
+            query += ' LIMIT 200'; // Top 200 URLs for a specific website
         }
 
         // Parameters
