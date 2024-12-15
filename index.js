@@ -345,7 +345,9 @@ app.get('/traffic-stats/urls', async (req, res) => {
             websites,
             servers: transformedServers,
             years,
-            months
+            months,
+            selectedYear: 2024,
+            selectedMonth: 12
         });
     } catch (err) {
         console.error(err);
