@@ -26,6 +26,14 @@
     color: #333;
     padding: 10px;
     border: 1px solid #ddd;
+    text-align: left;
+}
+
+/* Header Center Alignment for Specific Columns */
+#urls-highlight th.hits-header,
+#urls-highlight th.entry-header,
+#urls-highlight th.exit-header {
+    text-align: center; /* Center align Hits, Entry, Exit labels */
 }
 
 /* Row Styling */
@@ -33,6 +41,20 @@
     padding: 10px;
     border: 1px solid #ddd;
     word-wrap: break-word;
+}
+
+/* Center Align Data for Numeric Columns */
+#urls-highlight td.hits-data,
+#urls-highlight td.entry-data,
+#urls-highlight td.exit-data {
+    text-align: center; /* Center align Hits, Entry, Exit data */
+}
+
+/* Rank Column */
+#urls-highlight th.rank-header,
+#urls-highlight td.rank-data {
+    width: 50px; /* Narrower column for Rank */
+    text-align: left; /* Left align Rank label and data */
 }
 
 /* Alternating Row Colors */
@@ -47,20 +69,6 @@
 /* Hover Effect for Rows */
 #urls-highlight tbody tr:hover {
     background-color: #e9f5ff;
-}
-
-/* Center Align Hits, Entry, and Exit Columns */
-#urls-highlight td:nth-child(3), /* Hits */
-#urls-highlight td:nth-child(4), /* Entry */
-#urls-highlight td:nth-child(5)  /* Exit */ {
-    text-align: center;
-}
-
-/* No Data Row Styling */
-#urls-highlight tbody tr td[colspan] {
-    text-align: center;
-    font-style: italic;
-    color: #777;
 }
 
 /* Responsive Table */
