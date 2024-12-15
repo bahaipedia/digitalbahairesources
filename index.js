@@ -360,10 +360,13 @@ app.get('/api/traffic-stats/urls', async (req, res) => {
     try {
         const { website_id, server_id, year, month } = req.query;
 
-        // Base query for URL stats
-        const query = `
-            SELECT w.name AS website_name, wu.url, SUM(wus.hits) AS total_hits,
-                   SUM(wus.entry_count) AS total_entry, SUM(wus.exit_count) AS total_exit
+        // Base query
+        let query = `
+            SELECT 
+                ${website_id === 'null' ? 'w.name AS website_name,' : ''}
+                wu.url,
+                SUM(wus.hits) AS total_hits
+                ${website_id !== 'null' ? ', SUM(wus.entry_count) AS total_entry, SUM(wus.exit_count) AS total_exit' : ''}
             FROM website_url_stats wus
             JOIN website_url wu ON wus.website_url_id = wu.id
             JOIN websites w ON wu.website_id = w.id
@@ -371,11 +374,20 @@ app.get('/api/traffic-stats/urls', async (req, res) => {
               AND (? IS NULL OR wu.website_id = ?)
               AND (? IS NULL OR wus.server_id = ?)
               AND wus.year = ? AND wus.month = ?
-            GROUP BY w.name, wu.url
-            ORDER BY total_hits DESC
-            LIMIT 10;
         `;
 
+        // Add grouping and ordering
+        query += `
+            GROUP BY ${website_id === 'null' ? 'w.name, ' : ''}wu.url
+            ORDER BY total_hits DESC
+        `;
+
+        // Add limit for "all" websites
+        if (website_id === 'null') {
+            query += ' LIMIT 25';
+        }
+
+        // Parameters
         const params = [
             website_id === 'null' ? null : website_id,
             website_id === 'null' ? null : website_id,
