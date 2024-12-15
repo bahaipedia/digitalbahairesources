@@ -361,32 +361,29 @@ app.get('/api/traffic-stats/urls', async (req, res) => {
         const { website_id, server_id, year, month } = req.query;
 
         // Base query for URL stats
-        let query = `
+        const query = `
             SELECT w.name AS website_name, wu.url, SUM(wus.hits) AS total_hits,
                    SUM(wus.entry_count) AS total_entry, SUM(wus.exit_count) AS total_exit
             FROM website_url_stats wus
             JOIN website_url wu ON wus.website_url_id = wu.id
             JOIN websites w ON wu.website_id = w.id
             WHERE w.name NOT IN ('fr.bahai.works', 'bahaiconcordance.org')
+              AND (? IS NULL OR wu.website_id = ?)
+              AND (? IS NULL OR wus.server_id = ?)
               AND wus.year = ? AND wus.month = ?
-        `;
-        const params = [year, month];
-
-        // Add filters for website and server if provided
-        if (website_id) {
-            query += ' AND wu.website_id = ?';
-            params.push(website_id);
-        }
-        if (server_id) {
-            query += ' AND wus.server_id = ?';
-            params.push(server_id);
-        }
-
-        query += `
             GROUP BY w.name, wu.url
             ORDER BY total_hits DESC
-            LIMIT 10
+            LIMIT 10;
         `;
+
+        const params = [
+            website_id === 'null' ? null : website_id,
+            website_id === 'null' ? null : website_id,
+            server_id === 'null' ? null : server_id,
+            server_id === 'null' ? null : server_id,
+            year,
+            month
+        ];
 
         const [results] = await pool.query(query, params);
         res.json(results);
