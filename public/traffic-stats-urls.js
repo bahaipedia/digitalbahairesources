@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (websiteSelect.value === 'all') {
                 tableHeader.innerHTML = `
                     <tr>
+                        <th>Rank</th> <!-- Add Rank -->
                         <th>Website</th>
                         <th>URL</th>
                         <th>Hits</th>
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 tableHeader.innerHTML = `
                     <tr>
+                        <th>Rank</th> <!-- Add Rank -->
                         <th>URL</th>
                         <th>Hits</th>
                         <th>Entry</th>
@@ -71,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="${websiteSelect.value === 'all' ? 3 : 4}">No data available for the selected filters.</td>
+                        <td colspan="${websiteSelect.value === 'all' ? 4 : 5}">No data available for the selected filters.</td>
                     </tr>
                 `;
             }
@@ -79,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error fetching data:', err);
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="${websiteSelect.value === 'all' ? 3 : 4}">Error loading data. Please try again later.</td>
+                    <td colspan="${websiteSelect.value === 'all' ? 4 : 5}">Error loading data. Please try again later.</td>
                 </tr>
             `;
         }
