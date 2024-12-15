@@ -33,14 +33,14 @@
                 <label for="year-select">Year:</label>
                 <select id="year-select" name="year">
                     <% years.forEach(function(y) { %>
-                        <option value="<%= y %>"><%= y %></option>
+                        <option value="<%= y %>" <%= y === selectedYear ? 'selected' : '' %>><%= y %></option>
                     <% }) %>
                 </select>
 
                 <label for="month-select">Month:</label>
                 <select id="month-select" name="month">
                     <% months.forEach(function(m) { %>
-                        <option value="<%= m %>"><%= m %></option>
+                        <option value="<%= m %>" <%= m === selectedMonth ? 'selected' : '' %>><%= m %></option>
                     <% }) %>
                 </select>
             </nav>
