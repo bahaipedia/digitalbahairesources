@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const serverSelect = document.getElementById('server-select');
     const yearSelect = document.getElementById('year-select');
     const monthSelect = document.getElementById('month-select');
-    const tableBody = document.querySelector('table tbody');
+    const tableBody = document.querySelector('#urls-highlight tbody');
 
     const fetchData = async () => {
         const params = new URLSearchParams({
