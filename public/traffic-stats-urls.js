@@ -43,20 +43,19 @@ document.addEventListener('DOMContentLoaded', () => {
             tableBody.innerHTML = '';
             if (data.length > 0) {
                 data.forEach(row => {
+                    const formattedUrl = row.url.replace(/_/g, ' '); // Replace underscores with spaces
                     if (websiteSelect.value === 'all') {
-                        // Display Website, URL, Hits
                         tableBody.innerHTML += `
                             <tr>
                                 <td>${row.website_name}</td>
-                                <td>${row.url}</td>
+                                <td><a href="https://${row.website_name}/${row.url}" target="_blank">${formattedUrl}</a></td>
                                 <td>${Number(row.total_hits)?.toLocaleString() || 0}</td>
                             </tr>
                         `;
                     } else {
-                        // Display URL, Hits, Entry, Exit
                         tableBody.innerHTML += `
                             <tr>
-                                <td>${row.url}</td>
+                                <td><a href="https://${row.website_name}/${row.url}" target="_blank">${formattedUrl}</a></td>
                                 <td>${Number(row.total_hits)?.toLocaleString() || 0}</td>
                                 <td>${Number(row.total_entry)?.toLocaleString() || 0}</td>
                                 <td>${Number(row.total_exit)?.toLocaleString() || 0}</td>
