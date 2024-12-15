@@ -14,9 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
             month: monthSelect.value
         });
 
+        console.log(`Fetching data with params: ${params}`);
+        console.log(`Fetching data with params: ${params.toString()}`);
+
         try {
             const response = await fetch(`/api/traffic-stats/urls?${params}`);
+            console.log('Response object:', response);
             const data = await response.json();
+            console.log('API Response Data:', data);
 
             tableBody.innerHTML = '';
             if (data.length > 0) {
