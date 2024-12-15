@@ -10,13 +10,10 @@
 <body>
     <%- include('partials/header', { mini: true }) %>
     <div class="container">
-        <!-- Include Sidebar -->
         <%- include('partials/traffic-sidebar') %>
 
-        <!-- Main Content -->
         <div class="main-content">
             <nav class="traffic-nav">
-                <!-- Navigation Bar -->
                 <label for="website-select">Website:</label>
                 <select id="website-select" name="website">
                     <option value="all">All</option>
@@ -36,19 +33,19 @@
                 <label for="year-select">Year:</label>
                 <select id="year-select" name="year">
                     <% years.forEach(function(y) { %>
-                        <option value="<%= y %>" <%= y === selectedYear ? 'selected' : '' %>><%= y %></option>
+                        <option value="<%= y %>"><%= y %></option>
                     <% }) %>
                 </select>
 
                 <label for="month-select">Month:</label>
                 <select id="month-select" name="month">
                     <% months.forEach(function(m) { %>
-                        <option value="<%= m %>" <%= m === selectedMonth ? 'selected' : '' %>><%= m %></option>
+                        <option value="<%= m %>"><%= m %></option>
                     <% }) %>
                 </select>
             </nav>
 
-            <!-- Content Sections -->
+            <!-- Content sections -->
             <%- include('partials/urls-highlight') %>
         </div>
     </div>
