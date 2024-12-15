@@ -1,9 +1,10 @@
+/* Build top 10 urls view */
 document.addEventListener('DOMContentLoaded', () => {
     const websiteSelect = document.getElementById('website-select');
     const serverSelect = document.getElementById('server-select');
     const yearSelect = document.getElementById('year-select');
     const monthSelect = document.getElementById('month-select');
-    const tableBody = document.querySelector('#urls-highlight tbody');
+    const tableBody = document.querySelector('table tbody');
 
     const fetchData = async () => {
         const params = new URLSearchParams({
@@ -24,9 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <tr>
                             <td>${row.website_name}</td>
                             <td>${row.url}</td>
-                            <td>${row.total_hits}</td>
-                            <td>${row.total_entry}</td>
-                            <td>${row.total_exit}</td>
+                            <td>${Number(row.total_hits)?.toLocaleString() || 0}</td>
+                            <td>${Number(row.total_entry)?.toLocaleString() || 0}</td>
+                            <td>${Number(row.total_exit)?.toLocaleString() || 0}</td>
                         </tr>
                     `;
                 });
