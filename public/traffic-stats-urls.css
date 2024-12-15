@@ -1,14 +1,23 @@
+/* Main content */
+.main-content {
+    flex: 1;
+    padding: 1rem;
+}
+.container {
+    display: flex;
+    width: 100%;
+}
+
+/* URL styling */
 .urls-highlight table {
     width: 100%;
     border-collapse: collapse;
 }
-
 .urls-highlight th, .urls-highlight td {
     border: 1px solid #ccc;
     padding: 8px;
     text-align: left;
 }
-
 .urls-highlight th {
     background-color: #f5f5f5;
 }
