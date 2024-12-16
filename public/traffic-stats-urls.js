@@ -65,9 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 data.forEach((row, index) => {
                     const rank = index + 1; // Calculate rank
                     const formattedUrl = row.url.replace(/_/g, ' '); // Replace underscores with spaces
+                    const websiteName = websiteSelect.options[websiteSelect.selectedIndex].text;
 
                     if (websiteSelect.value === 'all') {
-                        const websiteName = websiteSelect.options[websiteSelect.selectedIndex].text;
                         tableBody.innerHTML += `
                             <tr>
                                 <td class="rank-data">${rank}</td>
