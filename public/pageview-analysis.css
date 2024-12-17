@@ -1,0 +1,67 @@
+.container {
+    width: 90%;
+    margin: 0 auto;
+    padding-top: 20px;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.controls label {
+    margin-right: 10px;
+}
+
+#website-select {
+    margin-right: 20px;
+}
+
+#title-input {
+    width: 300px;
+    padding: 5px;
+}
+
+.autocomplete-items {
+    position: absolute;
+    border: 1px solid #ccc;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #fff;
+    z-index: 1000;
+    list-style-type: none;
+    padding-left: 0;
+    width: 300px;
+}
+
+.autocomplete-items li {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.autocomplete-items li:hover {
+    background-color: #f0f0f0;
+}
+
+canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+@media (max-width: 600px) {
+    .controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #title-input,
+    #website-select {
+        margin-bottom: 10px;
+        width: 100%;
+    }
+
+    .autocomplete-items {
+        width: 100%;
+    }
+}
