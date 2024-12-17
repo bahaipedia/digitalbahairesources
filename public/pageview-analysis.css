@@ -1,13 +1,21 @@
+/* Container adjusted to accommodate sidebar */
 .container {
-    width: 90%;
-    margin: 0 auto;
-    padding-top: 20px;
+    display: flex;
+    width: 100%;
 }
 
+/* Sidebar styling (assuming width is set in the partial) */
+.main-content {
+    flex: 1;
+    padding: 20px;
+}
+
+/* Controls styling */
 .controls {
     display: flex;
     align-items: center;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .controls label {
@@ -18,13 +26,26 @@
     margin-right: 20px;
 }
 
-#title-input {
-    width: 300px;
-    padding: 5px;
+/* Autocomplete container to position dropdown correctly */
+.autocomplete {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 800px;
 }
 
+#title-input {
+    width: 100%;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+/* Autocomplete dropdown styling */
 .autocomplete-items {
     position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
     border: 1px solid #ccc;
     max-height: 200px;
     overflow-y: auto;
@@ -32,7 +53,7 @@
     z-index: 1000;
     list-style-type: none;
     padding-left: 0;
-    width: 300px;
+    margin: 0;
 }
 
 .autocomplete-items li {
@@ -44,11 +65,13 @@
     background-color: #f0f0f0;
 }
 
+/* Chart styling */
 canvas {
     max-width: 100%;
     height: auto;
 }
 
+/* Responsive adjustments */
 @media (max-width: 600px) {
     .controls {
         flex-direction: column;
@@ -59,6 +82,10 @@ canvas {
     #website-select {
         margin-bottom: 10px;
         width: 100%;
+    }
+
+    .autocomplete {
+        max-width: 100%;
     }
 
     .autocomplete-items {
