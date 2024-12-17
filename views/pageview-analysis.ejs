@@ -3,30 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URLs Stats</title>
+    <title>Pageview Analysis</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="stylesheet" href="/pageview-analysis.css">
 </head>
 <body>
     <%- include('partials/header', { mini: true }) %>
     <div class="container">
-       <%- include('partials/traffic-sidebar') %>
-        <div class="controls">
-            <label for="website-select">Website:</label>
-            <select id="website-select">
-                <% websites.forEach(function(website) { %>
-                    <option value="<%= website.id %>" <%= website.id === defaultWebsiteId ? 'selected' : '' %>><%= website.name %></option>
-                <% }) %>
-            </select>
+        <%- include('partials/traffic-sidebar') %>
+        <div class="main-content">
+            <div class="controls">
+                <label for="website-select">Website:</label>
+                <select id="website-select">
+                    <% websites.forEach(function(website) { %>
+                        <option value="<%= website.id %>" <%= website.id === defaultWebsiteId ? 'selected' : '' %>><%= website.name %></option>
+                    <% }) %>
+                </select>
 
-            <label for="title-input">Add Title:</label>
-            <input type="text" id="title-input" placeholder="Type to search...">
-            <ul id="autocomplete-list" class="autocomplete-items"></ul>
+                <label for="title-input">Add Title:</label>
+                <div class="autocomplete">
+                    <input type="text" id="title-input" placeholder="Type to search...">
+                    <ul id="autocomplete-list" class="autocomplete-items"></ul>
+                </div>
+            </div>
+
+            <canvas id="pageview-chart"></canvas>
         </div>
-
-        <canvas id="pageview-chart"></canvas>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/chart.umd.js"></script>
     <script src="/pageview-analysis.js"></script>
     <%- include('partials/footer') %>
 </body>
