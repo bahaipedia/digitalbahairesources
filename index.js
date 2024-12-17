@@ -407,6 +407,75 @@ app.get('/api/traffic-stats/urls', async (req, res) => {
     }
 });
 
+// Route to render the pageview-analysis page
+app.get('/pageview-analysis', async (req, res) => {
+    try {
+        // Fetch websites, excluding legacy/defunct sites, and ordering them
+        const [websites] = await pool.query(`
+            SELECT id, name
+            FROM websites
+            WHERE name NOT IN ('fr.bahai.works', 'bahaiconcordance.org')
+            ORDER BY
+                (FIELD(name, 'bahaipedia.org', 'bahai.works', 'bahai.media', 'bahai9.com', 'bahai.quest') > 0) DESC,
+                FIELD(name, 'bahaipedia.org', 'bahai.works', 'bahai.media', 'bahai9.com', 'bahai.quest'),
+                name ASC;
+        `);
+
+        // Set default website (e.g., bahaipedia.org)
+        const defaultWebsite = websites.find(w => w.name === 'bahaipedia.org') || websites[0];
+
+        // Render the pageview-analysis page
+        res.render('pageview-analysis', {
+            websites: websites,
+            defaultWebsiteId: defaultWebsite.id
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// API route to fetch titles for autocomplete
+app.get('/api/search-titles', async (req, res) => {
+    const { term, website_id } = req.query;
+    try {
+        const [results] = await pool.query(`
+            SELECT DISTINCT url
+            FROM website_url
+            WHERE website_id = ? AND url LIKE CONCAT('%', ?, '%')
+            LIMIT 10
+        `, [website_id, term]);
+
+        res.json(results.map(row => row.url));
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error fetching titles.' });
+    }
+});
+
+// API route to fetch hits data for selected titles over the past 12 months
+app.get('/api/pageview-data', async (req, res) => {
+    const { website_id, titles } = req.query;
+    const titlesArray = titles.split(',');
+
+    try {
+        const [results] = await pool.query(`
+            SELECT wu.url, wus.year, wus.month, SUM(wus.hits) as hits
+            FROM website_url_stats wus
+            JOIN website_url wu ON wus.website_url_id = wu.id
+            WHERE wu.website_id = ? AND wu.url IN (?)
+                AND CONCAT(wus.year, LPAD(wus.month, 2, '0')) >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 12 MONTH), '%Y%m')
+            GROUP BY wu.url, wus.year, wus.month
+            ORDER BY wu.url, wus.year, wus.month
+        `, [website_id, titlesArray]);
+
+        res.json(results);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error fetching hits data.' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Primary site running at http://localhost:${PORT}`);
 });
