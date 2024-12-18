@@ -26,31 +26,6 @@
                         <input type="text" id="title-input" placeholder="Type to search...">
                         <ul id="autocomplete-list" class="autocomplete-items"></ul>
                     </div>
-
-                    <!-- Date range selectors -->
-                    <label for="from-date">From:</label>
-                    <select id="from-month-select" name="from-month">
-                        <% months.forEach(function(m) { %>
-                            <option value="<%= m %>" <%= m === selectedFromMonth ? 'selected' : '' %>><%= m %></option>
-                        <% }) %>
-                    </select>
-                    <select id="from-year-select" name="from-year">
-                        <% years.forEach(function(y) { %>
-                            <option value="<%= y %>" <%= y === selectedFromYear ? 'selected' : '' %>><%= y %></option>
-                        <% }) %>
-                    </select>
-
-                    <label for="to-date">To:</label>
-                    <select id="to-month-select" name="to-month">
-                        <% months.forEach(function(m) { %>
-                            <option value="<%= m %>" <%= m === selectedToMonth ? 'selected' : '' %>><%= m %></option>
-                        <% }) %>
-                    </select>
-                    <select id="to-year-select" name="to-year">
-                        <% years.forEach(function(y) { %>
-                            <option value="<%= y %>" <%= y === selectedToYear ? 'selected' : '' %>><%= y %></option>
-                        <% }) %>
-                    </select>
                 </div>
 
                 <div class="chart-and-data">
