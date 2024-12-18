@@ -13,6 +13,7 @@
         <div class="container">
             <%- include('partials/traffic-sidebar') %>
             <div class="main-content">
+                <!-- Controls section -->
                 <div class="controls">
                     <label for="website-select">Website:</label>
                     <select id="website-select">
@@ -28,51 +29,59 @@
                     </div>
                 </div>
 
+                <!-- Chart and Data section -->
                 <div class="chart-and-data">
-    <div class="chart-container">
-        <canvas id="pageview-chart"></canvas>
-    </div>
-<div class="data-summary">
-    <h3>Data</h3>
-    <!-- Date selectors -->
-    <div class="date-selectors">
-        <label for="from-date">From:</label>
-        <select id="from-month-select" name="from-month">
-            <% months.forEach(function(m) { %>
-                <option value="<%= m %>" <%= m === selectedFromMonth ? 'selected' : '' %>><%= m %></option>
-            <% }) %>
-        </select>
-        <select id="from-year-select" name="from-year">
-            <% years.forEach(function(y) { %>
-                <option value="<%= y %>" <%= y === selectedFromYear ? 'selected' : '' %>><%= y %></option>
-            <% }) %>
-        </select>
+                    <!-- Chart container -->
+                    <div class="chart-container">
+                        <canvas id="pageview-chart"></canvas>
+                    </div>
 
-        <label for="to-date">To:</label>
-        <select id="to-month-select" name="to-month">
-            <% months.forEach(function(m) { %>
-                <option value="<%= m %>" <%= m === selectedToMonth ? 'selected' : '' %>><%= m %></option>
-            <% }) %>
-        </select>
-        <select id="to-year-select" name="to-year">
-            <% years.forEach(function(y) { %>
-                <option value="<%= y %>" <%= y === selectedToYear ? 'selected' : '' %>><%= y %></option>
-            <% }) %>
-        </select>
-    </div>
-    <!-- Data table -->
-    <table>
-        <tr>
-            <th>Pageviews</th>
-            <td id="total-pageviews"></td>
-        </tr>
-        <tr>
-            <th>Monthly Average</th>
-            <td id="monthly-average"></td>
-        </tr>
-    </table>
-</div>
+                    <!-- Data summary (including date selectors) -->
+                    <div class="data-summary">
+                        <h3>Data</h3>
 
+                        <!-- Date selectors -->
+                        <div class="date-selectors">
+                            <label for="from-date">From:</label>
+                            <select id="from-month-select" name="from-month">
+                                <% months.forEach(function(m) { %>
+                                    <option value="<%= m %>" <%= m === selectedFromMonth ? 'selected' : '' %>><%= m %></option>
+                                <% }) %>
+                            </select>
+                            <select id="from-year-select" name="from-year">
+                                <% years.forEach(function(y) { %>
+                                    <option value="<%= y %>" <%= y === selectedFromYear ? 'selected' : '' %>><%= y %></option>
+                                <% }) %>
+                            </select>
+
+                            <label for="to-date">To:</label>
+                            <select id="to-month-select" name="to-month">
+                                <% months.forEach(function(m) { %>
+                                    <option value="<%= m %>" <%= m === selectedToMonth ? 'selected' : '' %>><%= m %></option>
+                                <% }) %>
+                            </select>
+                            <select id="to-year-select" name="to-year">
+                                <% years.forEach(function(y) { %>
+                                    <option value="<%= y %>" <%= y === selectedToYear ? 'selected' : '' %>><%= y %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+
+                        <!-- Data table -->
+                        <table>
+                            <tr>
+                                <th>Pageviews</th>
+                                <td id="total-pageviews"></td>
+                            </tr>
+                            <tr>
+                                <th>Monthly Average</th>
+                                <td id="monthly-average"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Details table below the chart -->
                 <table id="details-table">
                     <thead>
                         <tr>
