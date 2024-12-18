@@ -424,25 +424,15 @@ app.get('/pageview-analysis', async (req, res) => {
         // Set default website (e.g., bahaipedia.org)
         const defaultWebsite = websites.find(w => w.name === 'bahaipedia.org') || websites[0];
 
-                // Prepare months and years for date selectors
+        // Prepare months and years for date selectors
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth() + 1;
 
-        const months = [
-            { value: 1, name: 'January' },
-            { value: 2, name: 'February' },
-            { value: 3, name: 'March' },
-            { value: 4, name: 'April' },
-            { value: 5, name: 'May' },
-            { value: 6, name: 'June' },
-            { value: 7, name: 'July' },
-            { value: 8, name: 'August' },
-            { value: 9, name: 'September' },
-            { value: 10, name: 'October' },
-            { value: 11, name: 'November' },
-            { value: 12, name: 'December' }
-        ];
+        const months = [];
+        for (let m = 1; m <= 12; m++) {
+            months.push(m);
+        }
 
         const years = [];
         for (let y = currentYear - 5; y <= currentYear; y++) {
