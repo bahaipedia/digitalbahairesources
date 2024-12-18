@@ -442,9 +442,16 @@ app.get('/api/search-titles', async (req, res) => {
         const [results] = await pool.query(`
             SELECT DISTINCT url
             FROM website_url
-            WHERE website_id = ? AND url LIKE CONCAT('%', ?, '%')
+            WHERE website_id = ?
+              AND url LIKE CONCAT('%', ?, '%')
+            ORDER BY
+              CASE
+                WHEN url LIKE CONCAT(?, '%') THEN 0  -- Titles starting with the term
+                WHEN url LIKE CONCAT('% ', ?, '%') THEN 1  -- Titles where term starts after a space
+                ELSE 2  -- Other matches
+              END
             LIMIT 10
-        `, [website_id, term]);
+        `, [website_id, term, term, term]);
 
         res.json(results.map(row => row.url));
     } catch (err) {
