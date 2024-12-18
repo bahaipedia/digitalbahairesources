@@ -72,27 +72,32 @@ canvas {
 .chart-container {
     flex: 3;
 }
-#pageview-chart {
-    flex: 2;
-    max-width: 100%;
-}
 .data-summary {
     flex: 1;
     margin-left: 20px;
-    max-width: 300px
+    max-width: 250px; /* Adjust as needed */
 }
-.data-summary .date-selectors {
-    margin-bottom: 20px;
+.data-summary h3 {
+    margin-top: 0;
 }
-.data-summary label {
+.data-summary .date-selectors label {
     display: block;
     margin-top: 10px;
 }
-.data-summary select {
+.data-summary .date-selectors select {
     width: 100%;
     padding: 5px;
     margin-top: 5px;
     box-sizing: border-box;
+}
+.data-summary table {
+    width: 100%;
+    margin-top: 20px;
+}
+.data-summary table th,
+.data-summary table td {
+    text-align: left;
+    padding: 5px 0;
 }
 #details-table {
     width: 100%;
@@ -130,12 +135,9 @@ canvas {
     .chart-and-data {
         flex-direction: column;
     }
-    .chart-container,
     .data-summary {
-        max-width: 100%;
         margin-left: 0;
-    }
-    .data-summary {
         margin-top: 20px;
+        max-width: 100%;
     }
 }
