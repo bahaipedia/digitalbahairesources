@@ -1,58 +1,14 @@
-/* Handle date range selection */
-const fromMonthSelect = document.getElementById('from-month-select');
-const fromYearSelect = document.getElementById('from-year-select');
-const toMonthSelect = document.getElementById('to-month-select');
-const toYearSelect = document.getElementById('to-year-select');
-
-[fromMonthSelect, fromYearSelect, toMonthSelect, toYearSelect].forEach(select => {
-    select.addEventListener('change', () => {
-        renderChart();
-    });
-});
-
-/* Function to update the details table based on the data */
-const updateDetailsTable = (data, monthsDiff) => {
-    const tbody = document.querySelector('#details-table tbody');
-    tbody.innerHTML = ''; // Clear the table
-
-    const titlesData = {};
-
-    data.forEach(d => {
-        if (!titlesData[d.url]) {
-            titlesData[d.url] = {
-                hits: 0
-                // Placeholder for future data: edits, editors, size, links
-            };
-        }
-        titlesData[d.url].hits += d.hits;
-    });
-
-    Object.keys(titlesData).forEach(title => {
-        const info = titlesData[title];
-        const row = document.createElement('tr');
-
-        row.innerHTML = `
-            <td>${title}</td>
-            <td>${info.hits}</td>
-            <td>${(info.hits / monthsDiff).toFixed(2)}</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        `;
-        tbody.appendChild(row);
-    });
-};
-
-// Call `updateDetailsTable` from within `renderChart`
-updateDetailsTable(data, monthsDiff);
-
 /* Main pageview analysis tool function */
 document.addEventListener('DOMContentLoaded', () => {
     const websiteSelect = document.getElementById('website-select');
     const titleInput = document.getElementById('title-input');
     const autocompleteList = document.getElementById('autocomplete-list');
     const chartCanvas = document.getElementById('pageview-chart');
+
+    const fromMonthSelect = document.getElementById('from-month-select');
+    const fromYearSelect = document.getElementById('from-year-select');
+    const toMonthSelect = document.getElementById('to-month-select');
+    const toYearSelect = document.getElementById('to-year-select');
 
     let selectedTitles = [];
     let chart;
@@ -171,6 +127,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+
+        // Update the details table
+        updateDetailsTable(data, monthsDiff);
+    };
+
+    // Function to update the details table based on the data
+    const updateDetailsTable = (data, monthsDiff) => {
+        const tbody = document.querySelector('#details-table tbody');
+        tbody.innerHTML = ''; // Clear the table
+
+        const titlesData = {};
+
+        data.forEach(d => {
+            if (!titlesData[d.url]) {
+                titlesData[d.url] = {
+                    hits: 0
+                    // Placeholder for future data: edits, editors, size, links
+                };
+            }
+            titlesData[d.url].hits += d.hits;
+        });
+
+        Object.keys(titlesData).forEach(title => {
+            const info = titlesData[title];
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td>${title}</td>
+                <td>${info.hits}</td>
+                <td>${(info.hits / monthsDiff).toFixed(2)}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            `;
+            tbody.appendChild(row);
+        });
     };
 
     // Function to generate consistent colors
@@ -226,5 +219,12 @@ document.addEventListener('DOMContentLoaded', () => {
         titleInput.value = '';
         autocompleteList.innerHTML = '';
         if (chart) chart.destroy();
+    });
+
+    // Handle date range selection
+    [fromMonthSelect, fromYearSelect, toMonthSelect, toYearSelect].forEach(select => {
+        select.addEventListener('change', () => {
+            renderChart();
+        });
     });
 });
