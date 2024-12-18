@@ -126,3 +126,16 @@ canvas {
         width: 100%;
     }
 }
+@media (max-width: 800px) {
+    .chart-and-data {
+        flex-direction: column;
+    }
+    .chart-container,
+    .data-summary {
+        max-width: 100%;
+        margin-left: 0;
+    }
+    .data-summary {
+        margin-top: 20px;
+    }
+}
