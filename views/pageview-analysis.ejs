@@ -9,29 +9,31 @@
 </head>
 <body>
     <%- include('partials/header', { mini: true }) %>
-    <div class="container">
-        <%- include('partials/traffic-sidebar') %>
-        <div class="main-content">
-            <div class="controls">
-                <label for="website-select">Website:</label>
-                <select id="website-select">
-                    <% websites.forEach(function(website) { %>
-                        <option value="<%= website.id %>" <%= website.id === defaultWebsiteId ? 'selected' : '' %>><%= website.name %></option>
-                    <% }) %>
-                </select>
+    <main>
+        <div class="container">
+            <%- include('partials/traffic-sidebar') %>
+            <div class="main-content">
+                <div class="controls">
+                    <label for="website-select">Website:</label>
+                    <select id="website-select">
+                        <% websites.forEach(function(website) { %>
+                            <option value="<%= website.id %>" <%= website.id === defaultWebsiteId ? 'selected' : '' %>><%= website.name %></option>
+                        <% }) %>
+                    </select>
 
-                <label for="title-input">Add Title:</label>
-                <div class="autocomplete">
-                    <input type="text" id="title-input" placeholder="Type to search...">
-                    <ul id="autocomplete-list" class="autocomplete-items"></ul>
+                    <label for="title-input">Add Title:</label>
+                    <div class="autocomplete">
+                        <input type="text" id="title-input" placeholder="Type to search...">
+                        <ul id="autocomplete-list" class="autocomplete-items"></ul>
+                    </div>
                 </div>
-            </div>
 
-            <canvas id="pageview-chart"></canvas>
+                <canvas id="pageview-chart"></canvas>
+            </div>
         </div>
-    </div>
-    <script src="/js/chart.umd.js"></script>
-    <script src="/pageview-analysis.js"></script>
+        <script src="/js/chart.umd.js"></script>
+        <script src="/pageview-analysis.js"></script>
+    </main>
     <%- include('partials/footer') %>
 </body>
 </html>
