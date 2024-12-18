@@ -76,13 +76,12 @@ canvas {
 .data-summary {
     flex: 1;
     margin-left: 20px;
-    max-width: 250px; /* Adjust as needed */
+    max-width: 350px;
 }
 .data-summary h3 {
     margin-top: 0;
 }
 .data-summary .date-selectors label {
-    display: block;
     margin-top: 10px;
 }
 .data-summary .date-selectors select {
