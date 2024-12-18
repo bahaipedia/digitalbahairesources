@@ -66,7 +66,11 @@ canvas {
 }
 .chart-and-data {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: row;
+    align-items: flex-start;
+}
+.chart-container {
+    flex: 3;
 }
 #pageview-chart {
     flex: 2;
@@ -74,7 +78,21 @@ canvas {
 }
 .data-summary {
     flex: 1;
-    padding: 20px;
+    margin-left: 20px;
+    max-width: 300px
+}
+.data-summary .date-selectors {
+    margin-bottom: 20px;
+}
+.data-summary label {
+    display: block;
+    margin-top: 10px;
+}
+.data-summary select {
+    width: 100%;
+    padding: 5px;
+    margin-top: 5px;
+    box-sizing: border-box;
 }
 #details-table {
     width: 100%;
