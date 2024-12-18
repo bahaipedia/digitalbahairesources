@@ -76,6 +76,19 @@ canvas {
     flex: 1;
     padding: 20px;
 }
+#details-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+#details-table th, #details-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+#details-table th {
+    background-color: #f9f9f9;
+    text-align: left;
+}
 
 /* Responsive adjustments */
 @media (max-width: 600px) {
