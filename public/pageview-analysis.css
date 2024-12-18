@@ -59,6 +59,7 @@
 .autocomplete-items li:hover {
     background-color: #f0f0f0;
 }
+
 /* Chart & data styling */
 canvas {
     max-width: 100%;
@@ -85,7 +86,6 @@ canvas {
     margin-top: 10px;
 }
 .data-summary .date-selectors select {
-    width: 100%;
     padding: 5px;
     margin-top: 5px;
     box-sizing: border-box;
