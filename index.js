@@ -424,10 +424,41 @@ app.get('/pageview-analysis', async (req, res) => {
         // Set default website (e.g., bahaipedia.org)
         const defaultWebsite = websites.find(w => w.name === 'bahaipedia.org') || websites[0];
 
+                // Prepare months and years for date selectors
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+
+        const months = [
+            { value: 1, name: 'January' },
+            { value: 2, name: 'February' },
+            { value: 3, name: 'March' },
+            { value: 4, name: 'April' },
+            { value: 5, name: 'May' },
+            { value: 6, name: 'June' },
+            { value: 7, name: 'July' },
+            { value: 8, name: 'August' },
+            { value: 9, name: 'September' },
+            { value: 10, name: 'October' },
+            { value: 11, name: 'November' },
+            { value: 12, name: 'December' }
+        ];
+
+        const years = [];
+        for (let y = currentYear - 5; y <= currentYear; y++) {
+            years.push(y);
+        }
+
         // Render the pageview-analysis page
         res.render('pageview-analysis', {
             websites: websites,
-            defaultWebsiteId: defaultWebsite.id
+            defaultWebsiteId: defaultWebsite.id,
+            months: months,
+            years: years,
+            selectedFromMonth: currentMonth,
+            selectedFromYear: currentYear - 1,
+            selectedToMonth: currentMonth,
+            selectedToYear: currentYear
         });
     } catch (err) {
         console.error(err);
@@ -462,19 +493,23 @@ app.get('/api/search-titles', async (req, res) => {
 
 // API route to fetch hits data for selected titles over the past 12 months
 app.get('/api/pageview-data', async (req, res) => {
-    const { website_id, titles } = req.query;
+    const { website_id, titles, from_year, from_month, to_year, to_month } = req.query;
     const titlesArray = titles.split(',');
 
     try {
+        // Calculate date boundaries
+        const fromDate = `${from_year}${from_month.padStart(2, '0')}`;
+        const toDate = `${to_year}${to_month.padStart(2, '0')}`;
+
         const [results] = await pool.query(`
             SELECT wu.url, wus.year, wus.month, SUM(wus.hits) as hits
             FROM website_url_stats wus
             JOIN website_url wu ON wus.website_url_id = wu.id
             WHERE wu.website_id = ? AND wu.url IN (?)
-                AND CONCAT(wus.year, LPAD(wus.month, 2, '0')) >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 12 MONTH), '%Y%m')
+                AND CONCAT(wus.year, LPAD(wus.month, 2, '0')) BETWEEN ? AND ?
             GROUP BY wu.url, wus.year, wus.month
             ORDER BY wu.url, wus.year, wus.month
-        `, [website_id, titlesArray]);
+        `, [website_id, titlesArray, fromDate, toDate]);
 
         res.json(results);
     } catch (err) {
