@@ -42,7 +42,6 @@
 
                         <!-- Date selectors -->
                         <div class="date-selectors">
-                            <label for="from-date">From:</label>
                             <select id="from-month-select" name="from-month">
                                 <% months.forEach(function(m) { %>
                                     <option value="<%= m %>" <%= m === selectedFromMonth ? 'selected' : '' %>><%= m %></option>
@@ -53,8 +52,7 @@
                                     <option value="<%= y %>" <%= y === selectedFromYear ? 'selected' : '' %>><%= y %></option>
                                 <% }) %>
                             </select>
-
-                            <label for="to-date">To:</label>
+                            <label for="to-date">—</label>
                             <select id="to-month-select" name="to-month">
                                 <% months.forEach(function(m) { %>
                                     <option value="<%= m %>" <%= m === selectedToMonth ? 'selected' : '' %>><%= m %></option>
