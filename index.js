@@ -501,6 +501,10 @@ app.get('/api/pageview-data', async (req, res) => {
             ORDER BY wu.url, wus.year, wus.month
         `, [website_id, titlesArray, fromDate, toDate]);
 
+       results.forEach(row => {
+            row.hits = Number(row.hits);
+        });
+
         res.json(results);
     } catch (err) {
         console.error(err);
