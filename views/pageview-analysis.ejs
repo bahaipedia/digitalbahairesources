@@ -26,9 +26,66 @@
                         <input type="text" id="title-input" placeholder="Type to search...">
                         <ul id="autocomplete-list" class="autocomplete-items"></ul>
                     </div>
+
+                    <!-- Date range selectors -->
+                    <label for="from-date">From:</label>
+                    <select id="from-month-select" name="from-month">
+                        <% months.forEach(function(m) { %>
+                            <option value="<%= m.value %>" <%= m.value === selectedFromMonth ? 'selected' : '' %>><%= m.name %></option>
+                        <% }) %>
+                    </select>
+                    <select id="from-year-select" name="from-year">
+                        <% years.forEach(function(y) { %>
+                            <option value="<%= y %>" <%= y === selectedFromYear ? 'selected' : '' %>><%= y %></option>
+                        <% }) %>
+                    </select>
+
+                    <label for="to-date">To:</label>
+                    <select id="to-month-select" name="to-month">
+                        <% months.forEach(function(m) { %>
+                            <option value="<%= m.value %>" <%= m.value === selectedToMonth ? 'selected' : '' %>><%= m.name %></option>
+                        <% }) %>
+                    </select>
+                    <select id="to-year-select" name="to-year">
+                        <% years.forEach(function(y) { %>
+                            <option value="<%= y %>" <%= y === selectedToYear ? 'selected' : '' %>><%= y %></option>
+                        <% }) %>
+                    </select>
                 </div>
 
-                <canvas id="pageview-chart"></canvas>
+                <div class="chart-and-data">
+                    <canvas id="pageview-chart"></canvas>
+                    <div class="data-summary">
+                        <h3>Data</h3>
+                        <table>
+                            <tr>
+                                <th>Pageviews</th>
+                                <td id="total-pageviews"></td>
+                            </tr>
+                            <tr>
+                                <th>Monthly Average</th>
+                                <td id="monthly-average"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <table id="details-table">
+                    <thead>
+                        <tr>
+                            <th>Page Title</th>
+                            <th>Hits</th>
+                            <th>Monthly Average</th>
+                            <th>Edits</th>
+                            <th>Editors</th>
+                            <th>Size</th>
+                            <th>Links</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be dynamically populated -->
+                    </tbody>
+                </table>
             </div>
         </div>
         <script src="/js/chart.umd.js"></script>
