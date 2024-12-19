@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch and render default data when the page loads
     const fetchAndRenderDefaultData = async () => {
         const defaultWebsiteId = 'bahaipedia.org';
-        const defaultTitles = ['Nine_Year_Plan_(2022-2031)']; 
+        const defaultTitles = ['Nine Year Plan (2022-2031)']; 
         const currentYear = new Date().getFullYear();
         const currentMonth = new Date().getMonth() + 1;
 
