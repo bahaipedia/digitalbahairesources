@@ -84,10 +84,8 @@ canvas {
 .data-table td {
     padding: 10px;
     text-align: left;
-    border-bottom: 1px solid #ddd;
 }
 .data-table th {
-    background-color: #f2f2f2;
     color: #333;
 }
 .data-summary {
