@@ -91,6 +91,7 @@ canvas {
 .data-summary {
     flex: 1;
     margin: 0 auto;
+    margin-top: 30px;
     max-width: 350px;
     padding: 20px;
     background-color: #f9f9f9;
