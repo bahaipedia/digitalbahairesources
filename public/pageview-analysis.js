@@ -265,6 +265,12 @@ document.addEventListener('DOMContentLoaded', () => {
         autocompleteList.innerHTML = '';
         if (chart) chart.destroy();
         displaySelectedTitles();
+
+        // Clear the details table
+        const tbody = document.querySelector('#details-table tbody');
+        if (tbody) {
+            tbody.innerHTML = '';
+        }   
     });
 
     // Handle date range selection
