@@ -434,10 +434,8 @@ app.get('/pageview-analysis', async (req, res) => {
             months.push(m);
         }
 
-        const years = [];
-        for (let y = currentYear - 5; y <= currentYear; y++) {
-            years.push(y);
-        }
+        const [yearResults] = await pool.query('SELECT DISTINCT year FROM website_url_stats ORDER BY year');
+        const years = yearResults.map(row => row.year);
 
         // Render the pageview-analysis page
         res.render('pageview-analysis', {
