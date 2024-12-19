@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const titleInput = document.getElementById('title-input');
     const autocompleteList = document.getElementById('autocomplete-list');
     const chartCanvas = document.getElementById('pageview-chart');
+    const selectedTitlesContainer = document.getElementById('selected-titles-container'); // New container for displaying selected titles
 
     const fromMonthSelect = document.getElementById('from-month-select');
     const fromYearSelect = document.getElementById('from-year-select');
@@ -12,6 +13,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let selectedTitles = [];
     let chart;
+
+    // Fetch and render default data when the page loads
+    const fetchAndRenderDefaultData = async () => {
+        const defaultWebsiteId = 'bahaipedia.org';
+        const defaultTitles = ['Nine_Year_Plan_(2022-2031)']; 
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1;
+
+        // Set default date range to the last 12 months
+        fromYearSelect.value = currentYear - 1;
+        fromMonthSelect.value = currentMonth;
+        toYearSelect.value = currentYear;
+        toMonthSelect.value = currentMonth;
+
+        // Set default website and titles
+        selectedTitles = defaultTitles;
+        displaySelectedTitles(); // Show selected titles
+        await renderChart();
+    };
 
     // Function to fetch autocomplete suggestions
     const fetchAutocomplete = async (term) => {
@@ -172,6 +192,39 @@ document.addEventListener('DOMContentLoaded', () => {
         return colors[index % colors.length];
     };
 
+    // Display selected titles with remove buttons
+    const displaySelectedTitles = () => {
+        selectedTitlesContainer.innerHTML = ''; // Clear previous entries
+
+        selectedTitles.forEach(title => {
+            const titleItem = document.createElement('div');
+            titleItem.textContent = title;
+
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.addEventListener('click', () => removeTitle(title));
+
+            titleItem.appendChild(removeButton);
+            selectedTitlesContainer.appendChild(titleItem);
+        });
+    };
+
+    // Add title to the selected list and update chart
+    const addTitle = (title) => {
+        if (!selectedTitles.includes(title)) {
+            selectedTitles.push(title);
+            displaySelectedTitles();
+            renderChart();
+        }
+    };
+
+    // Remove title from the selected list and update chart
+    const removeTitle = (title) => {
+        selectedTitles = selectedTitles.filter(t => t !== title);
+        displaySelectedTitles();
+        renderChart();
+    };
+
     // Handle autocomplete for title input
     titleInput.addEventListener('input', async () => {
         const term = titleInput.value.trim();
@@ -192,14 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Add title to the selected list and update chart
-    const addTitle = (title) => {
-        if (!selectedTitles.includes(title)) {
-            selectedTitles.push(title);
-            renderChart();
-        }
-    };
-
     // Handle 'Enter' key press in title input
     titleInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -219,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         titleInput.value = '';
         autocompleteList.innerHTML = '';
         if (chart) chart.destroy();
+        displaySelectedTitles();
     });
 
     // Handle date range selection
@@ -227,4 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderChart();
         });
     });
+
+    // Initialize the chart with default data
+    fetchAndRenderDefaultData();
 });
