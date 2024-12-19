@@ -172,9 +172,10 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.keys(titlesData).forEach(title => {
             const info = titlesData[title];
             const row = document.createElement('tr');
+            const domain = websiteSelect.options[websiteSelect.selectedIndex].text;
 
             row.innerHTML = `
-                <td><a href="https://${websiteSelect.options[websiteSelect.selectedIndex].text}/${encodeURIComponent(title)}" target="_blank">${title}</a></td>
+                <td><a href="https://${domain}/${domain === 'bahai9.com' ? 'wiki/' : ''}${encodeURIComponent(title)}" target="_blank">${title}</a></td>
                 <td>${info.hits}</td>
                 <td>${(info.hits / monthsDiff).toFixed(2)}</td>
                 <td></td>
