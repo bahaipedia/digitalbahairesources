@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = document.createElement('tr');
 
             row.innerHTML = `
-                <td><a href="https://${websiteSelect.value}/${title}" target="_blank">${title}</a></td>
+                <td><a href="https://${websiteSelect.options[websiteSelect.selectedIndex].text}/${encodeURIComponent(title)}" target="_blank">${title}</a></td>
                 <td>${info.hits}</td>
                 <td>${(info.hits / monthsDiff).toFixed(2)}</td>
                 <td></td>
