@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to update the details table based on the data
     const updateDetailsTable = (data, monthsDiff) => {
         const tbody = document.querySelector('#details-table tbody');
+        const pageUrl = `https://${websiteSelect.value}/${encodeURIComponent(title.replace(/ /g, '_'))}`;
         tbody.innerHTML = ''; // Clear the table
 
         const titlesData = {};
@@ -174,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = document.createElement('tr');
 
             row.innerHTML = `
-                <td>${title}</td>
+                <td><a href="${pageUrl}" target="_blank">${title}</a></td>
                 <td>${info.hits}</td>
                 <td>${(info.hits / monthsDiff).toFixed(2)}</td>
                 <td></td>
