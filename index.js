@@ -428,12 +428,8 @@ app.get('/pageview-analysis', async (req, res) => {
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth() + 1;
-
-        const months = [];
-        for (let m = 1; m <= 12; m++) {
-            months.push(m);
-        }
-
+        const [monthResults] = await pool.query('SELECT DISTINCT month FROM website_url_stats ORDER BY month');
+        const months = monthResults.map(row => row.month);
         const [yearResults] = await pool.query('SELECT DISTINCT year FROM website_url_stats ORDER BY year');
         const years = yearResults.map(row => row.year);
 
