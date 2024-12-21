@@ -1,3 +1,47 @@
+// Function to update the URL with current selections
+const updateURL = () => {
+    const params = new URLSearchParams({
+        website_id: websiteSelect.value,
+        titles: JSON.stringify(selectedTitles),
+        from_year: fromYearSelect.value,
+        from_month: fromMonthSelect.value,
+        to_year: toYearSelect.value,
+        to_month: toMonthSelect.value
+    });
+    window.history.pushState({}, '', `${location.pathname}?${params}`);
+};
+
+// Call updateURL whenever selections change
+websiteSelect.addEventListener('change', updateURL);
+titleInput.addEventListener('blur', updateURL);
+[fromMonthSelect, fromYearSelect, toMonthSelect, toYearSelect].forEach(select => {
+    select.addEventListener('change', updateURL);
+});
+
+// Function to apply state from URL parameters on page load
+const applyStateFromURL = () => {
+    const params = new URLSearchParams(window.location.search);
+    const websiteId = params.get('website_id');
+    const titles = JSON.parse(params.get('titles') || '[]');
+    const fromYear = params.get('from_year');
+    const fromMonth = params.get('from_month');
+    const toYear = params.get('to_year');
+    const toMonth = params.get('to_month');
+
+    if (websiteId) websiteSelect.value = websiteId;
+    if (titles.length) selectedTitles = titles;
+    if (fromYear) fromYearSelect.value = fromYear;
+    if (fromMonth) fromMonthSelect.value = fromMonth;
+    if (toYear) toYearSelect.value = toYear;
+    if (toMonth) toMonthSelect.value = toMonth;
+
+    displaySelectedTitles();
+    renderChart();
+};
+
+// Apply state on page load
+document.addEventListener('DOMContentLoaded', applyStateFromURL);
+
 /* Main pageview analysis tool function */
 document.addEventListener('DOMContentLoaded', () => {
     const websiteSelect = document.getElementById('website-select');
