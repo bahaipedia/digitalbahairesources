@@ -478,30 +478,36 @@ app.get('/api/search-titles', async (req, res) => {
 // API route to fetch hits data for selected titles over the past 12 months
 app.get('/api/pageview-data', async (req, res) => {
     const { website_id, titles, from_year, from_month, to_year, to_month } = req.query;
-    const titlesArray = titles.split(',');
-
+    
     try {
+        // Parse the JSON string back into an array
+        const titlesArray = JSON.parse(titles);
+        
         // Calculate date boundaries
         const fromDate = `${from_year}${from_month.padStart(2, '0')}`;
         const toDate = `${to_year}${to_month.padStart(2, '0')}`;
-
+        
+        // Create placeholders for the IN clause
+        const placeholders = titlesArray.map(() => '?').join(',');
+        
         const [results] = await pool.query(`
             SELECT wu.url, wus.year, wus.month, SUM(wus.hits) as hits
             FROM website_url_stats wus
             JOIN website_url wu ON wus.website_url_id = wu.id
-            WHERE wu.website_id = ? AND wu.url IN (?)
-                AND CONCAT(wus.year, LPAD(wus.month, 2, '0')) BETWEEN ? AND ?
+            WHERE wu.website_id = ? 
+            AND wu.url IN (${placeholders})
+            AND CONCAT(wus.year, LPAD(wus.month, 2, '0')) BETWEEN ? AND ?
             GROUP BY wu.url, wus.year, wus.month
             ORDER BY wu.url, wus.year, wus.month
-        `, [website_id, titlesArray, fromDate, toDate]);
+        `, [website_id, ...titlesArray, fromDate, toDate]);
 
-       results.forEach(row => {
+        results.forEach(row => {
             row.hits = Number(row.hits);
         });
-
+        
         res.json(results);
     } catch (err) {
-        console.error(err);
+        console.error('Error in /api/pageview-data:', err);
         res.status(500).json({ error: 'Error fetching hits data.' });
     }
 });
