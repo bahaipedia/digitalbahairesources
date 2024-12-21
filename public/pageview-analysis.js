@@ -42,51 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.history.pushState({}, '', `${location.pathname}?${params}`);
     };
 
-    const applyStateFromURL = () => {
-        const params = new URLSearchParams(window.location.search);
-        const websiteId = params.get('website_id');
-        const titles = JSON.parse(params.get('titles') || '[]');
-        const fromYear = params.get('from_year');
-        const fromMonth = params.get('from_month');
-        const toYear = params.get('to_year');
-        const toMonth = params.get('to_month');
-
-        if (websiteId) websiteSelect.value = websiteId;
-        if (titles.length) selectedTitles = titles;
-        if (fromYear) fromYearSelect.value = fromYear;
-        if (fromMonth) fromMonthSelect.value = fromMonth;
-        if (toYear) toYearSelect.value = toYear;
-        if (toMonth) toMonthSelect.value = toMonth;
-
-        displaySelectedTitles();
-        renderChart();
-    };
-
-    // Apply state on page load
-    applyStateFromURL();
-
-    // Fetch and render default data when the page loads
-    const fetchAndRenderDefaultData = async () => {
-        if (selectedTitles.length === 0) {
-            const defaultWebsiteId = 'bahaipedia.org';
-            const defaultTitles = ['Nine Year Plan (2022-2031)']; 
-            const currentYear = new Date().getFullYear();
-            const currentMonth = new Date().getMonth() + 1;
-
-            // Set default date range to the last 12 months
-            fromYearSelect.value = currentYear - 1;
-            fromMonthSelect.value = currentMonth;
-            toYearSelect.value = currentYear;
-            toMonthSelect.value = currentMonth;
-
-            // Set default website and titles
-            selectedTitles = defaultTitles;
-            displaySelectedTitles(); // Show selected titles
-            await renderChart();
-        }
-    };
-
-
     // Function to fetch autocomplete suggestions
     const fetchAutocomplete = async (term) => {
         const params = new URLSearchParams({
@@ -204,6 +159,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update the details table
         updateDetailsTable(data, monthsDiff);
+    };
+
+    const applyStateFromURL = () => {
+        const params = new URLSearchParams(window.location.search);
+        const websiteId = params.get('website_id');
+        const titles = JSON.parse(params.get('titles') || '[]');
+        const fromYear = params.get('from_year');
+        const fromMonth = params.get('from_month');
+        const toYear = params.get('to_year');
+        const toMonth = params.get('to_month');
+
+        if (websiteId) websiteSelect.value = websiteId;
+        if (titles.length) selectedTitles = titles;
+        if (fromYear) fromYearSelect.value = fromYear;
+        if (fromMonth) fromMonthSelect.value = fromMonth;
+        if (toYear) toYearSelect.value = toYear;
+        if (toMonth) toMonthSelect.value = toMonth;
+
+        displaySelectedTitles();
+        renderChart();
+    };
+
+    // Apply state on page load
+    applyStateFromURL();
+
+    // Fetch and render default data when the page loads
+    const fetchAndRenderDefaultData = async () => {
+        if (selectedTitles.length === 0) {
+            const defaultWebsiteId = 'bahaipedia.org';
+            const defaultTitles = ['Nine Year Plan (2022-2031)']; 
+            const currentYear = new Date().getFullYear();
+            const currentMonth = new Date().getMonth() + 1;
+
+            // Set default date range to the last 12 months
+            fromYearSelect.value = currentYear - 1;
+            fromMonthSelect.value = currentMonth;
+            toYearSelect.value = currentYear;
+            toMonthSelect.value = currentMonth;
+
+            // Set default website and titles
+            selectedTitles = defaultTitles;
+            displaySelectedTitles(); // Show selected titles
+            await renderChart();
+        }
     };
 
     // Function to update the details table based on the data
