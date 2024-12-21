@@ -1,0 +1,59 @@
+/* Project Tables */
+.project-table {
+    margin: 1rem 0 2rem 0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.table-header {
+    display: grid;
+    background-color: #f3f4f6;
+    padding: 0.75rem;
+    font-weight: 600;
+}
+
+.table-row {
+    display: grid;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-top: none;
+}
+
+/* Current Activity table */
+.project-table:first-of-type .table-header,
+.project-table:first-of-type .table-row {
+    grid-template-columns: 200px 1fr;
+    gap: 1rem;
+}
+
+/* Completed Projects table */
+.project-table:last-of-type .table-header,
+.project-table:last-of-type .table-row {
+    grid-template-columns: 200px 1fr 150px;
+    gap: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .table-header {
+        display: none;  /* Hide headers on mobile */
+    }
+    
+    .table-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .table-row > div {
+        padding: 0.25rem 0;
+    }
+    
+    .col-project {
+        font-weight: 600;
+    }
+    
+    .col-date {
+        color: #666;
+    }
+}
