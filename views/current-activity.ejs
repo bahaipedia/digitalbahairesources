@@ -3,15 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Projects</title>
+    <title>Current Activity</title>
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/current-activity.css">
 </head>
 <body>
     <%- include('partials/header', { mini: false }) %>
     <main>
         <section class="content-area">
-            <h1>Current Activity</h1>
-            <p>Details and descriptions of various projects undertaken by the organization.</p>
+                <h1>Current Activity</h1>
+                <div class="project-table">
+                        <div class="table-header">
+                                <div class="col-project">Project</div>
+                                <div class="col-details">Description</div>
+                        </div>
+                        <div class="table-row">
+                                <div class="col-project">Bahai.media</div>
+                                <div class="col-details">Uploading and categorizing images found in The Bahá’í World volumes.</div>
+                        </div>
+                </div>
+
+                <h1>Completed Projects</h1>
+                <div class="project-table">
+                        <div class="table-header">
+                                <div class="col-project">Project</div>
+                                <div class="col-details">Description</div>
+                                <div class="col-date">Date</div>
+                        </div>
+                        <div class="table-row">
+                                <div class="col-project">Bahai.works</div>
+                                <div class="col-details">Proofreading of Bahá’í News, some related tasks are still outstanding.</div>
+                                <div class="col-date">28 June 2024</div>
+                        </div>
+                </div>
         </section>
     </main>
     <%- include('partials/footer') %>
