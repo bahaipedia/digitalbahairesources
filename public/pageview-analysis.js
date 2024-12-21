@@ -248,6 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedTitles.push(title);
             displaySelectedTitles();
             renderChart();
+            updateURL();
         }
     };
 
@@ -256,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedTitles = selectedTitles.filter(t => t !== title);
         displaySelectedTitles();
         renderChart();
+        updateURL();
     };
 
     // Handle autocomplete for title input
