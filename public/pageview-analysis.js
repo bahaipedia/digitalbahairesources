@@ -62,24 +62,30 @@ document.addEventListener('DOMContentLoaded', () => {
         renderChart();
     };
 
+    // Apply state on page load
+    applyStateFromURL();
+
     // Fetch and render default data when the page loads
     const fetchAndRenderDefaultData = async () => {
-        const defaultWebsiteId = 'bahaipedia.org';
-        const defaultTitles = ['Nine Year Plan (2022-2031)']; 
-        const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth() + 1;
+        if (selectedTitles.length === 0) {
+            const defaultWebsiteId = 'bahaipedia.org';
+            const defaultTitles = ['Nine Year Plan (2022-2031)']; 
+            const currentYear = new Date().getFullYear();
+            const currentMonth = new Date().getMonth() + 1;
 
-        // Set default date range to the last 12 months
-        fromYearSelect.value = currentYear - 1;
-        fromMonthSelect.value = currentMonth;
-        toYearSelect.value = currentYear;
-        toMonthSelect.value = currentMonth;
+            // Set default date range to the last 12 months
+            fromYearSelect.value = currentYear - 1;
+            fromMonthSelect.value = currentMonth;
+            toYearSelect.value = currentYear;
+            toMonthSelect.value = currentMonth;
 
-        // Set default website and titles
-        selectedTitles = defaultTitles;
-        displaySelectedTitles(); // Show selected titles
-        await renderChart();
+            // Set default website and titles
+            selectedTitles = defaultTitles;
+            displaySelectedTitles(); // Show selected titles
+            await renderChart();
+        }
     };
+
 
     // Function to fetch autocomplete suggestions
     const fetchAutocomplete = async (term) => {
@@ -321,9 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
     [fromMonthSelect, fromYearSelect, toMonthSelect, toYearSelect].forEach(select => {
         select.addEventListener('change', updateURL);
     });
-
-    // Apply state on page load
-    applyStateFromURL();
 
     // Initialize the chart with default data
     fetchAndRenderDefaultData();
