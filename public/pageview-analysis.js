@@ -14,6 +14,23 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedTitles = [];
     let chart;
 
+    // Function definitions
+    const displaySelectedTitles = () => {
+        selectedTitlesContainer.innerHTML = ''; // Clear previous entries
+
+        selectedTitles.forEach(title => {
+            const titleItem = document.createElement('div');
+            titleItem.textContent = title;
+
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.addEventListener('click', () => removeTitle(title));
+
+            titleItem.appendChild(removeButton);
+            selectedTitlesContainer.appendChild(titleItem);
+        });
+    };
+
     const updateURL = () => {
         const params = new URLSearchParams({
             website_id: websiteSelect.value,
@@ -45,16 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
         displaySelectedTitles();
         renderChart();
     };
-
-    // Event listeners
-    websiteSelect.addEventListener('change', updateURL);
-    titleInput.addEventListener('blur', updateURL);
-    [fromMonthSelect, fromYearSelect, toMonthSelect, toYearSelect].forEach(select => {
-        select.addEventListener('change', updateURL);
-    });
-
-    // Apply state on page load
-    applyStateFromURL();
     
     // Fetch and render default data when the page loads
     const fetchAndRenderDefaultData = async () => {
@@ -323,6 +330,16 @@ document.addEventListener('DOMContentLoaded', () => {
             renderChart();
         });
     });
+
+    // Event listeners
+    websiteSelect.addEventListener('change', updateURL);
+    titleInput.addEventListener('blur', updateURL);
+    [fromMonthSelect, fromYearSelect, toMonthSelect, toYearSelect].forEach(select => {
+        select.addEventListener('change', updateURL);
+    });
+
+    // Apply state on page load
+    applyStateFromURL();
 
     // Initialize the chart with default data
     fetchAndRenderDefaultData();
