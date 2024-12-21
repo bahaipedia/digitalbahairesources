@@ -1,10 +1,9 @@
-/* Main pageview analysis tool function */
 document.addEventListener('DOMContentLoaded', () => {
     const websiteSelect = document.getElementById('website-select');
     const titleInput = document.getElementById('title-input');
     const autocompleteList = document.getElementById('autocomplete-list');
     const chartCanvas = document.getElementById('pageview-chart');
-    const selectedTitlesContainer = document.getElementById('selected-titles-container'); // New container for displaying selected titles
+    const selectedTitlesContainer = document.getElementById('selected-titles-container');
 
     const fromMonthSelect = document.getElementById('from-month-select');
     const fromYearSelect = document.getElementById('from-year-select');
@@ -14,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedTitles = [];
     let chart;
 
-    // Function definitions
+    // Display selected titles with remove buttons
     const displaySelectedTitles = () => {
         selectedTitlesContainer.innerHTML = ''; // Clear previous entries
 
@@ -62,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         displaySelectedTitles();
         renderChart();
     };
-    
+
     // Fetch and render default data when the page loads
     const fetchAndRenderDefaultData = async () => {
         const defaultWebsiteId = 'bahaipedia.org';
@@ -243,23 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return colors[index % colors.length];
     };
 
-    // Display selected titles with remove buttons
-    const displaySelectedTitles = () => {
-        selectedTitlesContainer.innerHTML = ''; // Clear previous entries
-
-        selectedTitles.forEach(title => {
-            const titleItem = document.createElement('div');
-            titleItem.textContent = title;
-
-            const removeButton = document.createElement('button');
-            removeButton.textContent = 'Remove';
-            removeButton.addEventListener('click', () => removeTitle(title));
-
-            titleItem.appendChild(removeButton);
-            selectedTitlesContainer.appendChild(titleItem);
-        });
-    };
-
     // Add title to the selected list and update chart
     const addTitle = (title) => {
         if (!selectedTitles.includes(title)) {
@@ -321,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.querySelector('#details-table tbody');
         if (tbody) {
             tbody.innerHTML = '';
-        }   
+        }
     });
 
     // Handle date range selection
@@ -331,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Event listeners
+    // Event listeners for URL update
     websiteSelect.addEventListener('change', updateURL);
     titleInput.addEventListener('blur', updateURL);
     [fromMonthSelect, fromYearSelect, toMonthSelect, toYearSelect].forEach(select => {
