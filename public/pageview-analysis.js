@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const params = new URLSearchParams({
             website_id: websiteSelect.value,
-            titles: selectedTitles.join(','),
+            titles: JSON.stringify(selectedTitles),
             from_year: fromYearSelect.value,
             from_month: fromMonthSelect.value,
             to_year: toYearSelect.value,
