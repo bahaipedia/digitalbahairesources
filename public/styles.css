@@ -131,13 +131,6 @@ header {
     background-color: rgba(66, 153, 225, 0.12);
     transform: translateX(2px);
 }
-/* Optional: Add a subtle indicator for active state */
-.stats-sidebar-menu li a.active {
-    background-color: rgba(66, 153, 225, 0.12);
-    color: #4299e1;
-    font-weight: 600;
-}
-/* Optional: Add hover effect */
 .stats-sidebar-menu li a::before {
     content: '';
     position: absolute;
