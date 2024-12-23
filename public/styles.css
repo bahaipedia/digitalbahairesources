@@ -54,7 +54,7 @@ header {
     transition: color 0.3s ease;
 }
 .logo-text span {
-    color: #333; /* Contrast for 'Bahá’í Resources' */
+    color: #333; 
     font-weight: normal;
 }
 .logo-text a:hover {
@@ -118,7 +118,6 @@ header {
     display: flex;
     align-items: center;
     border-radius: 8px;
-    transition: all 0.2s ease-in-out;
     position: relative;
     overflow: hidden;
 }
