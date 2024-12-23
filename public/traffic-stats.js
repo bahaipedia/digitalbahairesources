@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${Number(data.total_visits)?.toLocaleString() || 0}</td>
                         <td>${Number(data.total_pages)?.toLocaleString() || 0}</td>
                         <td>${Number(data.total_hits)?.toLocaleString() || 0}</td>
-                        <td>${(Number(data.total_bandwidth) / 1024 / 1024).toFixed(2).toLocaleString()} MB</td>
+                        <td>${(Number(data.total_bandwidth) / 1024 / 1024 / 1024).toFixed(2).toLocaleString()} GB</td>
                     </tr>
                 `;
             } else {
