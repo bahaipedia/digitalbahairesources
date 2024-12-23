@@ -111,9 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const monthlyAverage = totalHits / monthsDiff;
 
         // Update the "Data" table
-        document.getElementById('total-pageviews').textContent = totalHits;
-        document.getElementById('monthly-average').textContent = monthlyAverage.toFixed(2);
-
+        document.getElementById('total-pageviews').textContent = totalHits.toLocaleString();
+        document.getElementById('monthly-average').textContent = monthlyAverage.toFixed(2).toLocaleString();
+        
         // Destroy existing chart if it exists
         if (chart) chart.destroy();
 
@@ -286,12 +286,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             row.innerHTML = `
                 <td><a href="https://${domain}/${domain === 'bahai9.com' ? 'wiki/' : ''}${formattedTitle}" target="_blank">${title}</a></td>
-                <td>${info.hits}</td>
-                <td>${(info.hits / monthsDiff).toFixed(2)}</td>
+                <td>${info.hits.toLocaleString()}</td>
+                <td>${(info.hits / monthsDiff).toFixed(2).toLocaleString()}</td>
                 <td>${pageData.edits}</td>
                 <td>${pageData.editors}</td>
                 <td>${(pageData.size / 1024).toFixed(2).toLocaleString()} KB</td>
-                <td></td>
             `;
             tbody.appendChild(row);
         });
