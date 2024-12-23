@@ -81,7 +81,7 @@ header {
     border-radius: 3px;
 }
 .header-nav-bar a:hover {
-    background-color: #005bb5; /* Subtle highlight effect */
+    background-color: #005bb5;
     color: white;
 }
 .header-nav-bar .active {
@@ -92,7 +92,7 @@ header {
 
 /* Sidebar */
 .stats-sidebar {
-    background: linear-gradient(145deg, #ffffff, #f5f7fa);
+    background: linear-gradient(145deg, #fcfcfc, #f7f7f7);
     padding: 1rem;
     margin-top: 16px;
     box-shadow: 
