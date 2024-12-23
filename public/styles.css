@@ -92,9 +92,8 @@ header {
 
 /* Sidebar */
 .stats-sidebar {
-    width: 240px;
     background: linear-gradient(145deg, #ffffff, #f5f7fa);
-    padding: 1.5rem;
+    padding: 1rem;
     margin-top: 16px;
     box-shadow: 
         0 4px 20px rgba(0, 0, 0, 0.08),
@@ -115,7 +114,7 @@ header {
     text-decoration: none;
     color: #2d3748;
     font-weight: 500;
-    padding: 12px 16px;
+    padding: 8px 10px;
     display: flex;
     align-items: center;
     border-radius: 8px;
