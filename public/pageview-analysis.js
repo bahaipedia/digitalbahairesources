@@ -205,6 +205,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const fetchAdditionalPageData = async (titles) => {
+        const domain = websiteSelect.options[websiteSelect.selectedIndex].text;
+        const apiUrl = `https://${domain}/api.php`;
+
+        const resultData = {};
+
+        for (const title of titles) {
+            const params = new URLSearchParams({
+                action: 'query',
+                format: 'json',
+                titles: title,
+                prop: 'info|revisions',
+                rvprop: 'user',
+                rvlimit: 'max',
+                origin: '*'
+            });
+
+            const url = `${apiUrl}?${params.toString()}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                for (const pageId in data.query.pages) {
+                    const page = data.query.pages[pageId];
+                    const pageTitle = page.title;
+
+                    // Handle revisions and editors
+                    const revisions = page.revisions || [];
+                    const edits = revisions.length;
+                    const editorsSet = new Set(revisions.map(rev => rev.user));
+                    const editors = editorsSet.size;
+
+                    // Handle page size
+                    const size = page.length || 0;
+
+                    resultData[pageTitle] = {
+                        edits,
+                        editors,
+                        size
+                    };
+                }
+            } catch (error) {
+                console.error(`Failed to fetch data for title: ${title}`, error);
+            }
+        }
+
+        return resultData;
+    };
+
     // Function to update the details table based on the data
     const updateDetailsTable = (data, monthsDiff) => {
         const tbody = document.querySelector('#details-table tbody');
@@ -216,14 +266,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!titlesData[d.url]) {
                 titlesData[d.url] = {
                     hits: 0
-                    // Placeholder for future data: edits, editors, size, links
                 };
             }
             titlesData[d.url].hits += d.hits;
         });
 
-        Object.keys(titlesData).forEach(title => {
+        const titles = Object.keys(titlesData);
+
+        // Fetch additional data for the titles
+        const additionalData = await fetchAdditionalPageData(titles);
+
+        titles.forEach(title => {
             const info = titlesData[title];
+            const pageData = additionalData[title] || { edits: 0, editors: 0, size: 0 };
+
             const row = document.createElement('tr');
             const domain = websiteSelect.options[websiteSelect.selectedIndex].text;
             const formattedTitle = encodeURIComponent(title).replace(/%20/g, '_');
@@ -232,9 +288,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><a href="https://${domain}/${domain === 'bahai9.com' ? 'wiki/' : ''}${formattedTitle}" target="_blank">${title}</a></td>
                 <td>${info.hits}</td>
                 <td>${(info.hits / monthsDiff).toFixed(2)}</td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td>${pageData.edits}</td>
+                <td>${pageData.editors}</td>
+                <td>${pageData.size}</td>
                 <td></td>
             `;
             tbody.appendChild(row);
