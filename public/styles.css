@@ -92,17 +92,16 @@ header {
 
 /* Sidebar */
 .stats-sidebar {
-    width: 220px; /* Slightly wider for better space */
-    background: linear-gradient(135deg, #f0f4f8, #d9e2ec); /* Modern gradient background */
-    padding: 1rem;
+    width: 240px;
+    background: linear-gradient(145deg, #ffffff, #f5f7fa);
+    padding: 1.5rem;
     margin-top: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Softer shadow for depth */
-    border-radius: 12px; /* More rounded corners */
-    font-size: 1.2rem;
-    transition: transform 0.3s ease; /* Smooth transition for hover */
-}
-.stats-sidebar:hover {
-    transform: translateY(-5px); /* Slight lift on hover */
+    box-shadow: 
+        0 4px 20px rgba(0, 0, 0, 0.08),
+        inset 1px 1px 0 rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    font-size: 1.1rem;
 }
 .stats-sidebar-menu {
     list-style-type: none;
@@ -110,20 +109,50 @@ header {
     margin: 0;
 }
 .stats-sidebar-menu li {
-    margin: 0.75rem 0;
+    margin: 0.5rem 0;
 }
 .stats-sidebar-menu li a {
     text-decoration: none;
-    color: #333;
-    font-weight: bold;
-    padding: 10px 15px;
-    display: block;
-    border-radius: 8px; /* More rounded for buttons */
-    transition: background-color 0.3s ease, color 0.3s ease;
+    color: #2d3748;
+    font-weight: 500;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    overflow: hidden;
 }
 .stats-sidebar-menu li a:hover {
-    background-color: #2d9cdb; /* Highlight color on hover */
-    color: #fff; /* White text on hover for contrast */
+    background-color: rgba(66, 153, 225, 0.08);
+    color: #4299e1;
+    transform: translateX(4px);
+}
+.stats-sidebar-menu li a:active {
+    background-color: rgba(66, 153, 225, 0.12);
+    transform: translateX(2px);
+}
+/* Optional: Add a subtle indicator for active state */
+.stats-sidebar-menu li a.active {
+    background-color: rgba(66, 153, 225, 0.12);
+    color: #4299e1;
+    font-weight: 600;
+}
+/* Optional: Add hover effect */
+.stats-sidebar-menu li a::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background-color: #4299e1;
+    transform: scaleY(0);
+    transition: transform 0.2s ease-in-out;
+    border-radius: 0 2px 2px 0;
+}
+.stats-sidebar-menu li a:hover::before {
+    transform: scaleY(1);
 }
 
 /* Project styling */
