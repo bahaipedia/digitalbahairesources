@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${(info.hits / monthsDiff).toFixed(2)}</td>
                 <td>${pageData.edits}</td>
                 <td>${pageData.editors}</td>
-                <td>${pageData.size}</td>
+                <td>${(pageData.size / 1024).toFixed(2).toLocaleString()} KB</td>
                 <td></td>
             `;
             tbody.appendChild(row);
