@@ -256,9 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Function to update the details table based on the data
-    const updateDetailsTable = (data, monthsDiff) => {
+    const updateDetailsTable = async (data, monthsDiff) => {
         const tbody = document.querySelector('#details-table tbody');
-        tbody.innerHTML = ''; // Clear the table
+        tbody.innerHTML = ''; 
 
         const titlesData = {};
 
