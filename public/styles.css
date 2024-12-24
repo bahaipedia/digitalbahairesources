@@ -165,6 +165,12 @@ header {
     font-size: 0.9rem;
     margin: 0;
 }
+.project-logo {
+    display: block;
+    margin: 0 auto 10px;
+    max-width: 100px;
+    height: auto;
+}
 
 /* Main Content Area */
 .content-area {
