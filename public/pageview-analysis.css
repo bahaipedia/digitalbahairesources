@@ -72,6 +72,7 @@ canvas {
 }
 .chart-container {
     flex: 3;
+    min-height: 400px;
 }
 
 /* Data tables styling */
