@@ -81,14 +81,19 @@ app.get('/traffic-stats', async (req, res) => {
         const [monthResults] = await pool.query('SELECT DISTINCT month FROM summary ORDER BY month');
         const months = monthResults.map(row => row.month);
 
+        // Get the current year and month
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1
+        
         // Render the stats page
         res.render('traffic-stats', {
             websites: websites,
             servers: transformedServers,
             years: years,
             months: months,
-            selectedYear: 2025,   // Preselected value
-            selectedMonth: 1     // Preselected value
+            selectedYear: currentYear,
+            selectedMonth: currentMonth
         });
     } catch (err) {
         console.error(err);
