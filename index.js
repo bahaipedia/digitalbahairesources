@@ -87,8 +87,8 @@ app.get('/traffic-stats', async (req, res) => {
             servers: transformedServers,
             years: years,
             months: months,
-            selectedYear: 2024,   // Preselected value
-            selectedMonth: 12     // Preselected value
+            selectedYear: 2025,   // Preselected value
+            selectedMonth: 1     // Preselected value
         });
     } catch (err) {
         console.error(err);
