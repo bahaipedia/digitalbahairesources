@@ -345,14 +345,19 @@ app.get('/traffic-stats/urls', async (req, res) => {
         const [monthResults] = await pool.query('SELECT DISTINCT month FROM website_url_stats ORDER BY month');
         const months = monthResults.map(row => row.month);
 
+        // Get the current year and month
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+
         // Render the initial page
         res.render('traffic-stats-urls', {
             websites,
             servers: transformedServers,
             years,
             months,
-            selectedYear: 2024,
-            selectedMonth: 11
+            selectedYear: currentYear,
+            selectedMonth: currentMonth
         });
     } catch (err) {
         console.error(err);
