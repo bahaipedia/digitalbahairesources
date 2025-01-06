@@ -3,6 +3,8 @@ const path = require('path');
 const mysql = require('mysql2/promise');
 const winston = require('winston');
 const dotenv = require('dotenv');
+const crypto = require('crypto');
+const { exec } = require('child_process');
 
 dotenv.config();
 
@@ -41,6 +43,35 @@ app.get('/', (req, res) => res.render('index'));
 app.get('/about', (req, res) => res.render('about'));
 app.get('/current-activity', (req, res) => res.render('current-activity'));
 app.get('/contact', (req, res) => res.render('contact'));
+
+// Webhook Route
+app.post('/webhook', express.json(), (req, res) => {
+    const signature = `sha256=${crypto
+        .createHmac('sha256', process.env.WEBHOOK_SECRET)
+        .update(JSON.stringify(req.body))
+        .digest('hex')}`;
+
+    if (req.headers['x-hub-signature-256'] !== signature) {
+        return res.status(401).send('Invalid signature');
+    }
+
+    const { ref } = req.body;
+    if (ref === 'refs/heads/main') {
+        exec('git pull', { cwd: path.join(__dirname) }, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error: ${error.message}`);
+                return res.status(500).send('Error updating documentation');
+            }
+            if (stderr) {
+                console.error(`Stderr: ${stderr}`);
+            }
+            console.log(`Stdout: ${stdout}`);
+            return res.status(200).send('Documentation updated successfully');
+        });
+    } else {
+        res.status(200).send('No updates for this branch');
+    }
+});
 
 // Route to create the traffic stats page
 app.get('/traffic-stats', async (req, res) => {
