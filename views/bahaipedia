@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="images/dbs-favicon.png" type="image/png">
+</head>
+<body>
+    <%- include('partials/header', { mini: false }) %>
+    <main>
+        <section class="content-area">
+            <h1>About Bahaipedia</h1>
+            
+            <h2>Justification</h2>
+            <p>Bahaipedia.org hosts encyclopedia-style content about the Bahá’í Faith, its history, teachings, and communities. Its value lies in the relatively low barrier to entry and low costs associated with hosting this type of content. No administrative action is needed before someone can add or edit an article or correct mistakes in an existing article. Edits must be reviewed, but this requires little to no effort depending on the reputation of the contributor.</p>
+            
+            <h2>Scope & Content</h2>
+            <ul>
+                <li>Established in 2007, Bahaipedia has grown to 19,382 pages with over 153,472 edits contributed by a dedicated community.</li>
+                <li>Covers a wide range of topics, including historical figures, texts, events, principles, and global Bahá’í communities.</li>
+                <li>Built on MediaWiki, ensuring a familiar and structured approach to content creation and long-term sustainability.</li>
+            </ul>
+            
+            <h2>Reach & Audience</h2>
+            <ul>
+                <li>Serves researchers, students, Bahá’í community members, and the general public seeking accurate and well-organized information.</li>
+                <li>Global reach, with servers in Virginia (USA), Singapore, São Paulo, and Frankfurt for optimized access.</li>
+                <li>Provides a neutral, non-official alternative to institutional Bahá’í websites, allowing for independent historical and scholarly perspectives.</li>
+            </ul>
+            
+            <h2>Impact & Value</h2>
+            <ul>
+                <li>Acts as a preservation tool for historical and contemporary Bahá’í knowledge.</li>
+                <li>Encourages open contribution, making it a living, evolving resource for future generations.</li>
+                <li>Bridges the gap between casual learners and in-depth research, with references to source documents for deeper study.</li>
+            </ul>
+            
+            <h2>Sustainability & Future Potential</h2>
+            <ul>
+                <li>Minimal hosting costs, leveraging MediaWiki’s efficient infrastructure.</li>
+                <li>Community-driven contributions ensure continuous growth and accuracy.</li>
+                <li>Potential for expansion through collaborations with scholars, institutions, and digital archives.</li>
+            </ul>
+            
+            <h2>Conclusion...</h2>
+        </section>
+    </main>
+    <%- include('partials/footer') %>
+</body>
+</html>
