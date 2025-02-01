@@ -43,6 +43,14 @@ app.get('/', (req, res) => res.render('index'));
 app.get('/about', (req, res) => res.render('about'));
 app.get('/current-activity', (req, res) => res.render('current-activity'));
 app.get('/contact', (req, res) => res.render('contact'));
+app.get('/bahaipedia', (req, res) => res.render('bahaipedia'));
+app.get('/bahaiworks', (req, res) => res.render('bahaiworks'));
+app.get('/bahaimedia', (req, res) => res.render('bahaimedia'));
+app.get('/bahai9', (req, res) => res.render('bahai9'));
+app.get('/bahaidata', (req, res) => res.render('bahaidata'));
+app.get('/bahaiquest', (req, res) => res.render('bahaiquest'));
+app.get('/huququlator', (req, res) => res.render('huququlator'));
+app.get('/rbahai', (req, res) => res.render('r-bahai'));
 
 // Webhook Route
 app.post('/webhook', express.json(), (req, res) => {
