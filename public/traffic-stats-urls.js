@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <tr>
                                 <td class="rank-data">${rank}</td>
                                 <td>${row.website_name}</td>
-                                <td><a href="https://${row.website_name}/${websiteName === 'bahai9.com' ? 'wiki/' : ''}${row.url}" target="_blank">${formattedUrl}</a></td>
+                                <td><a href="https://${websiteName}/${websiteName === 'bahai9.com' ? 'wiki/' : ''}${row.url}" target="_blank">${formattedUrl}</a></td>
                                 <td class="hits-data">${Number(row.total_hits)?.toLocaleString() || 0}</td>
                             </tr>
                         `;
