@@ -31,12 +31,12 @@
             <h3>How We Handle Traffic</h3>
             <p>Our technology stack includes a robust series of systems designed to route and manage traffic:</p>
             <ul>
-                <li><strong>Nginx</strong>: Acts as the primary web server and reverse proxy, handling HTTPS (443) traffic and forwarding requests to Varnish or backend services.</li>
-                <li><strong>Varnish</strong>: Listens on port 80, caching HTTP responses and reducing load on backend servers for faster content delivery.</li>
-                <li><strong>Redis</strong>: A high-performance caching layer used for quick access to frequently requested data, such as user sessions or database query results.</li>
-                <li><strong>Elasticsearch</strong>: Powers fast, full-text search capabilities across our content, enabling users to find the information they need quickly.</li>
+                <li><strong>Nginx</strong>: Acts as the primary web server and reverse proxy, handling HTTPS traffic and forwarding requests to Varnish.</li>
+                <li><strong>Varnish</strong>: Caches and stores frequently accessed pages served to anonymous users, reducing load on the backend.</li>
+                <li><strong>Redis</strong>: A second caching layer, primarily for users who are logged in, storing details such as user sessions.</li>
+                <li><strong>Elasticsearch</strong>: Fast, full-text search capabilities across our content.</li>
                 <li><strong>CloudFront</strong>: Our CDN, which distributes and caches static assets (like images, videos, and documents) globally, reducing latency for users worldwide.</li>
-                <li><strong>AWS Lambda</strong>: Media file requests are processed by AWS Lambda, dynamically routing them to the closest geographic server for optimal performance.</li>
+                <li><strong>AWS Lambda</strong>: File <a href="https://github.com/bahaipedia/lambda-edge-detect-origin">cache misses</a> are dynamically routed to the closest geographic server. Lambda also helps <a href="https://github.com/bahaipedia/lambda-bahaimedia-distribute-s3">distribute files</a> after they are uploaded.</li>
                 <li><strong>Ansible and GitHub</strong>: Configuration files are centrally managed in GitHub, while Ansible automates server-specific changes before deploying updates across all regions.</li>
             </ul>
 
