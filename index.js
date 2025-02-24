@@ -51,6 +51,7 @@ app.get('/bahaidata', (req, res) => res.render('bahaidata'));
 app.get('/bahaiquest', (req, res) => res.render('bahaiquest'));
 app.get('/huququlator', (req, res) => res.render('huququlator'));
 app.get('/rbahai', (req, res) => res.render('r-bahai'));
+app.get('/technology', (req, res) => res.render('technology'));
 
 // Webhook Route
 app.post('/webhook', express.json(), (req, res) => {
