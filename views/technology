@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technology</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="images/dbs-favicon.png" type="image/png">
+</head>
+<body>
+    <%- include('partials/header', { mini: false }) %>
+    <main>
+        <section class="content-area">
+            <h1>Technology</h1>
+            <p>Bahaipedia.org leverages a robust and highly scalable infrastructure designed to ensure reliability, speed, and accessibility to our global audience. Below is an overview of the technology stack that powers our platform.</p>
+
+            <h2>Platform and Software</h2>
+            <p>Bahaipedia is built on the MediaWiki platform, the same software that powers Wikipedia. MediaWiki ensures a familiar and stable environment, supporting collaboration and future growth. This open-source software is highly customizable, allowing us to extend its functionality to better serve our mission.</p>
+            
+            <h2>Infrastructure and Hosting</h2>
+            <p>Our infrastructure is designed for speed and reliability, with servers strategically located across four global regions: Virginia (USA), Singapore, São Paulo (Brazil), and Frankfurt (Germany). This geographic distribution ensures fast and efficient access to content from anywhere in the world.</p>
+
+            <h3>File Hosting and Distribution</h3>
+            <p>Files uploaded to <a href="https://bahai.media" target="_blank">bahai.media</a> are replicated and stored in the following regions: Virginia (USA), Brazil, Singapore, and Germany. Each region serves as an origin server for CloudFront, our content delivery network (CDN). CloudFront caches and distributes the most commonly accessed files, drastically reducing download times, especially for large files.</p>
+            <p>Uploads are processed in the region closest to the user for efficiency, and the files are then replicated to other regions. This system ensures that users have quick access to the resources they need, no matter their location.</p>
+
+            <h2>Traffic Handling and Caching</h2>
+            <p>Our platform is built to handle a high volume of traffic efficiently and reliably. We employ a multi-layered caching strategy and utilize various technologies to ensure optimal performance.</p>
+
+            <!-- Placeholder section for Traffic Flow details -->
+            <h3>How We Handle Traffic</h3>
+            <p>Our technology stack includes a robust series of systems designed to route and manage traffic:</p>
+            <ul>
+                <li><strong>Nginx</strong>: Acts as the primary web server, handling incoming traffic and forwarding requests to the appropriate systems.</li>
+                <li><strong>Varnish</strong>: A reverse proxy that caches HTTP responses, reducing the load on backend servers and improving response times for frequently accessed content.</li>
+                <li><strong>Redis</strong>: A high-performance caching layer used for quick access to frequently requested data, such as user sessions or database query results.</li>
+                <li><strong>Elasticsearch</strong>: Powers fast, full-text search capabilities across our content, enabling users to find the information they need quickly.</li>
+                <li><strong>CloudFront</strong>: Our CDN, which distributes and caches static assets (like images, videos, and documents) globally, reducing latency for users worldwide.</li>
+                <li><strong>AWS Lambda</strong>: Handles request processing in a serverless environment, scaling dynamically based on demand and optimizing cost-efficiency.</li>
+            </ul>
+
+            <p>These technologies work together to ensure that traffic is efficiently managed, and our platform can scale as needed, even during peak usage times. Each component is optimized to handle specific types of requests and ensures a seamless user experience, regardless of location.</p>
+
+            <h2>Custom Extensions and Code</h2>
+            <p>We also develop custom extensions to enhance the functionality of our MediaWiki platform. These extensions help us provide a tailored experience for our users, improving both usability and performance.</p>
+            <p>For more technical details or to explore the custom code we use, visit our <a href="https://github.com/yourorganization" target="_blank">GitHub repository</a>.</p>
+        </section>
+    </main>
+    <%- include('partials/footer') %>
+</body>
+</html>
