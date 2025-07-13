@@ -205,85 +205,85 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-const fetchAdditionalPageData = async (titles) => {
-    const domain = websiteSelect.options[websiteSelect.selectedIndex].text;
-    const apiUrl = `https://${domain}/api.php`;
+    const fetchAdditionalPageData = async (titles) => {
+        const domain = websiteSelect.options[websiteSelect.selectedIndex].text;
+        const apiUrl = `https://${domain}/api.php`;
 
-    const resultData = {};
+        const resultData = {};
 
-    for (const title of titles) {
-        const params = new URLSearchParams({
-            action: 'query',
-            format: 'json',
-            titles: title,
-            prop: 'info|revisions',
-            inprop: 'length',
-            rvprop: 'user',
-            rvlimit: 'max',
-            origin: '*'
-        });
+        for (const title of titles) {
+            const params = new URLSearchParams({
+                action: 'query',
+                format: 'json',
+                titles: title,
+                prop: 'info|revisions',
+                inprop: 'length',
+                rvprop: 'user',
+                rvlimit: 'max',
+                origin: '*'
+            });
 
-        const url = `${apiUrl}?${params.toString()}`;
+            const url = `${apiUrl}?${params.toString()}`;
 
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
 
-            for (const pageId in data.query.pages) {
-                const page = data.query.pages[pageId];
-                // Normalize the page.title to match the format used in titlesData
-                const pageTitle = page.title.replace(/_/g, ' ');
+                for (const pageId in data.query.pages) {
+                    const page = data.query.pages[pageId];
+                    // Normalize the page.title to match the format used in titlesData
+                    const pageTitle = page.title.replace(/_/g, ' ');
 
-                // Handle revisions and editors
-                const revisions = page.revisions || [];
-                const edits = revisions.length;
-                const editorsSet = new Set(revisions.map(rev => rev.user));
-                const editors = editorsSet.size;
+                    // Handle revisions and editors
+                    const revisions = page.revisions || [];
+                    const edits = revisions.length;
+                    const editorsSet = new Set(revisions.map(rev => rev.user));
+                    const editors = editorsSet.size;
 
-                let size = 0;
+                    let size = 0;
 
-                if (page.ns === 6) {
-                    // Page is in the "File" namespace
-                    // Fetch imageinfo to get the file size
-                    const imageParams = new URLSearchParams({
-                        action: 'query',
-                        format: 'json',
-                        titles: page.title,
-                        prop: 'imageinfo',
-                        iiprop: 'size|dimensions|mime|url',
-                        origin: '*'
-                    });
+                    if (page.ns === 6) {
+                        // Page is in the "File" namespace
+                        // Fetch imageinfo to get the file size
+                        const imageParams = new URLSearchParams({
+                            action: 'query',
+                            format: 'json',
+                            titles: page.title,
+                            prop: 'imageinfo',
+                            iiprop: 'size|dimensions|mime|url',
+                            origin: '*'
+                        });
 
-                    const imageUrl = `${apiUrl}?${imageParams.toString()}`;
-                    try {
-                        const imageResponse = await fetch(imageUrl);
-                        const imageData = await imageResponse.json();
+                        const imageUrl = `${apiUrl}?${imageParams.toString()}`;
+                        try {
+                            const imageResponse = await fetch(imageUrl);
+                            const imageData = await imageResponse.json();
 
-                        const filePage = Object.values(imageData.query.pages)[0];
-                        const info = filePage.imageinfo?.[0];
-                        size = info?.size || 0;
-                    } catch (error) {
-                        console.error(`Failed to fetch imageinfo for title: ${page.title}`, error);
-                        size = 0;
+                            const filePage = Object.values(imageData.query.pages)[0];
+                            const info = filePage.imageinfo?.[0];
+                            size = info?.size || 0;
+                        } catch (error) {
+                            console.error(`Failed to fetch imageinfo for title: ${page.title}`, error);
+                            size = 0;
+                        }
+                    } else {
+                        // For regular pages, use page.length
+                        size = page.length || 0;
                     }
-                } else {
-                    // For regular pages, use page.length
-                    size = page.length || 0;
+
+                    resultData[pageTitle] = {
+                        edits,
+                        editors,
+                        size
+                    };
                 }
-
-                resultData[pageTitle] = {
-                    edits,
-                    editors,
-                    size
-                };
+            } catch (error) {
+                console.error(`Failed to fetch data for title: ${title}`, error);
             }
-        } catch (error) {
-            console.error(`Failed to fetch data for title: ${title}`, error);
         }
-    }
 
-    return resultData;
-};
+        return resultData;
+    };
 
     // Function to update the details table based on the data
 const updateDetailsTable = async (data, monthsDiff) => {
