@@ -238,8 +238,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     const editorsSet = new Set(revisions.map(rev => rev.user));
                     const editors = editorsSet.size;
 
-                    // Handle page size
-                    const size = page.length || 0;
+                    let size = page.length || 0;
+                    
+                    // For files (namespace 6), get the actual file size
+                    if (page.ns === 6) {
+                        const fileParams = new URLSearchParams({
+                            action: 'query',
+                            format: 'json',
+                            titles: page.title,
+                            prop: 'imageinfo',
+                            iiprop: 'size',
+                            origin: '*'
+                        });
+                        const fileUrl = `${apiUrl}?${fileParams.toString()}`;
+                        try {
+                            const fileResponse = await fetch(fileUrl);
+                            const fileData = await fileResponse.json();
+                            const filePage = Object.values(fileData.query.pages)[0];
+                            const fileInfo = filePage.imageinfo?.[0];
+                            if (fileInfo?.size) {
+                                size = fileInfo.size;
+                            }
+                        } catch (fileError) {
+                            console.warn(`Could not fetch file size for: ${page.title}`, fileError);
+                        }
+                    }
 
                     resultData[pageTitle] = {
                         edits,
