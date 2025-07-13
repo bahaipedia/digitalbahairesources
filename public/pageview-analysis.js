@@ -238,31 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const editorsSet = new Set(revisions.map(rev => rev.user));
                     const editors = editorsSet.size;
 
-                    let size = page.length || 0;
-                    
-                    // For files (namespace 6), get the actual file size
-                    if (page.ns === 6) {
-                        const fileParams = new URLSearchParams({
-                            action: 'query',
-                            format: 'json',
-                            titles: page.title,
-                            prop: 'imageinfo',
-                            iiprop: 'size',
-                            origin: '*'
-                        });
-                        const fileUrl = `${apiUrl}?${fileParams.toString()}`;
-                        try {
-                            const fileResponse = await fetch(fileUrl);
-                            const fileData = await fileResponse.json();
-                            const filePage = Object.values(fileData.query.pages).find(p => p.title === page.title);
-                            const fileInfo = filePage?.imageinfo?.[0];
-                            if (fileInfo?.size) {
-                                size = fileInfo.size;
-                            }
-                        } catch (fileError) {
-                            console.warn(`Could not fetch file size for: ${page.title}`, fileError);
-                        }
-                    }
+                    // Handle page size
+                    const size = page.length || 0;
 
                     resultData[pageTitle] = {
                         edits,
@@ -286,13 +263,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const titlesData = {};
 
         data.forEach(d => {
-            const pageTitle = d.url;
-            if (!titlesData[pageTitle]) {
-                titlesData[pageTitle] = {
+            if (!titlesData[d.url]) {
+                titlesData[d.url] = {
                     hits: 0
                 };
             }
-            titlesData[pageTitle].hits += d.hits;
+            titlesData[d.url].hits += d.hits;
         });
 
         const titles = Object.keys(titlesData);
