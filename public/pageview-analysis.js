@@ -286,12 +286,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const titlesData = {};
 
         data.forEach(d => {
-            if (!titlesData[d.url]) {
-                titlesData[d.url] = {
+            if (!titlesData[d.title]) {
+                titlesData[d.title] = {
                     hits: 0
                 };
             }
-            titlesData[d.url].hits += d.hits;
+            titlesData[d.title].hits += d.hits;
         });
 
         const titles = Object.keys(titlesData);
