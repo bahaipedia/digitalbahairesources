@@ -254,8 +254,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         try {
                             const fileResponse = await fetch(fileUrl);
                             const fileData = await fileResponse.json();
-                            const filePage = Object.values(fileData.query.pages)[0];
-                            const fileInfo = filePage.imageinfo?.[0];
+                            const filePage = Object.values(fileData.query.pages).find(p => p.title === page.title);
+                            const fileInfo = filePage?.imageinfo?.[0];
                             if (fileInfo?.size) {
                                 size = fileInfo.size;
                             }
