@@ -205,106 +205,102 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const fetchAdditionalPageData = async (titles) => {
-        const domain = websiteSelect.options[websiteSelect.selectedIndex].text;
-        const apiUrl = `https://${domain}/api.php`;
+const fetchAdditionalPageData = async (titles) => {
+    const domain = websiteSelect.options[websiteSelect.selectedIndex].text;
+    const apiUrl = `https://${domain}/api.php`;
 
-        const resultData = {};
-        const titleMap = {};
+    const resultData = {};
 
-        for (const title of titles) {
-            const params = new URLSearchParams({
-                action: 'query',
-                format: 'json',
-                titles: title,
-                prop: 'info|revisions',
-                rvprop: 'user',
-                rvlimit: 'max',
-                origin: '*'
-            });
+    for (const title of titles) {
+        const params = new URLSearchParams({
+            action: 'query',
+            format: 'json',
+            titles: title,
+            prop: 'info|revisions',
+            inprop: 'length',
+            rvprop: 'user',
+            rvlimit: 'max',
+            origin: '*'
+        });
 
-            const url = `${apiUrl}?${params.toString()}`;
+        const url = `${apiUrl}?${params.toString()}`;
 
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (data.query.normalized) {
-                    data.query.normalized.forEach(norm => {
-                        titleMap[norm.to] = norm.from;
-                    });
-                }
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
 
-                for (const pageId in data.query.pages) {
-                    const page = data.query.pages[pageId];
-                    const pageTitle = page.title;
+            for (const pageId in data.query.pages) {
+                const page = data.query.pages[pageId];
+                // Normalize the page.title to match the format used in titlesData
+                const pageTitle = page.title.replace(/_/g, ' ');
 
-                    // Get the original title
-                    const originalTitle = titleMap[pageTitle] || pageTitle;
+                // Handle revisions and editors
+                const revisions = page.revisions || [];
+                const edits = revisions.length;
+                const editorsSet = new Set(revisions.map(rev => rev.user));
+                const editors = editorsSet.size;
 
-                    // Handle revisions and editors
-                    const revisions = page.revisions || [];
-                    const edits = revisions.length;
-                    const editorsSet = new Set(revisions.map(rev => rev.user));
-                    const editors = editorsSet.size;
+                // Handle page size
+                const size = page.length || 0;
 
-                    // Handle page size
-                    const size = page.length || 0;
-
-                    resultData[pageTitle] = {
-                        edits,
-                        editors,
-                        size
-                    };
-                }
-            } catch (error) {
-                console.error(`Failed to fetch data for title: ${title}`, error);
-            }
-        }
-
-        return resultData;
-    };
-
-    // Function to update the details table based on the data
-    const updateDetailsTable = async (data, monthsDiff) => {
-        const tbody = document.querySelector('#details-table tbody');
-        tbody.innerHTML = ''; 
-
-        const titlesData = {};
-
-        data.forEach(d => {
-            if (!titlesData[d.url]) {
-                titlesData[d.url] = {
-                    hits: 0
+                resultData[pageTitle] = {
+                    edits,
+                    editors,
+                    size
                 };
             }
-            titlesData[d.url].hits += d.hits;
-        });
+        } catch (error) {
+            console.error(`Failed to fetch data for title: ${title}`, error);
+        }
+    }
 
-        const titles = Object.keys(titlesData);
+    return resultData;
+};
 
-        // Fetch additional data for the titles
-        const additionalData = await fetchAdditionalPageData(titles);
+    // Function to update the details table based on the data
+const updateDetailsTable = async (data, monthsDiff) => {
+    const tbody = document.querySelector('#details-table tbody');
+    tbody.innerHTML = ''; 
 
-        titles.forEach(title => {
-            const info = titlesData[title];
-            const pageData = additionalData[title] || { edits: 0, editors: 0, size: 0 };
+    const titlesData = {};
 
-            const row = document.createElement('tr');
-            const domain = websiteSelect.options[websiteSelect.selectedIndex].text;
-            const formattedTitle = encodeURIComponent(title).replace(/%20/g, '_');
+    data.forEach(d => {
+        // Normalize the d.url by replacing underscores with spaces
+        const title = d.url.replace(/_/g, ' ');
+        if (!titlesData[title]) {
+            titlesData[title] = {
+                hits: 0
+            };
+        }
+        titlesData[title].hits += d.hits;
+    });
 
-            row.innerHTML = `
-                <td><a href="https://${domain}/${domain === 'bahai9.com' ? 'wiki/' : ''}${formattedTitle}" target="_blank">${title}</a></td>
-                <td>${info.hits.toLocaleString()}</td>
-                <td>${Number((info.hits / monthsDiff).toFixed(2)).toLocaleString()}</td>
-                <td>${pageData.edits}</td>
-                <td>${pageData.editors}</td>
-                <td>${(pageData.size / 1024).toFixed(2).toLocaleString()} KB</td>
-            `;
-            tbody.appendChild(row);
-        });
-    };
+    const titles = Object.keys(titlesData);
+
+    // Fetch additional data for the titles
+    const additionalData = await fetchAdditionalPageData(titles);
+
+    titles.forEach(title => {
+        const info = titlesData[title];
+        const pageData = additionalData[title] || { edits: 0, editors: 0, size: 0 };
+
+        const row = document.createElement('tr');
+        const domain = websiteSelect.options[websiteSelect.selectedIndex].text;
+
+        // Properly format the title for the URL
+        const formattedTitle = encodeURIComponent(title.replace(/ /g, '_'));
+
+        row.innerHTML = `
+            <td><a href="https://${domain}/${domain === 'bahai9.com' ? 'wiki/' : ''}${formattedTitle}" target="_blank">${title}</a></td>
+            <td>${info.hits.toLocaleString()}</td>
+            <td>${Number((info.hits / monthsDiff).toFixed(2)).toLocaleString()}</td>
+            <td>${pageData.edits}</td>
+            <td>${pageData.editors}</td>
+            <td>${(pageData.size / 1024).toFixed(2).toLocaleString()} KB</td>
+        `;
+        tbody.appendChild(row);
+    });
+};
 
     // Function to generate consistent colors
     const getColor = (index) => {
