@@ -210,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const apiUrl = `https://${domain}/api.php`;
 
         const resultData = {};
+        const titleMap = {};
 
         for (const title of titles) {
             const params = new URLSearchParams({
@@ -217,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 format: 'json',
                 titles: title,
                 prop: 'info|revisions',
-                inprop: 'length',
                 rvprop: 'user',
                 rvlimit: 'max',
                 origin: '*'
@@ -228,10 +228,19 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch(url);
                 const data = await response.json();
+                
+                if (data.query.normalized) {
+                    data.query.normalized.forEach(norm => {
+                        titleMap[norm.to] = norm.from;
+                    });
+                }
 
                 for (const pageId in data.query.pages) {
                     const page = data.query.pages[pageId];
                     const pageTitle = page.title;
+
+                    // Get the original title
+                    const originalTitle = titleMap[pageTitle] || pageTitle;
 
                     // Handle revisions and editors
                     const revisions = page.revisions || [];
