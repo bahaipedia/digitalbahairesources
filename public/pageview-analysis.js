@@ -217,6 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 format: 'json',
                 titles: title,
                 prop: 'info|revisions',
+                inprop: 'length',
                 rvprop: 'user',
                 rvlimit: 'max',
                 origin: '*'
