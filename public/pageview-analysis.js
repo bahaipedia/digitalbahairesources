@@ -286,66 +286,66 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Function to update the details table based on the data
-const updateDetailsTable = async (data, monthsDiff) => {
-    const tbody = document.querySelector('#details-table tbody');
-    tbody.innerHTML = ''; 
+    const updateDetailsTable = async (data, monthsDiff) => {
+        const tbody = document.querySelector('#details-table tbody');
+        tbody.innerHTML = ''; 
 
-    const titlesData = {};
+        const titlesData = {};
 
-    data.forEach(d => {
-        // Normalize the d.url by replacing underscores with spaces
-        const title = d.url.replace(/_/g, ' ');
-        if (!titlesData[title]) {
-            titlesData[title] = {
-                hits: 0
-            };
-        }
-        titlesData[title].hits += d.hits;
-    });
+        data.forEach(d => {
+            // Normalize the d.url by replacing underscores with spaces
+            const title = d.url.replace(/_/g, ' ');
+            if (!titlesData[title]) {
+                titlesData[title] = {
+                    hits: 0
+                };
+            }
+            titlesData[title].hits += d.hits;
+        });
 
-    const titles = Object.keys(titlesData);
+        const titles = Object.keys(titlesData);
 
-    // Fetch additional data for the titles
-    const additionalData = await fetchAdditionalPageData(titles);
+        // Fetch additional data for the titles
+        const additionalData = await fetchAdditionalPageData(titles);
 
-    titles.forEach(title => {
-        const info = titlesData[title];
-        const pageData = additionalData[title] || { edits: 0, editors: 0, size: 0 };
+        titles.forEach(title => {
+            const info = titlesData[title];
+            const pageData = additionalData[title] || { edits: 0, editors: 0, size: 0 };
 
-        const row = document.createElement('tr');
-        const domain = websiteSelect.options[websiteSelect.selectedIndex].text;
+            const row = document.createElement('tr');
+            const domain = websiteSelect.options[websiteSelect.selectedIndex].text;
 
-        // Properly format the title for the URL
-        const formattedTitle = encodeURIComponent(title.replace(/ /g, '_'));
+            // Properly format the title for the URL
+            // const formattedTitle = encodeURIComponent(title.replace(/ /g, '_'));
 
-        // Format the size appropriately
-        let sizeInBytes = pageData.size;
-        let sizeDisplay;
+            // Format the size appropriately
+            let sizeInBytes = pageData.size;
+            let sizeDisplay;
 
-        if (sizeInBytes >= 1024 * 1024) {
-            // Display in MB
-            let sizeInMB = sizeInBytes / (1024 * 1024);
-            sizeDisplay = `${Number(sizeInMB.toFixed(2)).toLocaleString()} MB`;
-        } else if (sizeInBytes >= 1024) {
-            // Display in KB
-            let sizeInKB = sizeInBytes / 1024;
-            sizeDisplay = `${Number(sizeInKB.toFixed(2)).toLocaleString()} KB`;
-        } else {
-            // Display in bytes
-            sizeDisplay = `${sizeInBytes.toLocaleString()} bytes`;
-        }
+            if (sizeInBytes >= 1024 * 1024) {
+                // Display in MB
+                let sizeInMB = sizeInBytes / (1024 * 1024);
+                sizeDisplay = `${Number(sizeInMB.toFixed(2)).toLocaleString()} MB`;
+            } else if (sizeInBytes >= 1024) {
+                // Display in KB
+                let sizeInKB = sizeInBytes / 1024;
+                sizeDisplay = `${Number(sizeInKB.toFixed(2)).toLocaleString()} KB`;
+            } else {
+                // Display in bytes
+                sizeDisplay = `${sizeInBytes.toLocaleString()} bytes`;
+            }
 
-        row.innerHTML = `
-            <td><a href="https://${domain}/${domain === 'bahai9.com' ? 'wiki/' : ''}${formattedTitle}" target="_blank">${title}</a></td>
-            <td>${info.hits.toLocaleString()}</td>
-            <td>${Number((info.hits / monthsDiff).toFixed(2)).toLocaleString()}</td>
-            <td>${pageData.edits}</td>
-            <td>${pageData.editors}</td>
-            <td>${sizeDisplay}</td>
-        `;
-        tbody.appendChild(row);
-    });
-};
+            row.innerHTML = `
+                <td><a href="https://${domain}/${domain === 'bahai9.com' ? 'wiki/' : ''}${formattedTitle}" target="_blank">${title}</a></td>
+                <td>${info.hits.toLocaleString()}</td>
+                <td>${Number((info.hits / monthsDiff).toFixed(2)).toLocaleString()}</td>
+                <td>${pageData.edits}</td>
+                <td>${pageData.editors}</td>
+                <td>${sizeDisplay}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    };
 
     // Function to generate consistent colors
     const getColor = (index) => {
