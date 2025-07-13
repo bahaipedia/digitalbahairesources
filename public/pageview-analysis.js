@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const domain = websiteSelect.options[websiteSelect.selectedIndex].text;
 
             // Properly format the title for the URL
-            // const formattedTitle = encodeURIComponent(title.replace(/ /g, '_'));
+            const formattedTitle = encodeURIComponent(title.replace(/ /g, '_'));
 
             // Format the size appropriately
             let sizeInBytes = pageData.size;
