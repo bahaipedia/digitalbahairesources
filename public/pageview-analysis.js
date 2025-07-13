@@ -240,8 +240,36 @@ const fetchAdditionalPageData = async (titles) => {
                 const editorsSet = new Set(revisions.map(rev => rev.user));
                 const editors = editorsSet.size;
 
-                // Handle page size
-                const size = page.length || 0;
+                let size = 0;
+
+                if (page.ns === 6) {
+                    // Page is in the "File" namespace
+                    // Fetch imageinfo to get the file size
+                    const imageParams = new URLSearchParams({
+                        action: 'query',
+                        format: 'json',
+                        titles: page.title,
+                        prop: 'imageinfo',
+                        iiprop: 'size|dimensions|mime|url',
+                        origin: '*'
+                    });
+
+                    const imageUrl = `${apiUrl}?${imageParams.toString()}`;
+                    try {
+                        const imageResponse = await fetch(imageUrl);
+                        const imageData = await imageResponse.json();
+
+                        const filePage = Object.values(imageData.query.pages)[0];
+                        const info = filePage.imageinfo?.[0];
+                        size = info?.size || 0;
+                    } catch (error) {
+                        console.error(`Failed to fetch imageinfo for title: ${page.title}`, error);
+                        size = 0;
+                    }
+                } else {
+                    // For regular pages, use page.length
+                    size = page.length || 0;
+                }
 
                 resultData[pageTitle] = {
                     edits,
@@ -290,13 +318,30 @@ const updateDetailsTable = async (data, monthsDiff) => {
         // Properly format the title for the URL
         const formattedTitle = encodeURIComponent(title.replace(/ /g, '_'));
 
+        // Format the size appropriately
+        let sizeInBytes = pageData.size;
+        let sizeDisplay;
+
+        if (sizeInBytes >= 1024 * 1024) {
+            // Display in MB
+            let sizeInMB = sizeInBytes / (1024 * 1024);
+            sizeDisplay = `${Number(sizeInMB.toFixed(2)).toLocaleString()} MB`;
+        } else if (sizeInBytes >= 1024) {
+            // Display in KB
+            let sizeInKB = sizeInBytes / 1024;
+            sizeDisplay = `${Number(sizeInKB.toFixed(2)).toLocaleString()} KB`;
+        } else {
+            // Display in bytes
+            sizeDisplay = `${sizeInBytes.toLocaleString()} bytes`;
+        }
+
         row.innerHTML = `
             <td><a href="https://${domain}/${domain === 'bahai9.com' ? 'wiki/' : ''}${formattedTitle}" target="_blank">${title}</a></td>
             <td>${info.hits.toLocaleString()}</td>
             <td>${Number((info.hits / monthsDiff).toFixed(2)).toLocaleString()}</td>
             <td>${pageData.edits}</td>
             <td>${pageData.editors}</td>
-            <td>${(pageData.size / 1024).toFixed(2).toLocaleString()} KB</td>
+            <td>${sizeDisplay}</td>
         `;
         tbody.appendChild(row);
     });
