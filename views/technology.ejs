@@ -15,36 +15,33 @@
             <p>This page provides an overview of the technology and infrastructure used to run our sites.</p>
 
             <h2>Platform and Software</h2>
-            <p>Wikis like Bahaipedia are built on the MediaWiki platform, the same software that powers Wikipedia. MediaWiki ensures a familiar and stable environment, supporting collaboration and custom developments.</p>
+            <p>Wikis like Bahaipedia use the MediaWiki platform, the same software that powers Wikipedia. Using MediaWiki ensures our websites receive continuous updates and support, and users are likely to already be familiar with its user interface.</p>
             
             <h2>Infrastructure and Hosting</h2>
-            <p>Our infrastructure is distributed to provide optimal speed and reliability to the largest number of users. Our servers are deployed in 4 regions: Virginia in the United States, Singapore, São Paulo, and Frankfurt.</p>
+            <p>Our servers are distributed across four regions: Virginia (United States), Singapore, São Paulo, and Frankfurt. A distributed setup was chosen originally to ensure the fastest possible page rendering and file download times for users worldwide. Today it has become an effective strategy for isolating and mitigating sophisticated attempts to attack or crawl substantial volumes of content.</p>
 
             <h3>File Hosting and Distribution</h3>
-            <p>Files uploaded to <a href="https://bahai.media" target="_blank">bahai.media</a> are replicated and stored in the following regions: Virginia, Brazil, Singapore, and Germany. Each region serves as an origin server for CloudFront, our content delivery network (CDN). CloudFront caches and serves the most frequently accessed files, reducing download times.</p>
-            <p>Uploads are processed in the closest region for efficiency and then replicated to others. This system ensures that users have quick access to large files and resources, regardless of their location.</p>
+            <p>Files uploaded to <a href="https://bahai.media" target="_blank">bahai.media</a> are replicated to storage in Virginia, Brazil, Singapore, and Germany. Each region acts as an origin server for CloudFront, a Content Delivery Network, which caches and distributes files more broadly to reduce download times. If CloudFront can not locate a requested file in its cache, it makes a request to the closest available region. This setup significantly reduces download times worldwide, even in cases where files are not in the cache.</p>
+            <p>Uploads are processed in the region closest to the user, and then automatically replicated to all other regions. Some processes render files on demand, like viewing a specific page from a PDF stored on our site, and this configuration gets requested content to the users as quickly as possible.</p>
 
             <h2>Traffic Handling and Caching</h2>
-            <p>Our platform is built to handle a high volume of traffic efficiently and reliably. We employ a multi-layered caching strategy with Varnish and Redis to maximize server performance.</p>
+            <p>We use a multi-layered caching strategy, primarily with Varnish and Redis, to manage traffic and reduce server load. Varnish is also our first line of defense against all forms of automated content scraping attempts, and can be adjusted dynamically to respond to various attacks.</p>
 
             <!-- Placeholder section for Traffic Flow details -->
             <h3>How We Handle Traffic</h3>
-            <p>Our technology stack includes a robust series of systems designed to route and manage traffic:</p>
+            <p>Our technology stack routes and manages traffic using the following components:</p>
             <ul>
                 <li><strong>Nginx</strong>: Acts as the primary web server and reverse proxy, handling HTTPS traffic and forwarding requests to Varnish.</li>
-                <li><strong>Varnish</strong>: Caches and stores frequently accessed pages served to anonymous users, reducing load on the backend.</li>
+                <li><strong>Varnish</strong>: Caches and stores frequently accessed pages served to anonymous users, reducing load on the backend. Varnish also analyses incoming requests and will reject those matching certain patterns.</li>
                 <li><strong>Redis</strong>: A second caching layer, primarily for users who are logged in, storing details such as user sessions.</li>
                 <li><strong>Elasticsearch</strong>: Fast, full-text search capabilities across our content.</li>
-                <li><strong>CloudFront</strong>: Our CDN, which distributes and caches static assets (like images, videos, and documents) globally, reducing latency for users worldwide.</li>
-                <li><strong>AWS Lambda</strong>: <a href="https://github.com/bahaipedia/lambda-edge-detect-origin">Cache misses</a> in the CDN are dynamically routed to the closest geographic server. Lambda also helps <a href="https://github.com/bahaipedia/lambda-bahaimedia-distribute-s3">distribute files</a> after they have been uploaded.</li>
+                <li><strong>CloudFront</strong>: Our CDN, which distributes and caches static assets (like images, videos, and documents) globally.</li>
+                <li><strong>AWS Lambda</strong>: <a href="https://github.com/bahaipedia/lambda-edge-detect-origin">Cache misses</a> in the CDN are dynamically routed to the closest geographic origin bucket. Lambda also helps <a href="https://github.com/bahaipedia/lambda-bahaimedia-distribute-s3">distribute files</a> after they have been uploaded.</li>
                 <li><strong>Ansible and GitHub</strong>: Configuration files are centrally managed in GitHub, while Ansible automates server-specific changes before deploying updates across all regions.</li>
             </ul>
 
-            <p>These technologies work together to ensure that traffic is efficiently distributed, and our platform can scale as needed, even during peak usage times.</p>
-
             <h2>Custom Extensions and Code</h2>
-            <p>We also develop custom extensions to enhance the functionality of our Wikis. These extensions help us provide a tailored experience for our users.</p>
-            <p>For more technical details or to explore the custom code we use, visit our <a href="https://github.com/bahaipedia" target="_blank">GitHub repository</a>.</p>
+            <p>We develop custom MediaWiki extensions to add specific features to our wikis. For more technical details or to explore the custom code we use, visit our <a href="https://github.com/bahaipedia" target="_blank">GitHub repository</a>.</p>
         </section>
     </main>
     <%- include('partials/footer') %>
