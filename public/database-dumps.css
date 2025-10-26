@@ -1,0 +1,37 @@
+.dump-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    font-size: 1rem; /* Matches .header-nav-bar font-size */
+}
+.dump-table th, .dump-table td {
+    border: 1px solid #ddd;
+    padding: 10px 12px;
+    text-align: left;
+}
+.dump-table th {
+    background-color: #f4f4f4; /* A light grey */
+    font-weight: 600;
+}
+.dump-table tr:nth-child(even) {
+    background-color: #f9f9f9; /* Matches your body bg */
+}
+.dump-table td:last-child {
+    width: 120px;
+    text-align: center;
+}
+.btn-download {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #005bb5; /* Matches your header hover */
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+}
+.btn-download:hover {
+    background-color: #003f8c; /* Darker blue from logo hover */
+    color: white;
+}
