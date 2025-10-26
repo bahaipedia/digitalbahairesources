@@ -44,9 +44,9 @@
                                     <td><strong><%= dump.prettyName %></strong></td>
                                     <td>
                                         <% if (dump.wikiId === 'worksen' || dump.wikiId === 'worksde') { %>
-                                            Public content only
+                                            Excludes images, copyrighted content
                                         <% } else { %>
-                                            All public content
+                                            Excludes images
                                         <% } %>
                                     </td>
                                     <td><%= dump.size %></td>
