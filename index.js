@@ -5,6 +5,7 @@ const winston = require('winston');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
 const { exec } = require('child_process');
+const { S3Client, ListObjectsV2Command } = require("@aws-sdk/client-s3");
 
 dotenv.config();
 
@@ -37,6 +38,50 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/js', express.static(path.join(__dirname, 'node_modules/chart.js/dist')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// --- S3 Client & Dump Page Configuration ---
+const s3Client = new S3Client({ region: "us-east-1" }); 
+const S3_BUCKET = "digitalbahairesources";
+const S3_BUCKET_URL_PREFIX = `https://digitalbahairesources.s3.amazonaws.com`; 
+
+// This maps the DB name to a "pretty name" for the table
+const WIKI_NAMES = {
+    "pediaen": "Bahaipedia (English)",
+    "pediade": "Bahaipedia (German)",
+    "pediaes": "Bahaipedia (Spanish)",
+    "pediafa": "Bahaipedia (Persian)",
+    "pediafr": "Bahaipedia (French)",
+    "pediaja": "Bahaipedia (Japanese)",
+    "pediapt": "Bahaipedia (Portuguese)",
+    "pediaru": "Bahaipedia (Russian)",
+    "pediavi": "Bahaipedia (Vietnamese)",
+    "pediazh": "Bahaipedia (Chinese)",
+    "worksde": "Baha'i Works (German) (Public Content Only)",
+    "worksen": "Baha'i Works (English) (Public Content Only)",
+    "bahaimedia": "Bahai.media",
+    "enbahai9": "Bahai9",
+    "bahaidata": "Bahaidata",
+    "bahaiquest": "Bahai.quest",
+};
+
+// Helper function to format bytes to KB/MB/GB
+function formatBytes(bytes, decimals = 2) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+// Helper function to format "MMYYYY" to "Month Year"
+function formatDumpDate(dateStr) {
+    const month = dateStr.substring(0, 2);
+    const year = dateStr.substring(2, 6);
+    // Use 2nd day to avoid any timezone day-rollover issues
+    const date = new Date(`${year}-${month}-02`); 
+    return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+}
 
 // Routes
 app.get('/', (req, res) => res.render('index'));
@@ -79,6 +124,78 @@ app.post('/webhook', express.json(), (req, res) => {
         });
     } else {
         res.status(200).send('No updates for this branch');
+    }
+});
+
+app.get('/database-dumps', async (req, res) => {
+    try {
+        const command = new ListObjectsV2Command({
+            Bucket: S3_BUCKET,
+            Prefix: "", // List all files
+        });
+
+        const s3Result = await s3Client.send(command);
+        
+        // Handle cases where the bucket is empty or no files match
+        if (!s3Result.Contents || s3Result.Contents.length === 0) {
+            return res.render('database-dumps', {
+                dumpsByMonth: {}, // Pass an empty object
+            });
+        }
+        
+        const allDumps = s3Result.Contents
+            .filter(file => file.Key.endsWith('.xml.gz'))
+            .map(file => {
+                // Filename is like "092025-pediaen.xml.gz"
+                const parts = file.Key.split('.')[0].split('-');
+                
+                // Handle potential malformed filenames
+                if (parts.length < 2) return null; 
+                
+                const dateStr = parts[0]; // "092025"
+                const wikiId = parts[1]; // "pediaen"
+                
+                // Basic validation
+                if (!/^\d{6}$/.test(dateStr) || !wikiId) return null;
+
+                return {
+                    key: file.Key,
+                    dateStr: dateStr,
+                    wikiId: wikiId,
+                    prettyName: WIKI_NAMES[wikiId] || wikiId, // Fallback to ID
+                    size: formatBytes(file.Size),
+                    url: `${S3_BUCKET_URL_PREFIX}/${file.Key}`,
+                    lastModified: file.LastModified,
+                };
+            })
+            .filter(dump => dump !== null) // Remove any nulls from malformed names
+            // Sort by date (newest first), then by name
+            .sort((a, b) => {
+                if (a.dateStr > b.dateStr) return -1;
+                if (a.dateStr < b.dateStr) return 1;
+                if (a.prettyName > b.prettyName) return 1;
+                if (a.prettyName < b.prettyName) return -1;
+                return 0;
+            });
+
+        // Group the dumps by the month/year string
+        const dumpsByMonth = allDumps.reduce((acc, dump) => {
+            const monthYear = formatDumpDate(dump.dateStr); // "September 2025"
+            if (!acc[monthYear]) {
+                acc[monthYear] = [];
+            }
+            acc[monthYear].push(dump);
+            return acc;
+        }, {});
+
+        res.render('database-dumps', {
+            dumpsByMonth: dumpsByMonth
+        });
+
+    } catch (err) {
+        console.error("Error fetching S3 objects:", err);
+        logger.error("Error fetching S3 objects:", err); // Log to Winston
+        res.status(500).send('Server Error: Could not load database dumps.');
     }
 });
 
