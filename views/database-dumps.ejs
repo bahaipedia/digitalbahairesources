@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Dumps - digitalbahairesources.org</title>
+    <!-- Correctly links to your existing stylesheet -->
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="/images/dbs-favicon.png" type="image/png">
+</head>
+<body>
+    <%- include('partials/header', { mini: false }) %>
+    <main>
+        <!-- Uses your existing .content-area class -->
+        <section class="content-area">
+            <h1 class="centered">Wiki Database Dumps</h1>
+            
+            <p>As an alternative to web scrapers, we provide monthly snapshots of the public content of our wikis in XML format. These dumps are intended for data preservation, research, and offline use. Dumps for Bahai.works are filtered to exclude all copyrighted material.</p>
+            <p>Files are automatically generated on the 1st of each month and contain the content from the previous month. Archives older than 12 months may be automatically pruned.</p>
+            
+            <% const months = Object.keys(dumpsByMonth); %>
+            
+            <% if (months.length === 0) { %>
+                <p>No database dumps are currently available. Please check back later.</p>
+            <% } else { %>
+                <% for (const month of months) { %>
+                    <!-- This h2 will be styled by your .content-area default styles -->
+                    <h2><%= month %></h2>
+                    
+                    <!-- This table uses the new classes you can add to styles.css -->
+                    <table class="dump-table">
+                        <thead>
+                            <tr>
+                                <th>Website</th>
+                                <th>Notes</th>
+                                <th>File Size</th>
+                                <th>Download</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% for (const dump of dumpsByMonth[month]) { %>
+                                <tr>
+                                    <td><strong><%= dump.prettyName %></strong></td>
+                                    <td>
+                                        <% if (dump.wikiId === 'worksen' || dump.wikiId === 'worksde') { %>
+                                            Public content only
+                                        <% } else { %>
+                                            All public content
+                                        <% } %>
+                                    </td>
+                                    <td><%= dump.size %></td>
+                                    <td>
+                                        <a href="<%= dump.url %>" class="btn-download">Download</a>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                <% } %>
+            <% } %>
+
+        </section>
+    </main>
+    <%- include('partials/footer') %>
+</body>
+</html>
+
