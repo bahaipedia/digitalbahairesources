@@ -1,52 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Technology</title>
-    <link rel="stylesheet" href="/styles.css">
-    <link rel="icon" href="images/dbs-favicon.png" type="image/png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technology</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="images/dbs-favicon.png" type="image/png">
 </head>
 <body>
-    <%- include('partials/header', { mini: false }) %>
-    <main>
-        <section class="content-area">
-            <h1>Technology</h1>
-            <p>Our sites leverage scalable infrastructure designed to ensure reliability, speed, and accessibility to a global audience. Below is an overview of the technology that powers our platforms.</p>
+    <%- include('partials/header', { mini: false }) %>
+    <main>
+        <section class="content-area">
+            <h1>Technology</h1>
+            <p>This page provides an overview of the technology and infrastructure used to run our sites.</p>
 
-            <h2>Platform and Software</h2>
-            <p>Wikis like Bahaipedia are built on the MediaWiki platform, the same software that powers Wikipedia. MediaWiki ensures a familiar and stable environment, supporting collaboration and custom developments.</p>
-            
-            <h2>Infrastructure and Hosting</h2>
-            <p>Our infrastructure is distributed to provide optimal speed and reliability to the largest number of users. Our servers are deployed in 4 regions: Virginia in the United States, Singapore, São Paulo, and Frankfurt.</p>
+            <h2>Platform and Software</h2>
+            <p>Our wikis, such as Bahaipedia, run on MediaWiki, the same software platform used by Wikipedia.</p>
+            
+            <h2>Infrastructure and Hosting</h2>
+            <p>Our servers are distributed across four regions: Virginia (United States), Singapore, São Paulo, and Frankfurt.</p>
 
-            <h3>File Hosting and Distribution</h3>
-            <p>Files uploaded to <a href="https://bahai.media" target="_blank">bahai.media</a> are replicated and stored in the following regions: Virginia, Brazil, Singapore, and Germany. Each region serves as an origin server for CloudFront, our content delivery network (CDN). CloudFront caches and serves the most frequently accessed files, reducing download times.</p>
-            <p>Uploads are processed in the closest region for efficiency and then replicated to others. This system ensures that users have quick access to large files and resources, regardless of their location.</p>
+            <h3>File Hosting and Distribution</h3>
+            <p>Files uploaded to <a href="https://bahai.media" target="_blank">bahai.media</a> are replicated to storage in Virginia, Brazil, Singapore, and Germany. Each region acts as an origin server for our Content Delivery Network (CDN), CloudFront, which caches files to reduce download times.</p>
+            <p>Uploads are processed in the nearest region and then replicated to all other regions.</p>
 
-            <h2>Traffic Handling and Caching</h2>
-            <p>Our platform is built to handle a high volume of traffic efficiently and reliably. We employ a multi-layered caching strategy with Varnish and Redis to maximize server performance.</p>
+            <h2>Traffic Handling and Caching</h2>
+            <p>We use a multi-layered caching strategy, primarily with Varnish and Redis, to manage traffic and reduce server load.</p>
 
-            <!-- Placeholder section for Traffic Flow details -->
-            <h3>How We Handle Traffic</h3>
-            <p>Our technology stack includes a robust series of systems designed to route and manage traffic:</p>
-            <ul>
-                <li><strong>Nginx</strong>: Acts as the primary web server and reverse proxy, handling HTTPS traffic and forwarding requests to Varnish.</li>
-                <li><strong>Varnish</strong>: Caches and stores frequently accessed pages served to anonymous users, reducing load on the backend.</li>
-                <li><strong>Redis</strong>: A second caching layer, primarily for users who are logged in, storing details such as user sessions.</li>
-                <li><strong>Elasticsearch</strong>: Fast, full-text search capabilities across our content.</li>
-                <li><strong>CloudFront</strong>: Our CDN, which distributes and caches static assets (like images, videos, and documents) globally, reducing latency for users worldwide.</li>
-                <li><strong>AWS Lambda</strong>: <a href="https://github.com/bahaipedia/lambda-edge-detect-origin">Cache misses</a> in the CDN are dynamically routed to the closest geographic server. Lambda also helps <a href="https://github.com/bahaipedia/lambda-bahaimedia-distribute-s3">distribute files</a> after they have been uploaded.</li>
-                <li><strong>Ansible and GitHub</strong>: Configuration files are centrally managed in GitHub, while Ansible automates server-specific changes before deploying updates across all regions.</li>
-            </ul>
+                        <h3>How We Handle Traffic</h3>
+            <p>Our technology stack routes and manages traffic using the following components:</p>
+            <ul>
+                <li><strong>Nginx</strong>: Acts as the primary web server and reverse proxy, handling HTTPS traffic and forwarding requests to Varnish.</li>
+                <li><strong>Varnish</strong>: Caches pages for anonymous users to reduce backend load.</li>
+                <li><strong>Redis</strong>: A secondary cache (primarily for logged-in users) used for storing application data and user sessions.</li>
+                <li><strong>Elasticsearch</strong>: Provides full-text search capabilities.</li>
+                <li><strong>CloudFront</strong>: Our CDN, which caches and distributes static assets (images, videos, documents) to reduce latency.</li>
+                <li><strong>AWS Lambda</strong>: Routes <a href="https://github.com/bahaipedia/lambda-edge-detect-origin">CDN cache misses</a> to the closest geographic origin server and assists with post-upload <a href="https://github.com/bahaipedia/lambda-bahaimedia-distribute-s3">file distribution</a>.</li>
+                <li><strong>Ansible and GitHub</strong>: Configuration files are managed in GitHub. Ansible is used to automate server configuration and deploy updates across all regions.</li>
+            </ul>
 
-            <p>These technologies work together to ensure that traffic is efficiently distributed, and our platform can scale as needed, even during peak usage times.</p>
-
-            <h2>Custom Extensions and Code</h2>
-            <p>We also develop custom extensions to enhance the functionality of our Wikis. These extensions help us provide a tailored experience for our users.</p>
-            <p>For more technical details or to explore the custom code we use, visit our <a href="https://github.com/bahaipedia" target="_blank">GitHub repository</a>.</p>
-        </section>
-    </main>
-    <%- include('partials/footer') %>
+            <h2>Custom Extensions and Code</h2>
+            <p>We develop custom MediaWiki extensions to add specific features to our wikis.</p>
+            <p>Our code, including these extensions, is available in our <a href="https://github.com/bahaipedia" target="_blank">GitHub repository</a>.</p>
+        </section>
+    </main>
+    <%- include('partials/footer') %>
 </body>
 </html>
