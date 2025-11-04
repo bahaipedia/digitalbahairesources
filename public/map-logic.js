@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- NEW: Define all the icon objects ---
 // Ensure the iconUrl paths match the files you created.
 // Using a consistent size and anchor point makes the map look clean.
-const iconOptions = { iconSize: [30, 40], iconAnchor: [15, 40], popupAnchor: [0, -40] };
+const iconOptions = { iconSize: [120, 140], iconAnchor: [60, 140], popupAnchor: [0, -140] };
 
 const bahaipediaIcon = L.icon({ iconUrl: '/images/map-icons/bahaipedia-pin.png', ...iconOptions });
 const bahaimediaIcon = L.icon({ iconUrl: '/images/map-icons/bahaimedia-pin.png', ...iconOptions });
