@@ -1,0 +1,12 @@
+/* public/map.css */
+
+#map-container {
+    /* Fills the viewport height between the header and footer */
+    height: calc(100vh - 160px); /* Adjust 160px to match your header/footer height */
+    width: 100%;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+}
