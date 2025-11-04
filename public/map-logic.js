@@ -66,11 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- NEW: Define all the icon objects ---
 // Ensure the iconUrl paths match the files you created.
 // Using a consistent size and anchor point makes the map look clean.
-const iconOptions = { iconSize: [110, 140], iconAnchor: [55, 140], popupAnchor: [0, -140] };
+const iconOptions = { iconSize: [70, 90], iconAnchor: [35, 90], popupAnchor: [0, -90] };
 
 const bahaipediaIcon = L.icon({ iconUrl: 'https://file.bahai.media/8/80/Pedia-Map-Icon.png', ...iconOptions });
 const bahaimediaIcon = L.icon({ iconUrl: 'https://file.bahai.media/b/b4/Media-Map-Icon.png', ...iconOptions });
-const bothIcon = L.icon({ iconUrl: 'https://file.bahai.media/7/76/PediaMedia-Map-Icon.png', ...iconOptions });
+const bothIcon = L.icon({ iconUrl: '/images/map-icons/PediaMedia-Map-Icon-smaller.png', ...iconOptions });
 const defaultIcon = L.icon({ iconUrl: 'https://file.bahai.media/9/95/Default-Map-Icon.png', ...iconOptions });
 
 // --- NEW: Helper function to choose an icon based on sitelinks ---
