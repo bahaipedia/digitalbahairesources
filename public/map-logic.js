@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }).addTo(map);
 
     // 3. Define the SPARQL query to get all items with coordinates
-    const sparqlEndpoint = 'https://query.bahaidata.org/sparql';
+    const sparqlEndpoint = 'https://query.bahaidata.org/proxy/sparql';
     const sparqlQuery = `
         SELECT ?item ?itemLabel ?coords ?type ?bahaipedia_link ?bahaimedia_link WHERE {
           ?item wdt:P20 ?coords.
@@ -28,10 +28,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     `;
 
-    const queryUrl = sparqlEndpoint + '?query=' + encodeURIComponent(sparqlQuery);
+    const queryUrl = sparqlEndpoint;
 
     // 4. Fetch the data from Bahaidata
-    fetch(queryUrl, { headers: { 'Accept': 'application/sparql-results+json' } })
+    fetch(queryUrl, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/sparql-results+json',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        },
+    body: 'query=' + encodeURIComponent(sparqlQuery)
+})
         .then(response => response.json())
         .then(data => {
             const items = data.results.bindings;
