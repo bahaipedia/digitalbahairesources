@@ -68,10 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // Using a consistent size and anchor point makes the map look clean.
 const iconOptions = { iconSize: [110, 140], iconAnchor: [55, 140], popupAnchor: [0, -140] };
 
-const bahaipediaIcon = L.icon({ iconUrl: '/images/map-icons/bahaipedia-pin.png', ...iconOptions });
-const bahaimediaIcon = L.icon({ iconUrl: '/images/map-icons/bahaimedia-pin.png', ...iconOptions });
-const bothIcon = L.icon({ iconUrl: '/images/map-icons/both-pin.png', ...iconOptions });
-const defaultIcon = L.icon({ iconUrl: '/images/map-icons/default-pin.png', ...iconOptions });
+const bahaipediaIcon = L.icon({ iconUrl: 'https://file.bahai.media/b/b4/Media-Map-Icon.png', ...iconOptions });
+const bahaimediaIcon = L.icon({ iconUrl: 'https://file.bahai.media/b/b4/Media-Map-Icon.png', ...iconOptions });
+const bothIcon = L.icon({ iconUrl: 'https://file.bahai.media/b/b4/Media-Map-Icon.png', ...iconOptions });
+const defaultIcon = L.icon({ iconUrl: 'https://file.bahai.media/b/b4/Media-Map-Icon.png', ...iconOptions });
 
 // --- NEW: Helper function to choose an icon based on sitelinks ---
 // This function replaces the old getIconForType function.
