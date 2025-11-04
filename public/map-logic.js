@@ -14,6 +14,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const map = L.map('map').setView(initialView, initialZoom);
 
+    // This function updates the browser's URL bar whenever the user stops moving the map.
+    map.on('moveend', function() {
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Update lat, lon, and zoom parameters. Using toFixed() keeps the URL clean.
+        urlParams.set('lat', center.lat.toFixed(5));
+        urlParams.set('lon', center.lng.toFixed(5));
+        urlParams.set('zoom', zoom);
+
+        // Build the new URL and update the browser's history without reloading the page.
+        // replaceState is used so the back button isn't filled with map movements.
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+    });
+    
     // Add the tile layer (the map background). This syntax is correct.
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
