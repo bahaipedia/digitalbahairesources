@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    
+    <!-- Your existing stylesheet -->
+    <link rel="stylesheet" href="/styles.css">
+    
+    <!-- LeafletJS CSS (required for the map) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    
+    <!-- A new stylesheet for just the map page -->
+    <link rel="stylesheet" href="/map.css">
+
+    <link rel="icon" href="/images/dbs-favicon.png" type="image/png">
+</head>
+<body>
+    <!-- Use your existing header partial -->
+    <%- include('partials/header', { mini: true }) %>
+
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+    
+    <!-- Use your existing footer partial -->
+    <%- include('partials/footer') %>
+
+    <!-- LeafletJS JavaScript (must come before your script) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+    <!-- Your custom JavaScript to fetch data and create the map -->
+    <script src="/map-logic.js"></script>
+</body>
+</html>
