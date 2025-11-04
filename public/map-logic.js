@@ -71,7 +71,7 @@ const iconOptions = { iconSize: [110, 140], iconAnchor: [55, 140], popupAnchor: 
 const bahaipediaIcon = L.icon({ iconUrl: 'https://file.bahai.media/8/80/Pedia-Map-Icon.png', ...iconOptions });
 const bahaimediaIcon = L.icon({ iconUrl: 'https://file.bahai.media/b/b4/Media-Map-Icon.png', ...iconOptions });
 const bothIcon = L.icon({ iconUrl: 'https://file.bahai.media/7/76/PediaMedia-Map-Icon.png', ...iconOptions });
-const defaultIcon = L.icon({ iconUrl: 'https://file.bahai.media/b/b4/Media-Map-Icon.png', ...iconOptions });
+const defaultIcon = L.icon({ iconUrl: 'https://file.bahai.media/9/95/Default-Map-Icon.png', ...iconOptions });
 
 // --- NEW: Helper function to choose an icon based on sitelinks ---
 // This function replaces the old getIconForType function.
