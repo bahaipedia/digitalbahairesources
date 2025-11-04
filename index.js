@@ -199,6 +199,13 @@ app.get('/database-dumps', async (req, res) => {
     }
 });
 
+// Route to create an interactive world map
+app.get('/map', (req, res) => {
+    res.render('map', { 
+        title: 'World Map of Content' 
+    });
+});
+
 // Route to create the traffic stats page
 app.get('/traffic-stats', async (req, res) => {
     try {
