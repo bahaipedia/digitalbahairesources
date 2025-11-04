@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
         },
     body: 'query=' + encodeURIComponent(sparqlQuery)
-})
+    })
         .then(response => response.json())
         .then(data => {
             const items = data.results.bindings;
