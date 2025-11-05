@@ -1,12 +1,56 @@
-/* public/map.css */
-
 #map-container {
     /* Fills the viewport height between the header and footer */
     height: calc(100vh - 160px); /* Adjust 160px to match your header/footer height */
     width: 100%;
 }
-
 #map {
     height: 100%;
     width: 100%;
+}
+
+.map-controls {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+    line-height: 1.5;
+}
+.map-controls h3 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+.map-controls summary {
+    font-weight: bold;
+    cursor: pointer;
+    padding: 2px 0;
+}
+.map-controls details {
+    margin-bottom: 10px;
+}
+.map-controls .legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+.map-controls .legend-item img {
+    width: 25px; /* Smaller icons for the legend */
+    height: auto;
+    margin-right: 8px;
+}
+.map-controls .filter-item {
+    display: block;
+}
+.map-controls textarea {
+    width: 100%;
+    min-width: 250px;
+    height: 150px;
+    font-family: monospace;
+    font-size: 12px;
+    margin-top: 5px;
+}
+.map-controls button {
+    margin-top: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
 }
