@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Configuration for filters ---
     // Add or remove items here. Key is the QID, value is the display label.
     const filterConfig = {
-        'Q4268': 'House of Worship',
+        'Q6828': 'House of Worship',
         'Q226939': 'Community',
         'Q265324': 'Holy Place',
         'Q2065360': 'Historical Site'
