@@ -105,10 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Configuration for filters ---
     // Add or remove items here. Key is the QID, value is the display label.
     const filterConfig = {
-        'Q6828': 'House of Worship',
-        'Q226939': 'Community',
-        'Q265324': 'Holy Place',
-        'Q2065360': 'Historical Site'
+        'Q6828': 'continental House of Worship',
+        'Q6835': 'national House of Worship',
+        'Q6841': 'local House of Worship'
     };
     
     // --- Custom Leaflet Control for Legend, Filters, and Query Editor ---
