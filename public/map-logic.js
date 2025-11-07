@@ -107,7 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterConfig = {
         'Q6828': 'continental House of Worship',
         'Q6835': 'national House of Worship',
-        'Q6841': 'local House of Worship'
+        'Q6841': 'local House of Worship',
+        'Q5791': "Bahá'í-inspired schools",
+        'Q5152': 'community schools',
+        'Q6848': 'universities'
     };
     
     // --- Custom Leaflet Control for Legend, Filters, and Query Editor ---
