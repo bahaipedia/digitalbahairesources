@@ -105,12 +105,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Configuration for filters ---
     // Add or remove items here. Key is the QID, value is the display label.
     const filterConfig = {
-        'Q6828': 'continental House of Worship',
-        'Q6835': 'national House of Worship',
-        'Q6841': 'local House of Worship',
-        'Q5791': "Bahá'í-inspired schools",
-        'Q5152': 'community schools',
-        'Q6848': 'universities'
+        'Q6828': 'House of Worship - continental',
+        'Q6835': 'House of Worship - national',
+        'Q6841': 'House of Worship - local',
+        'Q5791': "Organizations - Bahá'í-inspired",
+        'Q5791': "Schools - Bahá'í-inspired",
+        'Q5152': 'Schools - Community/tutorial',
+        'Q6848': 'Schools - Universities'
     };
     
     // --- Custom Leaflet Control for Legend, Filters, and Query Editor ---
