@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'Q6828': 'House of Worship - continental',
         'Q6835': 'House of Worship - national',
         'Q6841': 'House of Worship - local',
-        'Q5791': "Organizations - Bahá'í-inspired",
+        'Q6860': "Organizations - Bahá'í-inspired",
         'Q5791': "Schools - Bahá'í-inspired",
         'Q5152': 'Schools - Community/tutorial',
         'Q6848': 'Schools - Universities'
