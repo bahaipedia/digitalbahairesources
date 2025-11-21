@@ -35,9 +35,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Base SPARQL query with a placeholder for filters.
     const baseSparqlQuery = `
-        SELECT ?item ?itemLabel ?coords ?bahaipedia_link ?bahaimedia_link WHERE {
+        SELECT ?item ?itemLabel ?coords ?bahaipedia_link ?bahaimedia_link ?atlas_page WHERE {
           ?item wdt:P20 ?coords.
           /* FILTER_PLACEHOLDER */
+          OPTIONAL { ?item wdt:P60 ?atlas_page. }
           OPTIONAL { ?bahaipedia_link schema:about ?item; schema:isPartOf <https://bahaipedia.org/>. }
           OPTIONAL { ?bahaimedia_link schema:about ?item; schema:isPartOf <https://bahai.media/>. }
           SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
@@ -79,6 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 let popupContent = `<b>${item.itemLabel?.value || 'No label'}</b>`;
                 if (item.bahaipedia_link?.value) {
                     popupContent += `<br><a href="${item.bahaipedia_link.value}" target="_blank">Bahaipedia Article</a>`;
+                }
+                if (item.atlas_page?.value) {
+                    popupContent += `<br><a href="https://bahai.media/${item.atlas_page.value}" target="_blank">Bahaipedia Atlas Entry</a>`;
                 }
                 if (item.bahaimedia_link?.value) {
                     popupContent += `<br><a href="${item.bahaimedia_link.value}" target="_blank">Bahai.media Category</a>`;
