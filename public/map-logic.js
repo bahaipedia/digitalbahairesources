@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     popupContent += `<br><a href="${item.bahaipedia_link.value}" target="_blank">Bahaipedia Article</a>`;
                 }
                 if (item.atlas_page?.value) {
-                    popupContent += `<br><a href="https://bahai.media/${item.atlas_page.value}" target="_blank">Bahaipedia Atlas Entry</a>`;
+                    popupContent += `<br><a href="https://bahai.media/${item.atlas_page.value}" target="_blank">Bahai.media Atlas Entry</a>`;
                 }
                 if (item.bahaimedia_link?.value) {
                     popupContent += `<br><a href="${item.bahaimedia_link.value}" target="_blank">Bahai.media Category</a>`;
