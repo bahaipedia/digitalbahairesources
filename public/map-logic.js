@@ -110,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add or remove items here. Key is the QID, value is the display label.
     const filterConfig = {
         'Q545': 'GeoLocation - country or territory',
+        'Q6932': 'GeoLocation - state/province',
         'Q6780': 'GeoLocation - locality/city/town',
         'Q6828': 'House of Worship - continental',
         'Q6835': 'House of Worship - national',
