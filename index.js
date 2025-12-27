@@ -96,6 +96,7 @@ app.get('/bahaidata', (req, res) => res.render('bahaidata'));
 app.get('/bahaiquest', (req, res) => res.render('bahaiquest'));
 app.get('/huququlator', (req, res) => res.render('huququlator'));
 app.get('/rbahai', (req, res) => res.render('r-bahai'));
+app.get('/search', (req, res) => { res.render('search');});
 app.get('/technology', (req, res) => res.render('technology'));
 
 // Webhook Route
@@ -683,6 +684,54 @@ app.get('/api/pageview-data', async (req, res) => {
     } catch (err) {
         console.error('Error in /api/pageview-data:', err);
         res.status(500).json({ error: 'Error fetching hits data.' });
+    }
+});
+
+// The Search Logic
+app.post('/api/search/query', async (req, res) => {
+    const { prompt } = req.body;
+
+    try {
+        // 1. Check Instance Status
+        const command = new DescribeInstancesCommand({ InstanceIds: [G5_INSTANCE_ID] });
+        const data = await ec2Client.send(command);
+        const instance = data.Reservations[0].Instances[0];
+        const state = instance.State.Name;
+        const publicIp = instance.PublicIpAddress;
+
+        // 2. Scenario: Server is Stopped -> Wake it up
+        if (state === 'stopped') {
+            console.log("Wake up trigger received. Starting G5...");
+            await ec2Client.send(new StartInstancesCommand({ InstanceIds: [G5_INSTANCE_ID] }));
+            return res.json({ status: 'booting', message: 'Powering on research server...' });
+        }
+
+        // 3. Scenario: Server is Booting -> Tell user to wait
+        if (state === 'pending' || state === 'stopping') {
+             return res.json({ status: 'booting', message: 'Server initializing services...' });
+        }
+
+        // 4. Scenario: Server is Running -> Proxy the Request
+        if (state === 'running') {
+            // We verify the service is actually listening (it might be running but python script isn't up yet)
+            try {
+                // This connects to the Python Script we will build in step 5
+                const agentResponse = await axios.post(`http://${publicIp}:${AGENT_PORT}/query`, {
+                    query: prompt
+                }, { timeout: 120000 }); // 2 minute timeout for generation
+
+                return res.json({ status: 'ready', data: agentResponse.data });
+            } catch (error) {
+                console.error("Agent connect error:", error.message);
+                // Instance is up, but Python script isn't ready
+                return res.json({ status: 'booting', message: 'Loading AI models...' });
+            }
+        }
+
+    } catch (err) {
+        console.error("Search Error:", err);
+        logger.error("Search Error:", err);
+        res.status(500).json({ error: 'System error managing research node.' });
     }
 });
 
