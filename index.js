@@ -1,16 +1,26 @@
 const express = require('express');
+const axios = require('axios');
 const path = require('path');
 const mysql = require('mysql2/promise');
 const winston = require('winston');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
 const { exec } = require('child_process');
+
+// AWS SDK
 const { S3Client, ListObjectsV2Command } = require("@aws-sdk/client-s3");
+const { EC2Client, StartInstancesCommand, DescribeInstancesCommand } = require("@aws-sdk/client-ec2");
 
 dotenv.config();
 
+// Configuration
+const ec2Client = new EC2Client({ region: "us-east-2" });
+const G5_INSTANCE_ID = process.env.G5_INSTANCE_ID; 
+const AGENT_PORT = 5000;
+
 const app = express();
 const PORT = process.env.PORT || 3008;
+app.use(express.json());
 
 // Logger setup using Winston
 const logger = winston.createLogger({
