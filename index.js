@@ -14,7 +14,7 @@ const { EC2Client, StartInstancesCommand, DescribeInstancesCommand } = require("
 dotenv.config();
 
 // Configuration
-const ec2Client = new EC2Client({ region: "us-east-2" });
+const ec2Client = new EC2Client({ region: "us-east-1" });
 const G5_INSTANCE_ID = process.env.G5_INSTANCE_ID; 
 const AGENT_PORT = 5000;
 
