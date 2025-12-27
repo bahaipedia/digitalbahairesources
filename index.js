@@ -15,6 +15,7 @@ dotenv.config();
 
 // Configuration
 const ec2Client = new EC2Client({ region: "us-east-1" });
+const G5_PRIVATE_IP = process.env.G5_PRIVATE_IP;
 const G5_INSTANCE_ID = process.env.G5_INSTANCE_ID; 
 const AGENT_PORT = 5000;
 
@@ -705,9 +706,7 @@ app.post('/api/search/query', async (req, res) => {
         // 1. Check Instance Status
         const command = new DescribeInstancesCommand({ InstanceIds: [G5_INSTANCE_ID] });
         const data = await ec2Client.send(command);
-        const instance = data.Reservations[0].Instances[0];
-        const state = instance.State.Name;
-        const publicIp = instance.PublicIpAddress;
+        const state = data.Reservations[0].Instances[0].State.Name;
 
         // 2. Scenario: Server is Stopped -> Wake it up
         if (state === 'stopped') {
@@ -721,26 +720,24 @@ app.post('/api/search/query', async (req, res) => {
              return res.json({ status: 'booting', message: 'Server initializing services...' });
         }
 
-        // 4. Scenario: Server is Running -> Proxy the Request
+        // 4. Scenario: Server is Running -> Proxy the Request to Private IP
         if (state === 'running') {
-            // We verify the service is actually listening (it might be running but python script isn't up yet)
             try {
-                // This connects to the Python Script we will build in step 5
-                const agentResponse = await axios.post(`http://${publicIp}:${AGENT_PORT}/query`, {
+                // Connect to Python Agent via Private IP
+                const agentResponse = await axios.post(`http://${G5_PRIVATE_IP}:${AGENT_PORT}/query`, {
                     query: prompt
-                }, { timeout: 120000 }); // 2 minute timeout for generation
+                }, { timeout: 120000 }); // 2 minute timeout
 
                 return res.json({ status: 'ready', data: agentResponse.data });
             } catch (error) {
+                // Instance is up, but Python script might be loading models
                 console.error("Agent connect error:", error.message);
-                // Instance is up, but Python script isn't ready
                 return res.json({ status: 'booting', message: 'Loading AI models...' });
             }
         }
 
     } catch (err) {
         console.error("Search Error:", err);
-        logger.error("Search Error:", err);
         res.status(500).json({ error: 'System error managing research node.' });
     }
 });
