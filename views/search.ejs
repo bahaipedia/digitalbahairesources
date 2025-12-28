@@ -35,19 +35,14 @@
                     </div>
                     <p class="status-subtext">This system runs on-demand to save resources. Waking up the engine usually takes about 90 seconds.</p>
                 </div>
+                <div id="resultsArea" class="hidden">
+                    <div class="article-content" id="articleText"></div>
 
-                <details id="resultsContainer" class="hidden">
-                    <summary>View Answer and Sources</summary>
-
-                    <!-- The original container now lives inside -->
-                    <div id="resultsArea">
-                        <div class="article-content" id="articleText"></div>
-                        <div class="sources-container hidden" id="sourcesContainer">
-                            <h3>Sources Consulted:</h3>
-                            <ul class="sources-list" id="sourcesText"></ul>
-                        </div>
-                    </div>
-                </details>
+                    <details id="sourcesContainer" class="sources-container hidden">
+                        <summary>View Sources Consulted</summary>
+                        <ul class="sources-list" id="sourcesText"></ul>
+                    </details>
+                </div>
             </div>
         </section>
     </main>
@@ -62,7 +57,10 @@
             // UI Updates
             document.getElementById('searchBtn').disabled = true;
             document.getElementById('statusArea').classList.remove('hidden');
-            document.getElementById('resultsContainer').classList.add('hidden');
+            
+            // --- THIS IS THE CORRECTED JS LINE ---
+            // It now correctly hides the main results container
+            document.getElementById('resultsArea').classList.add('hidden');
             
             // Clear previous results
             document.getElementById('articleText').innerHTML = "";
@@ -88,15 +86,18 @@
                 } else if (data.status === 'ready') {
                     // Success!
                     document.getElementById('statusArea').classList.add('hidden');
-                    document.getElementById('resultsContainer').classList.remove('hidden');
+                    
+                    // --- THIS IS THE CORRECTED JS LINE ---
+                    // It now correctly shows the main results container
+                    document.getElementById('resultsArea').classList.remove('hidden');
 
-                    // --- FIX 1: Parse Markdown to HTML ---
-                    // This converts **bold** to <b> and newlines to <p> tags
+                    // Parse Markdown to HTML for the main article
                     document.getElementById('articleText').innerHTML = marked.parse(data.data.markdown);
                     
-                    // --- FIX 2: Render Sources ---
+                    // Render Sources
                     if (data.data.sources && data.data.sources.length > 0) {
                         const list = document.getElementById('sourcesText');
+                        list.innerHTML = ''; // Clear previous sources just in case
                         data.data.sources.forEach(src => {
                             const li = document.createElement('li');
                             li.textContent = src;
