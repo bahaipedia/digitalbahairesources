@@ -11,30 +11,31 @@
 <body>
     <%- include('partials/header', { mini: false }) %>
     
-    <main class="search-container">
-        <section class="search-header">
-            <h1>Archive Research Assistant</h1>
-            <p>Ask questions across Bahaipedia, Bahai.works, and Bahai.media.</p>
-        </section>
+    <section class="content-area">
+        <main class="search-container">
+            <section class="search-header">
+                <h2>Ask questions and receive answers sourced from<br>Bahaipedia, Bahai.works, and Bahai.media.</h2>
+            </section>
 
-        <section class="search-box-area">
-            <textarea id="userQuery" placeholder="Example: What is the history of the House of Worship in Chicago?"></textarea>
-            <button id="searchBtn" onclick="startSearch()">Research</button>
-        </section>
+            <section class="search-box-area">
+                <input type="text" id="userQuery" placeholder="Example: What is the history of the House of Worship in Chicago?">
+                <button id="searchBtn" onclick="startSearch()">Search</button>
+            </section>
 
-        <div id="statusArea" class="hidden">
-            <div class="status-message" id="statusText">Initializing...</div>
-            <div class="progress-bar-container">
-                <div class="progress-bar-fill"></div>
+            <div id="statusArea" class="hidden">
+                <div class="status-message" id="statusText">Initializing...</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill"></div>
+                </div>
+                <p class="status-subtext">This system runs on-demand to save resources. Waking up the engine usually takes about 90 seconds.</p>
             </div>
-            <p class="status-subtext">This system runs on-demand to save resources. Waking up the engine usually takes about 90 seconds.</p>
-        </div>
 
-        <div id="resultsArea" class="hidden">
-            <div class="article-content" id="articleText"></div>
-            <div class="sources-list" id="sourcesText"></div>
-        </div>
-    </main>
+            <div id="resultsArea" class="hidden">
+                <div class="article-content" id="articleText"></div>
+                <div class="sources-list" id="sourcesText"></div>
+            </div>
+        </main>
+    </section>
 
     <%- include('partials/footer') %>
 
@@ -70,7 +71,7 @@
                     // Show Results
                     document.getElementById('statusArea').classList.add('hidden');
                     document.getElementById('resultsArea').classList.remove('hidden');
-                    document.getElementById('articleText').innerHTML = data.data.markdown; // Assume markdown response
+                    document.getElementById('articleText').innerHTML = data.data.markdown;
                     document.getElementById('searchBtn').disabled = false;
                 }
             } catch (err) {
