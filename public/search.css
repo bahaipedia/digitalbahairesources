@@ -99,18 +99,18 @@
     margin-top: 10px;
 }
 
-/* Article Content Styling */
+/* Article Content Readability */
+.article-content {
+    line-height: 1.6;
+}
 .article-content ul {
-    padding-left: 20px;
+    padding-left: 25px;
     list-style-type: disc;
     margin-bottom: 1em;
 }
-
 .article-content p {
     margin-bottom: 1em;
-    line-height: 1.6;
 }
-
 .article-content h1,
 .article-content h2,
 .article-content h3 {
@@ -118,17 +118,12 @@
     margin-bottom: 0.5em;
 }
 
-/* Collapsible Container Styling */
+/* Collapsible <details> Container */
 #resultsContainer {
     border: 1px solid #ddd;
     border-radius: 8px;
     margin-top: 30px;
 }
-
-#resultsContainer[open] summary {
-    border-bottom: 1px solid #ddd;
-}
-
 #resultsContainer summary {
     padding: 15px 20px;
     font-size: 1.1em;
@@ -136,21 +131,20 @@
     cursor: pointer;
     list-style: none; /* remove default arrow */
 }
-
 #resultsContainer summary::-webkit-details-marker {
     display: none; /* remove default arrow for Chrome/Safari */
 }
-
 #resultsContainer summary::before {
     content: '+'; /* Show plus icon when closed */
     margin-right: 10px;
     font-weight: bold;
 }
-
+#resultsContainer[open] summary {
+    border-bottom: 1px solid #ddd;
+}
 #resultsContainer[open] summary::before {
     content: '−'; /* Show minus icon when open */
 }
-
 #resultsArea {
     padding: 20px;
 }
@@ -161,7 +155,6 @@
     border-top: 1px solid #ddd;
     padding-top: 20px;
 }
-
 .sources-container h3 {
     font-size: 1em;
     color: #555;
@@ -169,18 +162,16 @@
     letter-spacing: 0.5px;
     margin-bottom: 15px;
 }
-
 .sources-list {
     font-size: 14px; /* Smaller font size for the list */
     color: #555;
     padding-left: 0;
     list-style-type: none;
-    column-count: 3; /* Arrange in 3 columns on wider screens */
+    column-count: 3; /* Arrange in 3 columns */
     column-gap: 20px;
 }
-
 .sources-list li {
-    margin-bottom: 8px; /* Add a little space between items */
+    margin-bottom: 8px;
 }
 
 /* Make sources single-column on smaller screens */
