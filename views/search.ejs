@@ -11,8 +11,8 @@
 <body>
     <%- include('partials/header', { mini: false }) %>
     
-    <section class="content-area">
-        <main class="search-container">
+    <main>
+        <div class="search-container">
             <section class="search-header">
                 <h2>Ask questions and receive answers sourced from<br>Bahaipedia, Bahai.works, and Bahai.media.</h2>
             </section>
@@ -34,8 +34,8 @@
                 <div class="article-content" id="articleText"></div>
                 <div class="sources-list" id="sourcesText"></div>
             </div>
-        </main>
-    </section>
+        </div>
+    </main>
 
     <%- include('partials/footer') %>
 
@@ -63,12 +63,9 @@
                 const data = await response.json();
 
                 if (data.status === 'booting') {
-                    // Update status text
                     document.getElementById('statusText').innerText = data.message;
-                    // Poll again in 5 seconds
                     setTimeout(() => pollServer(query), 5000);
                 } else if (data.status === 'ready') {
-                    // Show Results
                     document.getElementById('statusArea').classList.add('hidden');
                     document.getElementById('resultsArea').classList.remove('hidden');
                     document.getElementById('articleText').innerHTML = data.data.markdown;
