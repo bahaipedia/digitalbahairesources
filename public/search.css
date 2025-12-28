@@ -99,29 +99,93 @@
     margin-top: 10px;
 }
 
-.article-content {
-    line-height: 1.6;
-    color: #333;
-    margin-top: 30px;
-}
-
-.article-content h3 {
-    font-size: 1.5em;
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
-    color: #222;
+/* Article Content Styling */
+.article-content ul {
+    padding-left: 20px;
+    list-style-type: disc;
+    margin-bottom: 1em;
 }
 
 .article-content p {
     margin-bottom: 1em;
+    line-height: 1.6;
 }
 
-.article-content ul,
-.article-content ol {
-    padding-left: 25px;
-    margin-bottom: 1em;
-}
-
-.article-content li {
+.article-content h1,
+.article-content h2,
+.article-content h3 {
+    margin-top: 1.5em;
     margin-bottom: 0.5em;
+}
+
+/* Collapsible Container Styling */
+#resultsContainer {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 30px;
+}
+
+#resultsContainer[open] summary {
+    border-bottom: 1px solid #ddd;
+}
+
+#resultsContainer summary {
+    padding: 15px 20px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    list-style: none; /* remove default arrow */
+}
+
+#resultsContainer summary::-webkit-details-marker {
+    display: none; /* remove default arrow for Chrome/Safari */
+}
+
+#resultsContainer summary::before {
+    content: '+'; /* Show plus icon when closed */
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+#resultsContainer[open] summary::before {
+    content: '−'; /* Show minus icon when open */
+}
+
+#resultsArea {
+    padding: 20px;
+}
+
+/* Sources List Styling */
+.sources-container {
+    margin-top: 30px;
+    border-top: 1px solid #ddd;
+    padding-top: 20px;
+}
+
+.sources-container h3 {
+    font-size: 1em;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 15px;
+}
+
+.sources-list {
+    font-size: 14px; /* Smaller font size for the list */
+    color: #555;
+    padding-left: 0;
+    list-style-type: none;
+    column-count: 3; /* Arrange in 3 columns on wider screens */
+    column-gap: 20px;
+}
+
+.sources-list li {
+    margin-bottom: 8px; /* Add a little space between items */
+}
+
+/* Make sources single-column on smaller screens */
+@media (max-width: 768px) {
+    .sources-list {
+        column-count: 1;
+    }
 }
