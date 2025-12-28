@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="/styles.css">
     <link rel="stylesheet" href="/search.css">
     <link rel="icon" href="images/dbs-favicon.png" type="image/png">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <%- include('partials/header', { mini: false }) %>
@@ -36,7 +38,11 @@
 
                 <div id="resultsArea" class="hidden">
                     <div class="article-content" id="articleText"></div>
-                    <div class="sources-list" id="sourcesText"></div>
+                    
+                    <div class="sources-container hidden" id="sourcesContainer">
+                        <h3>Sources Consulted:</h3>
+                        <ul class="sources-list" id="sourcesText"></ul>
+                    </div>
                 </div>
             </div>
         </section>
@@ -53,6 +59,11 @@
             document.getElementById('searchBtn').disabled = true;
             document.getElementById('statusArea').classList.remove('hidden');
             document.getElementById('resultsArea').classList.add('hidden');
+            
+            // Clear previous results
+            document.getElementById('articleText').innerHTML = "";
+            document.getElementById('sourcesText').innerHTML = "";
+            document.getElementById('sourcesContainer').classList.add('hidden');
             
             pollServer(query);
         }
@@ -71,16 +82,42 @@
                     document.getElementById('statusText').innerText = data.message;
                     setTimeout(() => pollServer(query), 5000);
                 } else if (data.status === 'ready') {
+                    // Success!
                     document.getElementById('statusArea').classList.add('hidden');
                     document.getElementById('resultsArea').classList.remove('hidden');
-                    document.getElementById('articleText').innerHTML = data.data.markdown;
+
+                    // --- FIX 1: Parse Markdown to HTML ---
+                    // This converts **bold** to <b> and newlines to <p> tags
+                    document.getElementById('articleText').innerHTML = marked.parse(data.data.markdown);
+                    
+                    // --- FIX 2: Render Sources ---
+                    if (data.data.sources && data.data.sources.length > 0) {
+                        const list = document.getElementById('sourcesText');
+                        data.data.sources.forEach(src => {
+                            const li = document.createElement('li');
+                            li.textContent = src;
+                            list.appendChild(li);
+                        });
+                        document.getElementById('sourcesContainer').classList.remove('hidden');
+                    }
+
                     document.getElementById('searchBtn').disabled = false;
                 }
             } catch (err) {
+                console.error(err);
                 document.getElementById('statusText').innerText = "Error connecting to research node.";
                 document.getElementById('searchBtn').disabled = false;
             }
         }
     </script>
+    
+    <style>
+        .article-content ul { padding-left: 20px; list-style-type: disc; margin-bottom: 1em; }
+        .article-content p { margin-bottom: 1em; line-height: 1.6; }
+        .article-content h1, .article-content h2, .article-content h3 { margin-top: 1.5em; margin-bottom: 0.5em; }
+        .sources-container { margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; }
+        .sources-container h3 { font-size: 0.9em; color: #666; text-transform: uppercase; }
+        .sources-list { font-size: 0.85em; color: #555; }
+    </style>
 </body>
 </html>
