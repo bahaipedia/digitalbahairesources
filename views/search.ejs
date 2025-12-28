@@ -36,14 +36,18 @@
                     <p class="status-subtext">This system runs on-demand to save resources. Waking up the engine usually takes about 90 seconds.</p>
                 </div>
 
-                <div id="resultsArea" class="hidden">
-                    <div class="article-content" id="articleText"></div>
-                    
-                    <div class="sources-container hidden" id="sourcesContainer">
-                        <h3>Sources Consulted:</h3>
-                        <ul class="sources-list" id="sourcesText"></ul>
+                <details id="resultsContainer" class="hidden">
+                    <summary>View Answer and Sources</summary>
+
+                    <!-- The original container now lives inside -->
+                    <div id="resultsArea">
+                        <div class="article-content" id="articleText"></div>
+                        <div class="sources-container hidden" id="sourcesContainer">
+                            <h3>Sources Consulted:</h3>
+                            <ul class="sources-list" id="sourcesText"></ul>
+                        </div>
                     </div>
-                </div>
+                </details>
             </div>
         </section>
     </main>
@@ -84,7 +88,7 @@
                 } else if (data.status === 'ready') {
                     // Success!
                     document.getElementById('statusArea').classList.add('hidden');
-                    document.getElementById('resultsArea').classList.remove('hidden');
+                    document.getElementById('resultsContainer').classList.remove('hidden');
 
                     // --- FIX 1: Parse Markdown to HTML ---
                     // This converts **bold** to <b> and newlines to <p> tags
@@ -110,14 +114,5 @@
             }
         }
     </script>
-    
-    <style>
-        .article-content ul { padding-left: 20px; list-style-type: disc; margin-bottom: 1em; }
-        .article-content p { margin-bottom: 1em; line-height: 1.6; }
-        .article-content h1, .article-content h2, .article-content h3 { margin-top: 1.5em; margin-bottom: 0.5em; }
-        .sources-container { margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; }
-        .sources-container h3 { font-size: 0.9em; color: #666; text-transform: uppercase; }
-        .sources-list { font-size: 0.85em; color: #555; }
-    </style>
 </body>
 </html>
