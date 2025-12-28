@@ -1,17 +1,36 @@
 /* Container - Wider as requested */
 .search-container {
     max-width: 1200px;
-    margin: 40px auto;
-    padding: 0 20px;
+    margin: 0 auto;
+    padding: 60px 20px;
+    min-height: 90vh;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
 }
 
 .search-header {
     text-align: center;
     margin-bottom: 40px;
 }
+.search-header h2 {
+    margin: 0;
+    line-height: 1.2;
+}
+.search-header .intro-text {
+    display: block;
+    font-size: 0.8em;
+    font-weight: normal;
+    color: #555;
+    margin-bottom: 15px;
+}
+.search-header .source-text {
+    display: block;
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #222;
+}
 
-/* Flexbox layout for Side-by-Side Input and Button */
 .search-box-area {
     display: flex;
     justify-content: center;
@@ -19,16 +38,15 @@
     margin-bottom: 30px;
 }
 
-/* Search Input styling (replacing textarea) */
 .search-box-area input[type="text"] {
-    flex: 0 1 600px; /* Base width 600px, but can shrink */
+    flex: 0 1 600px;
     padding: 12px 15px;
     border-radius: 5px;
     border: 1px solid #ccc;
     font-size: 16px;
 }
 
-/* Button styling (updated for inline position) */
+/* Button styling */
 .search-box-area button {
     padding: 12px 24px;
     background-color: #004d40;
