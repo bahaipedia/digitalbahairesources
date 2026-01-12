@@ -884,6 +884,8 @@ app.get('/api/tags', async (req, res) => {
 // FETCH LOGICAL UNITS (Read Path)
 app.get('/api/units', authenticateExtension, async (req, res) => {
     const { source_code, source_page_id } = req.query;
+    const currentUserId = req.user.uid;
+    const currentUserRole = req.user.role;
 
     if (!source_code || !source_page_id) {
         return res.status(400).json({ error: "Missing source_code or source_page_id" });
@@ -898,7 +900,8 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
                 u.end_char_index, 
                 u.text_content, 
                 u.author, 
-                u.unit_type
+                u.unit_type,
+                u.created_by
             FROM logical_units u
             JOIN articles a ON u.article_id = a.id
             WHERE a.source_code = ? 
@@ -907,9 +910,14 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
 
         const [rows] = await metadataPool.query(query, [source_code, source_page_id]);
 
-        // Return the array directly or wrapped. 
-        // Our service worker expects { units: [...] } or just [...]
-        res.json({ units: rows });
+        // Map over rows to add permission flags
+        const unitsWithPermissions = rows.map(unit => ({
+            ...unit,
+            // You can delete if you own it OR if you are an admin
+            can_delete: (unit.created_by === currentUserId) || (currentUserRole === 'admin')
+        }));
+
+        res.json({ units: unitsWithPermissions });
 
     } catch (err) {
         console.error("[API] Fetch Units Error:", err);
@@ -1013,6 +1021,38 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
         res.status(500).json({ error: "Database transaction failed", details: err.message });
     } finally {
         if (conn) conn.release();
+    }
+});
+
+/* DELETE logic */
+app.delete('/api/units/:id', authenticateExtension, async (req, res) => {
+    const unitId = req.params.id;
+    const userId = req.user.uid;
+    const userRole = req.user.role;
+
+    try {
+        // 1. Check ownership
+        const [rows] = await metadataPool.query("SELECT created_by FROM logical_units WHERE id = ?", [unitId]);
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "Unit not found" });
+        }
+
+        const unit = rows[0];
+
+        // 2. Permission Check
+        if (unit.created_by !== userId && userRole !== 'admin') {
+            return res.status(403).json({ error: "You do not have permission to delete this unit." });
+        }
+
+        // 3. Delete
+        await metadataPool.query("DELETE FROM logical_units WHERE id = ?", [unitId]);
+
+        res.json({ success: true, message: "Unit deleted" });
+
+    } catch (err) {
+        console.error("Delete Error:", err);
+        res.status(500).json({ error: "Database error" });
     }
 });
 
