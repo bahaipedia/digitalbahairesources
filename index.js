@@ -852,6 +852,35 @@ app.post('/auth/verify-session', async (req, res) => {
     }
 });
 
+/**
+ * GET /api/tags
+ * Autocomplete endpoint for the RAG Librarian
+ * Query Param: ?search=abc
+ */
+app.get('/api/tags', async (req, res) => {
+    const { search } = req.query;
+
+    if (!search) {
+        return res.json([]);
+    }
+
+    try {
+        const query = `
+            SELECT id, tag_label AS label 
+            FROM defined_tags 
+            WHERE label LIKE ? 
+            LIMIT 10
+        `;
+        
+        const [rows] = await metadataPool.query(query, [`%${search}%`]);
+        
+        res.json(rows);
+    } catch (err) {
+        console.error("[API] Tag Search Error:", err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
 // 2. CONTRIBUTE LOGICAL UNIT (Protected)
 app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
     const { 
@@ -921,35 +950,7 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
     }
 });
 
-/**
- * GET /api/tags
- * Autocomplete endpoint for the RAG Librarian
- * Query Param: ?search=abc
- */
-app.get('/api/tags', async (req, res) => {
-    const { search } = req.query;
-
-    if (!search) {
-        return res.json([]);
-    }
-
-    try {
-        const query = `
-            SELECT id, tag_label AS label 
-            FROM defined_tags 
-            WHERE label LIKE ? 
-            LIMIT 10
-        `;
-        
-        const [rows] = await metadataPool.query(query, [`%${search}%`]);
-        
-        res.json(rows);
-    } catch (err) {
-        console.error("[API] Tag Search Error:", err);
-        res.status(500).json({ error: "Database error" });
-    }
-});
-
+// END //
 app.listen(PORT, () => {
     console.log(`Primary site running at http://localhost:${PORT}`);
 });
