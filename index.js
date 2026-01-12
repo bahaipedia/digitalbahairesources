@@ -858,9 +858,6 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
             [articleId, start_char_index, end_char_index, text_content, author, unit_type, userId]
         );
 
-        // C. (Optional) Log who created it using req.user.uid?
-        // You might want to add a 'created_by' column to logical_units later.
-
         await conn.commit();
 
         res.status(201).json({
