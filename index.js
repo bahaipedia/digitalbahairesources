@@ -890,7 +890,8 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
         end_char_index, 
         text_content, 
         author, 
-        unit_type 
+        unit_type,
+        tags
     } = req.body;
 
     // Basic Validation
@@ -932,19 +933,48 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, 0, ?)`,
             [articleId, start_char_index, end_char_index, text_content, author, unit_type, userId]
         );
+        
+        const unitId = unitResult.insertId;
+
+        // --- START NEW TAG LOGIC ---
+        if (tags && Array.isArray(tags) && tags.length > 0) {
+            for (const tag of tags) {
+                let tagId = tag;
+
+                // 1. Check if it's a new string tag (e.g. "Justice")
+                if (typeof tag === 'string') {
+                    // Check if it exists already
+                    const [existing] = await conn.query("SELECT id FROM defined_tags WHERE label = ?", [tag]);
+                    
+                    if (existing.length > 0) {
+                        tagId = existing[0].id;
+                    } else {
+                        // Create it
+                        const [newTag] = await conn.query("INSERT INTO defined_tags (label) VALUES (?)", [tag]);
+                        tagId = newTag.insertId;
+                    }
+                }
+
+                // 2. Link the Tag to the Unit
+                await conn.query(
+                    `INSERT INTO unit_tags (unit_id, tag_id) VALUES (?, ?)`,
+                    [unitId, tagId]
+                );
+            }
+        }
 
         await conn.commit();
 
         res.status(201).json({
             success: true,
-            unit_id: unitResult.insertId,
+            unit_id: unitId,
             parent_article_id: articleId
         });
 
     } catch (err) {
         if (conn) await conn.rollback();
         console.error("Contribution Error:", err);
-        res.status(500).json({ error: "Database transaction failed" });
+        res.status(500).json({ error: "Database transaction failed", details: err.message });
     } finally {
         if (conn) conn.release();
     }
