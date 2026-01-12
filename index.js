@@ -881,50 +881,6 @@ app.get('/api/tags', async (req, res) => {
     }
 });
 
-// FETCH LOGICAL UNITS (Read Path)
-app.get('/api/units', authenticateExtension, async (req, res) => {
-    const { source_code, source_page_id } = req.query;
-    const currentUserId = req.user.uid;
-    const currentUserRole = req.user.role;
-
-    if (!source_code || !source_page_id) {
-        return res.status(400).json({ error: "Missing source_code or source_page_id" });
-    }
-
-    try {
-        const query = `
-            SELECT 
-                u.id, 
-                u.article_id, 
-                u.start_char_index, 
-                u.end_char_index, 
-                u.text_content, 
-                u.author, 
-                u.unit_type,
-                u.created_by
-            FROM logical_units u
-            JOIN articles a ON u.article_id = a.id
-            WHERE a.source_code = ? 
-            AND a.source_page_id = ?
-        `;
-
-        const [rows] = await metadataPool.query(query, [source_code, source_page_id]);
-
-        // Map over rows to add permission flags
-        const unitsWithPermissions = rows.map(unit => ({
-            ...unit,
-            // You can delete if you own it OR if you are an admin
-            can_delete: (unit.created_by === currentUserId) || (currentUserRole === 'admin')
-        }));
-
-        res.json({ units: unitsWithPermissions });
-
-    } catch (err) {
-        console.error("[API] Fetch Units Error:", err);
-        res.status(500).json({ error: "Database error fetching units" });
-    }
-});
-
 // GET LOGICAL UNITS (Read Path - Updated for Permissions)
 app.get('/api/units', authenticateExtension, async (req, res) => {
     const { source_code, source_page_id } = req.query;
