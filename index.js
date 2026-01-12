@@ -925,6 +925,46 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
     }
 });
 
+// GET LOGICAL UNITS (Read Path - Updated for Permissions)
+app.get('/api/units', authenticateExtension, async (req, res) => {
+    const { source_code, source_page_id } = req.query;
+    const currentUserId = req.user.uid;
+    const currentUserRole = req.user.role;
+
+    try {
+        const query = `
+            SELECT 
+                u.id, 
+                u.article_id, 
+                u.start_char_index, 
+                u.end_char_index, 
+                u.text_content, 
+                u.author, 
+                u.unit_type,
+                u.created_by
+            FROM logical_units u
+            JOIN articles a ON u.article_id = a.id
+            WHERE a.source_code = ? 
+            AND a.source_page_id = ?
+        `;
+
+        const [rows] = await metadataPool.query(query, [source_code, source_page_id]);
+
+        // Calculate permissions for each unit
+        const unitsWithPermissions = rows.map(unit => ({
+            ...unit,
+            // User can delete if they created it OR if they are admin
+            can_delete: (unit.created_by === currentUserId) || (currentUserRole === 'admin')
+        }));
+
+        res.json({ units: unitsWithPermissions });
+
+    } catch (err) {
+        console.error("[API] Fetch Units Error:", err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
 // CONTRIBUTE LOGICAL UNIT (Protected)
 app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
     const { 
