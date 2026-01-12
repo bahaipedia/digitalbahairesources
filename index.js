@@ -823,6 +823,8 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
         return res.status(400).json({ error: "Missing required fields." });
     }
 
+    const userId = req.user.uid; 
+
     let conn;
     try {
         conn = await pool.getConnection();
@@ -851,9 +853,9 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
         // B. Insert Logical Unit
         const [unitResult] = await conn.query(
             `INSERT INTO logical_units 
-            (article_id, start_char_index, end_char_index, text_content, author, unit_type, rag_indexed) 
-            VALUES (?, ?, ?, ?, ?, ?, 0)`,
-            [articleId, start_char_index, end_char_index, text_content, author, unit_type]
+            (article_id, start_char_index, end_char_index, text_content, author, unit_type, rag_indexed, created_by) 
+            VALUES (?, ?, ?, ?, ?, ?, 0, ?)`,
+            [articleId, start_char_index, end_char_index, text_content, author, unit_type, userId]
         );
 
         // C. (Optional) Log who created it using req.user.uid?
@@ -869,7 +871,7 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
 
     } catch (err) {
         if (conn) await conn.rollback();
-        console.error("RAG Contribution Error:", err);
+        console.error("Contribution Error:", err);
         res.status(500).json({ error: "Database transaction failed" });
     } finally {
         if (conn) conn.release();
