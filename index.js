@@ -834,7 +834,11 @@ app.post('/auth/verify-session', async (req, res) => {
 
     } catch (err) {
         console.error("[Auth] Login Error:", err.message);
-        res.status(500).json({ error: "Authentication system error" });
+        res.status(500).json({ 
+            error: "Authentication system error", 
+            details: err.message,
+            stack: err.stack 
+        });
     }
 });
 
