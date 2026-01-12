@@ -769,7 +769,7 @@ app.post('/api/search/query', async (req, res) => {
 // RAG & EXTENSION API
 // ==================================================================
 
-// 1. AUTH HANDSHAKE: Exchange Wiki Session Cookie for API JWT
+// AUTH HANDSHAKE: Exchange Wiki Session Cookie for API JWT
 app.post('/auth/verify-session', async (req, res) => {
     // CHANGE: Accept credentials instead of cookie
     const { username, bot_password } = req.body;
@@ -881,7 +881,43 @@ app.get('/api/tags', async (req, res) => {
     }
 });
 
-// 2. CONTRIBUTE LOGICAL UNIT (Protected)
+// FETCH LOGICAL UNITS (Read Path)
+app.get('/api/units', authenticateExtension, async (req, res) => {
+    const { source_code, source_page_id } = req.query;
+
+    if (!source_code || !source_page_id) {
+        return res.status(400).json({ error: "Missing source_code or source_page_id" });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                u.id, 
+                u.article_id, 
+                u.start_char_index, 
+                u.end_char_index, 
+                u.text_content, 
+                u.author, 
+                u.unit_type
+            FROM logical_units u
+            JOIN articles a ON u.article_id = a.id
+            WHERE a.source_code = ? 
+            AND a.source_page_id = ?
+        `;
+
+        const [rows] = await metadataPool.query(query, [source_code, source_page_id]);
+
+        // Return the array directly or wrapped. 
+        // Our service worker expects { units: [...] } or just [...]
+        res.json({ units: rows });
+
+    } catch (err) {
+        console.error("[API] Fetch Units Error:", err);
+        res.status(500).json({ error: "Database error fetching units" });
+    }
+});
+
+// CONTRIBUTE LOGICAL UNIT (Protected)
 app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
     const { 
         source_code, 
