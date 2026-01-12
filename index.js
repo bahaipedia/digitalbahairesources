@@ -782,6 +782,7 @@ app.post('/auth/verify-session', async (req, res) => {
         });
         
         const loginToken = tokenRes.data.query.tokens.logintoken;
+        const cookies = tokenRes.headers['set-cookie'];
 
         // 2. PERFORM LOGIN
         // MediaWiki requires a POST with url-encoded form data
@@ -792,7 +793,11 @@ app.post('/auth/verify-session', async (req, res) => {
         params.append('lgtoken', loginToken);
         params.append('format', 'json');
 
-        const loginRes = await axios.post(mwUrl, params);
+        const loginRes = await axios.post(mwUrl, params, {
+            headers: {
+                'Cookie': cookies ? cookies.join('; ') : '' 
+            }
+        });
         const loginData = loginRes.data.login;
 
         // 3. CHECK RESULT
