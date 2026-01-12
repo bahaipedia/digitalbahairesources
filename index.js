@@ -761,23 +761,38 @@ app.post('/api/search/query', async (req, res) => {
 
 // 1. AUTH HANDSHAKE: Exchange Wiki Session Cookie for API JWT
 app.post('/auth/verify-session', async (req, res) => {
-    // 1. We expect the client to send the specific cookie value
-    const { session_cookie } = req.body; 
+    const { session_cookie } = req.body;
 
     if (!session_cookie) return res.status(400).json({ error: "No cookie provided" });
 
+    // DEBUG LOG: See what cookie we are trying
+    console.log(`[Auth] Verifying cookie: ${session_cookie.substring(0, 10)}...`);
+
     try {
-        // 2. Loopback to MediaWiki
-        // We pass the cookie named 'enworks_session' because that matches your DB name/cookie prefix
         const wikiRes = await axios.get("https://bahai.works/api.php", {
-            params: { action: "query", meta: "userinfo", format: "json" },
-            headers: { "Cookie": `enworks_session=${session_cookie}` } 
+            params: {
+                action: "query",
+                meta: "userinfo",
+                format: "json"
+            },
+            headers: {
+                // 1. CRITICAL: Add a User Agent (MediaWiki requires this)
+                "User-Agent": "RAG-Librarian-Auth/1.0 (sarah@digitalbahairesources.org)",
+                "Cookie": `enworks_session=${session_cookie}`
+            }
         });
+
+        // 2. DEBUG LOG: See exactly what MediaWiki returned
+        console.log("[Auth] Wiki Response:", JSON.stringify(wikiRes.data, null, 2));
 
         const userInfo = wikiRes.data.query.userinfo;
 
         if (!userInfo || userInfo.id === 0) {
-            return res.status(401).json({ error: "Invalid Session or Anon User" });
+            console.log("[Auth] Failed: User is Anon (ID 0)");
+            return res.status(401).json({ 
+                error: "Invalid Session or Anon User", 
+                wiki_response: wikiRes.data
+            });
         }
 
         // 3. Upsert User (Track them in our system)
