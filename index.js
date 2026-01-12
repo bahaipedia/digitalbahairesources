@@ -5,6 +5,7 @@ const mysql = require('mysql2/promise');
 const winston = require('winston');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 const { exec } = require('child_process');
 
 // AWS SDK
@@ -17,6 +18,7 @@ dotenv.config();
 const ec2Client = new EC2Client({ region: "us-east-1" });
 const G5_PRIVATE_IP = process.env.G5_PRIVATE_IP;
 const G5_INSTANCE_ID = process.env.G5_INSTANCE_ID; 
+const JWT_SECRET = process.env.JWT_SECRET;
 const AGENT_PORT = 5000;
 
 const app = express();
@@ -49,6 +51,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/js', express.static(path.join(__dirname, 'node_modules/chart.js/dist')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+const authenticateExtension = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'No token provided' });
+
+    const token = authHeader.split(' ')[1]; // Bearer <token>
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ error: 'Invalid token' });
+        req.user = user;
+        next();
+    });
+};
 
 // --- S3 Client & Dump Page Configuration ---
 const s3Client = new S3Client({ region: "us-east-1" }); 
@@ -739,6 +752,127 @@ app.post('/api/search/query', async (req, res) => {
     } catch (err) {
         console.error("Search Error:", err);
         res.status(500).json({ error: 'System error managing research node.' });
+    }
+});
+
+// ==================================================================
+// RAG & EXTENSION API
+// ==================================================================
+
+// 1. AUTH HANDSHAKE: Exchange Wiki Session Cookie for API JWT
+app.post('/auth/verify-session', async (req, res) => {
+    // 1. We expect the client to send the specific cookie value
+    const { session_cookie } = req.body; 
+
+    if (!session_cookie) return res.status(400).json({ error: "No cookie provided" });
+
+    try {
+        // 2. Loopback to MediaWiki
+        // We pass the cookie named 'enworks_session' because that matches your DB name/cookie prefix
+        const wikiRes = await axios.get("https://bahai.works/api.php", {
+            params: { action: "query", meta: "userinfo", format: "json" },
+            headers: { "Cookie": `enworks_session=${session_cookie}` } 
+        });
+
+        const userInfo = wikiRes.data.query.userinfo;
+
+        if (!userInfo || userInfo.id === 0) {
+            return res.status(401).json({ error: "Invalid Session or Anon User" });
+        }
+
+        // 3. Upsert User (Track them in our system)
+        await pool.query(
+            `INSERT INTO api_users (mw_user_id, mw_username, role) 
+             VALUES (?, ?, 'user') 
+             ON DUPLICATE KEY UPDATE mw_username = VALUES(mw_username)`,
+            [userInfo.id, userInfo.name]
+        );
+
+        // 4. Get the Internal ID (This is what we store in logical_units)
+        const [userRows] = await pool.query("SELECT id, role FROM api_users WHERE mw_user_id = ?", [userInfo.id]);
+        
+        // 5. Sign JWT with the Internal ID
+        const token = jwt.sign({ 
+            uid: userRows[0].id,   // <--- This is the ID we will use for 'created_by'
+            mw_id: userInfo.id, 
+            role: userRows[0].role 
+        }, JWT_SECRET, { expiresIn: '30d' });
+
+        res.json({ token, username: userInfo.name });
+
+    } catch (err) {
+        console.error("Auth Handshake Error:", err);
+        res.status(500).json({ error: "Auth verification failed" });
+    }
+});
+
+// 2. CONTRIBUTE LOGICAL UNIT (Protected)
+app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
+    const { 
+        source_code, 
+        source_page_id, 
+        start_char_index, 
+        end_char_index, 
+        text_content, 
+        author, 
+        unit_type 
+    } = req.body;
+
+    // Basic Validation
+    if (!source_code || !source_page_id || !text_content) {
+        return res.status(400).json({ error: "Missing required fields." });
+    }
+
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        await conn.beginTransaction();
+
+        // A. Resolve Article ID (Get or Create Logic)
+        let articleId;
+        const [articleRows] = await conn.query(
+            "SELECT id FROM articles WHERE source_code = ? AND source_page_id = ?",
+            [source_code, source_page_id]
+        );
+
+        if (articleRows.length > 0) {
+            articleId = articleRows[0].id;
+        } else {
+            // Stub the article if it doesn't exist yet
+            const [result] = await conn.query(
+                `INSERT INTO articles 
+                (source_code, source_page_id, title, latest_rev_id, is_active) 
+                VALUES (?, ?, ?, ?, ?)`,
+                [source_code, source_page_id, "Auto-Discovered Page", 0, 1]
+            );
+            articleId = result.insertId;
+        }
+
+        // B. Insert Logical Unit
+        const [unitResult] = await conn.query(
+            `INSERT INTO logical_units 
+            (article_id, start_char_index, end_char_index, text_content, author, unit_type, rag_indexed) 
+            VALUES (?, ?, ?, ?, ?, ?, 0)`,
+            [articleId, start_char_index, end_char_index, text_content, author, unit_type]
+        );
+
+        // C. (Optional) Log who created it using req.user.uid?
+        // You might want to add a 'created_by' column to logical_units later.
+
+        await conn.commit();
+
+        res.status(201).json({
+            success: true,
+            unit_id: unitResult.insertId,
+            parent_article_id: articleId
+        });
+
+    } catch (err) {
+        if (conn) await conn.rollback();
+        console.error("RAG Contribution Error:", err);
+        res.status(500).json({ error: "Database transaction failed" });
+    } finally {
+        if (conn) conn.release();
     }
 });
 
