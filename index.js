@@ -45,6 +45,16 @@ const pool = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0
 });
+// Dedicated pool for RAG Metadata
+const metadataPool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER_META,
+    password: process.env.DB_PASSWORD_META,
+    database: process.env.DB_NAME_META,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
