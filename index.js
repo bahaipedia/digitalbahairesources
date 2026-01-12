@@ -816,7 +816,7 @@ app.post('/auth/verify-session', async (req, res) => {
             const mwUserName = loginData.lgusername;
 
             // A. Upsert User in your DB
-            await pool.query(
+            await metadataPool.query(
                 `INSERT INTO api_users (mw_user_id, mw_username, role) 
                  VALUES (?, ?, 'user') 
                  ON DUPLICATE KEY UPDATE mw_username = VALUES(mw_username)`,
@@ -824,7 +824,7 @@ app.post('/auth/verify-session', async (req, res) => {
             );
 
             // B. Get Internal ID
-            const [userRows] = await pool.query("SELECT id, role FROM api_users WHERE mw_user_id = ?", [mwUserId]);
+            const [userRows] = await metadataPool.query("SELECT id, role FROM api_users WHERE mw_user_id = ?", [mwUserId]);
             
             // C. Issue JWT
             const token = jwt.sign({ 
