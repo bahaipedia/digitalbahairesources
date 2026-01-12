@@ -761,63 +761,75 @@ app.post('/api/search/query', async (req, res) => {
 
 // 1. AUTH HANDSHAKE: Exchange Wiki Session Cookie for API JWT
 app.post('/auth/verify-session', async (req, res) => {
-    const { session_cookie } = req.body;
+    // CHANGE: Accept credentials instead of cookie
+    const { username, bot_password } = req.body;
 
-    if (!session_cookie) return res.status(400).json({ error: "No cookie provided" });
-
-    // DEBUG LOG: See what cookie we are trying
-    console.log(`[Auth] Verifying cookie: ${session_cookie.substring(0, 10)}...`);
+    if (!username || !bot_password) {
+        return res.status(400).json({ error: "Missing credentials" });
+    }
 
     try {
-        const wikiRes = await axios.get("https://bahai.works/api.php", {
+        const mwUrl = "https://bahai.works/api.php";
+        
+        // 1. GET LOGIN TOKEN
+        const tokenRes = await axios.get(mwUrl, {
             params: {
                 action: "query",
-                meta: "userinfo",
+                meta: "tokens",
+                type: "login",
                 format: "json"
-            },
-            headers: {
-                // 1. CRITICAL: Add a User Agent (MediaWiki requires this)
-                "User-Agent": "RAG-Librarian-Auth/1.0 (sarah@digitalbahairesources.org)",
-                "Cookie": `enworks_session=${session_cookie}`
             }
         });
+        
+        const loginToken = tokenRes.data.query.tokens.logintoken;
 
-        // 2. DEBUG LOG: See exactly what MediaWiki returned
-        console.log("[Auth] Wiki Response:", JSON.stringify(wikiRes.data, null, 2));
+        // 2. PERFORM LOGIN
+        // MediaWiki requires a POST with url-encoded form data
+        const params = new URLSearchParams();
+        params.append('action', 'login');
+        params.append('lgname', username);
+        params.append('lgpassword', bot_password);
+        params.append('lgtoken', loginToken);
+        params.append('format', 'json');
 
-        const userInfo = wikiRes.data.query.userinfo;
+        const loginRes = await axios.post(mwUrl, params);
+        const loginData = loginRes.data.login;
 
-        if (!userInfo || userInfo.id === 0) {
-            console.log("[Auth] Failed: User is Anon (ID 0)");
+        // 3. CHECK RESULT
+        if (loginData.result === "Success") {
+            const mwUserId = loginData.lguserid;
+            const mwUserName = loginData.lgusername;
+
+            // A. Upsert User in your DB
+            await pool.query(
+                `INSERT INTO api_users (mw_user_id, mw_username, role) 
+                 VALUES (?, ?, 'user') 
+                 ON DUPLICATE KEY UPDATE mw_username = VALUES(mw_username)`,
+                [mwUserId, mwUserName]
+            );
+
+            // B. Get Internal ID
+            const [userRows] = await pool.query("SELECT id, role FROM api_users WHERE mw_user_id = ?", [mwUserId]);
+            
+            // C. Issue JWT
+            const token = jwt.sign({ 
+                uid: userRows[0].id, 
+                mw_id: mwUserId, 
+                role: userRows[0].role 
+            }, JWT_SECRET, { expiresIn: '30d' });
+
+            return res.json({ token, username: mwUserName, role: userRows[0].role });
+        } else {
+            // Login failed (Wrong password, throttled, etc.)
             return res.status(401).json({ 
-                error: "Invalid Session or Anon User", 
-                wiki_response: wikiRes.data
+                error: "Login Failed", 
+                details: loginData.reason || loginData.result 
             });
         }
 
-        // 3. Upsert User (Track them in our system)
-        await pool.query(
-            `INSERT INTO api_users (mw_user_id, mw_username, role) 
-             VALUES (?, ?, 'user') 
-             ON DUPLICATE KEY UPDATE mw_username = VALUES(mw_username)`,
-            [userInfo.id, userInfo.name]
-        );
-
-        // 4. Get the Internal ID (This is what we store in logical_units)
-        const [userRows] = await pool.query("SELECT id, role FROM api_users WHERE mw_user_id = ?", [userInfo.id]);
-        
-        // 5. Sign JWT with the Internal ID
-        const token = jwt.sign({ 
-            uid: userRows[0].id,   // <--- This is the ID we will use for 'created_by'
-            mw_id: userInfo.id, 
-            role: userRows[0].role 
-        }, JWT_SECRET, { expiresIn: '30d' });
-
-        res.json({ token, username: userInfo.name });
-
     } catch (err) {
-        console.error("Auth Handshake Error:", err);
-        res.status(500).json({ error: "Auth verification failed" });
+        console.error("[Auth] Login Error:", err.message);
+        res.status(500).json({ error: "Authentication system error" });
     }
 });
 
