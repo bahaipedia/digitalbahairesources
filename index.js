@@ -935,6 +935,8 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
         const query = `
             SELECT 
                 u.id, 
+                a.source_code,
+                a.source_page_id,
                 u.article_id, 
                 u.start_char_index, 
                 u.end_char_index, 
