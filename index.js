@@ -873,7 +873,7 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
 
     let conn;
     try {
-        conn = await pool.getConnection();
+        conn = await metadataPool.getConnection();
         await conn.beginTransaction();
 
         // A. Resolve Article ID (Get or Create Logic)
