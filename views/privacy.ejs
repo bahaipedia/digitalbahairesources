@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="images/dbs-favicon.png" type="image/png">
+</head>
+<body>
+    <%- include('partials/header', { mini: false }) %>
+    <main>
+        <section class="content-area">
+            <h1>Privacy Policy</h1>
+            <p>Last Updated: January 2026</p>
+
+            <p><strong>Digital Bahá’í Resources</strong> is the parent organization for a suite of digital projects including Bahaipedia.org, Bahai.works, Bahai.media, and Bahaidata.org. We are committed to maintaining the trust of our contributors and visitors.</p>
+
+            <hr>
+
+            <h3>1. Website Visitors</h3>
+            <p>This website (digitalbahairesources.org) is largely read-only and designed to provide transparency regarding our projects. For visitors to this site:</p>
+            <ul>
+                <li><strong>Logs:</strong> We may collect standard server logs (IP address, user agent, time of visit) to generate the aggregate traffic statistics found on our "Traffic" tab. These logs are used solely for performance monitoring and security.</li>
+                <li><strong>Cookies:</strong> This website does not use cookies for general visitors.</li>
+            </ul>
+
+            <hr>
+
+            <h3>2. Browser Extensions & Software Tools</h3>
+            <p>We develop browser extensions (such as the "Nexus" / "RAG Librarian" tool) to assist researchers in tagging and organizing text on our partner wikis. If you choose to install and authenticate with these tools, we collect the following specific data:</p>
+
+            <h4>Authentication Data</h4>
+            <p>To ensure data integrity, our tools require authentication using your MediaWiki credentials (specifically, a unique "Bot Password"). We store:</p>
+            <ul>
+                <li>Your MediaWiki Username (to attribute your contributions).</li>
+                <li>An encrypted token derived from your Bot Password.</li>
+            </ul>
+
+            <h4>User Activity & Content</h4>
+            <p>When you actively use our extensions to contribute data, we collect:</p>
+            <ul>
+                <li><strong>Selected Text:</strong> The specific snippets of text you highlight or tag.</li>
+                <li><strong>Page Metadata:</strong> The source URL, page ID, and revision ID of the content you are annotating.</li>
+                <li><strong>Tags & Annotations:</strong> Any metadata you manually attach to the text.</li>
+            </ul>
+            <p>This data is stored in our secure database and is used exclusively to build knowledge graphs and improve search retrieval systems for the Bahá’í Writings.</p>
+
+            <hr>
+
+            <h3>3. Data Sharing & Security</h3>
+            <p>We do not sell, trade, or rent user personal identification information to others.</p>
+            <p><strong>Public Contributions:</strong> Please be aware that, like any wiki project, the text highlights and tags you submit are intended to become part of a public or semi-public dataset to aid research.</p>
+            <p><strong>Data Removal:</strong> Users of our tools have the ability to delete their own contributions directly through the tool interface. If you require assistance removing data, please contact us.</p>
+
+            <hr>
+
+            <h3>Contact</h3>
+            <p>If you have questions about this policy or our data practices, please email: <script>
+              var user = 'haslipsarah';
+              var domain = 'gmail.com';
+              document.write('<a href="mailto:' + user + '@' + domain + '">' + user + '@' + domain + '</a>');
+            </script></p>
+        </section>
+    </main>
+    <%- include('partials/footer') %>
+</body>
+</html>
