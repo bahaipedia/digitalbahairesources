@@ -1072,6 +1072,58 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
     }
 });
 
+// GET /api/relationships
+// Returns all relationships where the Subject OR Object is on the requested page
+app.get('/api/relationships', authenticateExtension, async (req, res) => {
+    const { source_code, source_page_id } = req.query;
+
+    if (!source_code || !source_page_id) {
+        return res.status(400).json({ error: "Missing source context" });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                r.subject_unit_id,
+                r.object_unit_id,
+                r.relationship_type,
+                r.weight,
+                
+                -- Expand Subject Info
+                s.text_content as subject_text,
+                s.unit_type as subject_type,
+                a_s.source_page_id as subject_page_id,
+
+                -- Expand Object Info
+                o.text_content as object_text,
+                o.unit_type as object_type,
+                a_o.source_page_id as object_page_id
+
+            FROM unit_relationships r
+            JOIN logical_units s ON r.subject_unit_id = s.id
+            JOIN articles a_s ON s.article_id = a_s.id
+            JOIN logical_units o ON r.object_unit_id = o.id
+            JOIN articles a_o ON o.article_id = a_o.id
+
+            WHERE 
+                (a_s.source_code = ? AND a_s.source_page_id = ?)
+                OR 
+                (a_o.source_code = ? AND a_o.source_page_id = ?)
+        `;
+
+        const [rows] = await metadataPool.query(query, [
+            source_code, source_page_id, 
+            source_code, source_page_id
+        ]);
+
+        res.json(rows);
+
+    } catch (err) {
+        console.error("[API] Get Relationships Error:", err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
 // POST /api/contribute/relationship
 // Connects two existing units (Subject -> Object)
 app.post('/api/contribute/relationship', authenticateExtension, async (req, res) => {
