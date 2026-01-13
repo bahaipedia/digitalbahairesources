@@ -1250,9 +1250,9 @@ app.delete('/api/units/:id', authenticateExtension, async (req, res) => {
 
 // DELETE KNOWLEDGE UNIT (With Partner Cleanup)
 app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) => {
-    const unitId = req.params.id;
+    const unitId = parseInt(req.params.id, 10); // Ensure int
     const userId = req.user.uid;
-    
+
     if (isNaN(unitId)) return res.status(400).json({ error: "Invalid ID" });
 
     let conn;
@@ -1260,16 +1260,15 @@ app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) =
         conn = await metadataPool.getConnection();
         await conn.beginTransaction();
 
-        // 1. Inspect the Unit BEFORE deleting it
-        const [units] = await conn.query("SELECT id, unit_type FROM logical_units WHERE id = ?", [unitId]);
+        // 1. Get the unit to be deleted
+        const [units] = await conn.query("SELECT * FROM logical_units WHERE id = ?", [unitId]);
         if (units.length === 0) {
             await conn.rollback();
             return res.status(404).json({ error: "Unit not found" });
         }
         const unitToDelete = units[0];
 
-        // 2. Find Partner ID (if this is a link type)
-        // We must do this NOW because deleting the unit will cascade-delete the relationship row
+        // 2. Identify Partner (Run this BEFORE deleting the main unit)
         let partnerId = null;
         if (unitToDelete.unit_type === 'link_subject' || unitToDelete.unit_type === 'link_object') {
             const [rels] = await conn.query(`
@@ -1280,22 +1279,33 @@ app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) =
 
             if (rels.length > 0) {
                 const r = rels[0];
-                // If we are subject, partner is object (and vice versa)
-                partnerId = (r.subject_unit_id == unitId) ? r.object_unit_id : r.subject_unit_id;
+                // Compare as Numbers to be safe
+                if (Number(r.subject_unit_id) === unitId) {
+                    partnerId = r.object_unit_id;
+                } else {
+                    partnerId = r.subject_unit_id;
+                }
             }
         }
 
-        // 3. Delete the Requested Unit
-        // (This triggers ON DELETE CASCADE for the unit_relationships row)
-        await conn.query("DELETE FROM logical_units WHERE id = ? AND created_by = ?", [unitId, userId]);
+        // 3. Delete the Targeted Unit (Cascades to unit_relationships)
+        const [delResult] = await conn.query(
+            "DELETE FROM logical_units WHERE id = ? AND created_by = ?", 
+            [unitId, userId]
+        );
 
-        // 4. Delete the Partner (Conditionally)
-        // Only delete the partner if it is ALSO a link type ('link_subject' or 'link_object')
-        // We do NOT want to delete a 'tablet' or 'prayer' just because a link was removed.
+        // Security Check: Did the user actually own the unit?
+        if (delResult.affectedRows === 0) {
+             await conn.rollback();
+             return res.status(403).json({ error: "Permission denied or unit already deleted." });
+        }
+
+        // 4. Delete Partner (If applicable)
         if (partnerId) {
-            const [partnerRows] = await conn.query("SELECT unit_type FROM logical_units WHERE id = ?", [partnerId]);
-            if (partnerRows.length > 0) {
-                const pType = partnerRows[0].unit_type;
+            // Double check partner is also a strictly deletable link type
+            const [pRows] = await conn.query("SELECT unit_type FROM logical_units WHERE id = ?", [partnerId]);
+            if (pRows.length > 0) {
+                const pType = pRows[0].unit_type;
                 if (pType === 'link_subject' || pType === 'link_object') {
                     await conn.query("DELETE FROM logical_units WHERE id = ?", [partnerId]);
                 }
@@ -1303,7 +1313,7 @@ app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) =
         }
 
         await conn.commit();
-        res.json({ success: true, message: "Unit and partners deleted." });
+        res.json({ success: true, partner_deleted: !!partnerId });
 
     } catch (err) {
         if (conn) await conn.rollback();
