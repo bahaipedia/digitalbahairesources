@@ -130,6 +130,7 @@ app.get('/bahaidata', (req, res) => res.render('bahaidata'));
 app.get('/bahaiquest', (req, res) => res.render('bahaiquest'));
 app.get('/huququlator', (req, res) => res.render('huququlator'));
 app.get('/rbahai', (req, res) => res.render('r-bahai'));
+app.get('/privacy-policy', (req, res) => res.render('privacy-policy'));
 app.get('/search', (req, res) => { res.render('search');});
 app.get('/technology', (req, res) => res.render('technology'));
 
