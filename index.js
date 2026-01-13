@@ -1104,6 +1104,39 @@ app.post('/api/contribute/relationship', authenticateExtension, async (req, res)
     }
 });
 
+// GET /api/qa
+// Fetches canonical questions. Useful for populating the edit form.
+app.get('/api/qa', authenticateExtension, async (req, res) => {
+    const { answer_unit_id } = req.query;
+
+    // Basic validation
+    if (!answer_unit_id) {
+        return res.status(400).json({ error: "Missing required parameter: answer_unit_id" });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                id,
+                question_text,
+                answer_unit_id,
+                source_book,
+                created_by
+            FROM canonical_questions
+            WHERE answer_unit_id = ?
+        `;
+
+        const [rows] = await metadataPool.query(query, [answer_unit_id]);
+        
+        // Return array (even if empty) to keep frontend logic simple
+        res.json(rows);
+
+    } catch (err) {
+        console.error("[API] Fetch QA Error:", err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
 // POST /api/contribute/qa
 // Creates a Canonical Question linked to an Answer Unit
 app.post('/api/contribute/qa', authenticateExtension, async (req, res) => {
