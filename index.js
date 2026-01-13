@@ -882,6 +882,31 @@ app.get('/api/tags', async (req, res) => {
     }
 });
 
+// GET /api/tags/tree
+// Returns the full hierarchy of defined tags
+app.get('/api/tags/tree', async (req, res) => {
+    try {
+        const [rows] = await metadataPool.query("SELECT id, label, parent_id, description FROM defined_tags ORDER BY label ASC");
+
+        // Helper to nest flat list into tree
+        const buildTree = (items, parentId = null) => {
+            return items
+                .filter(item => item.parent_id === parentId)
+                .map(item => ({
+                    ...item,
+                    children: buildTree(items, item.id)
+                }));
+        };
+
+        const tree = buildTree(rows);
+        res.json(tree);
+
+    } catch (err) {
+        console.error("[API] Tag Tree Error:", err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
 // GET LOGICAL UNITS (Read Path - Updated for Permissions)
 app.get('/api/units', authenticateExtension, async (req, res) => {
     const { source_code, source_page_id } = req.query;
@@ -1020,6 +1045,65 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
         res.status(500).json({ error: "Database transaction failed", details: err.message });
     } finally {
         if (conn) conn.release();
+    }
+});
+
+// POST /api/contribute/relationship
+// Connects two existing units (Subject -> Object)
+app.post('/api/contribute/relationship', authenticateExtension, async (req, res) => {
+    const { subject_unit_id, object_unit_id, relationship_type } = req.body;
+    const userId = req.user.uid;
+
+    if (!subject_unit_id || !object_unit_id || !relationship_type) {
+        return res.status(400).json({ error: "Missing required IDs or type." });
+    }
+
+    if (subject_unit_id === object_unit_id) {
+        return res.status(400).json({ error: "Cannot link a unit to itself." });
+    }
+
+    try {
+        // Use IGNORE to prevent crashing on duplicate links
+        const query = `
+            INSERT IGNORE INTO unit_relationships 
+            (subject_unit_id, object_unit_id, relationship_type, created_by)
+            VALUES (?, ?, ?, ?)
+        `;
+        
+        await metadataPool.query(query, [subject_unit_id, object_unit_id, relationship_type, userId]);
+        
+        res.status(201).json({ success: true, message: "Relationship linked." });
+
+    } catch (err) {
+        console.error("[API] Relationship Error:", err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+// POST /api/contribute/qa
+// Creates a Canonical Question linked to an Answer Unit
+app.post('/api/contribute/qa', authenticateExtension, async (req, res) => {
+    const { question_text, answer_unit_id, source_book } = req.body;
+    const userId = req.user.uid;
+
+    if (!question_text || !answer_unit_id) {
+        return res.status(400).json({ error: "Missing question or answer ID." });
+    }
+
+    try {
+        const query = `
+            INSERT INTO canonical_questions 
+            (question_text, answer_unit_id, source_book, created_by)
+            VALUES (?, ?, ?, ?)
+        `;
+        
+        const [result] = await metadataPool.query(query, [question_text, answer_unit_id, source_book || 'Unknown', userId]);
+        
+        res.status(201).json({ success: true, id: result.insertId });
+
+    } catch (err) {
+        console.error("[API] Q&A Error:", err);
+        res.status(500).json({ error: "Database error" });
     }
 });
 
