@@ -1252,6 +1252,8 @@ app.delete('/api/units/:id', authenticateExtension, async (req, res) => {
 app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) => {
     const unitId = req.params.id;
     const userId = req.user.uid;
+    
+    if (isNaN(unitId)) return res.status(400).json({ error: "Invalid ID" });
 
     let conn;
     try {
