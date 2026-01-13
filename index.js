@@ -909,12 +909,18 @@ app.get('/api/tags/tree', async (req, res) => {
 
 // GET LOGICAL UNITS (Read Path - Updated for Permissions)
 app.get('/api/units', authenticateExtension, async (req, res) => {
-    const { source_code, source_page_id } = req.query;
+    // Now accepts tag_id as an alternative filter
+    const { source_code, source_page_id, tag_id, limit } = req.query;
     const currentUserId = req.user.uid;
     const currentUserRole = req.user.role;
 
+    // Validate: Must have EITHER (Page context) OR (Tag context)
+    if ((!source_code || !source_page_id) && !tag_id) {
+        return res.status(400).json({ error: "Must provide source_code+source_page_id OR tag_id" });
+    }
+
     try {
-        const query = `
+        let query = `
             SELECT 
                 u.id, 
                 a.source_code,
@@ -928,20 +934,38 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
                 u.created_by
             FROM logical_units u
             JOIN articles a ON u.article_id = a.id
-            WHERE a.source_code = ? 
-            AND a.source_page_id = ?
         `;
 
-        const [rows] = await metadataPool.query(query, [source_code, source_page_id]);
+        const params = [];
 
-        // Calculate permissions for each unit
+        // SCENARIO A: Fetch by Page (Current behavior)
+        if (source_code && source_page_id) {
+            query += ` WHERE a.source_code = ? AND a.source_page_id = ?`;
+            params.push(source_code, source_page_id);
+        } 
+        // SCENARIO B: Fetch by Tag (Taxonomy Explorer)
+        else if (tag_id) {
+            query += ` 
+                JOIN unit_tags ut ON u.id = ut.unit_id 
+                WHERE ut.tag_id = ? 
+            `;
+            params.push(tag_id);
+        }
+
+        // Optional Limit for Taxonomy previews
+        if (limit) {
+            query += ` LIMIT ?`;
+            params.push(parseInt(limit));
+        }
+
+        const [rows] = await metadataPool.query(query, params);
+
         const unitsWithPermissions = rows.map(unit => ({
             ...unit,
-            // User can delete if they created it OR if they are admin
             can_delete: (unit.created_by === currentUserId) || (currentUserRole === 'admin')
         }));
 
-        res.json({ units: unitsWithPermissions });
+        res.json(unitsWithPermissions); // NOTE: Changed return format to Array for consistency with client
 
     } catch (err) {
         console.error("[API] Fetch Units Error:", err);
