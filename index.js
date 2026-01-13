@@ -1248,6 +1248,70 @@ app.delete('/api/units/:id', authenticateExtension, async (req, res) => {
     }
 });
 
+// DELETE KNOWLEDGE UNIT (With Partner Cleanup)
+app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) => {
+    const unitId = req.params.id;
+    const userId = req.user.uid;
+
+    let conn;
+    try {
+        conn = await metadataPool.getConnection();
+        await conn.beginTransaction();
+
+        // 1. Inspect the Unit BEFORE deleting it
+        const [units] = await conn.query("SELECT id, unit_type FROM logical_units WHERE id = ?", [unitId]);
+        if (units.length === 0) {
+            await conn.rollback();
+            return res.status(404).json({ error: "Unit not found" });
+        }
+        const unitToDelete = units[0];
+
+        // 2. Find Partner ID (if this is a link type)
+        // We must do this NOW because deleting the unit will cascade-delete the relationship row
+        let partnerId = null;
+        if (unitToDelete.unit_type === 'link_subject' || unitToDelete.unit_type === 'link_object') {
+            const [rels] = await conn.query(`
+                SELECT subject_unit_id, object_unit_id 
+                FROM unit_relationships 
+                WHERE subject_unit_id = ? OR object_unit_id = ?
+            `, [unitId, unitId]);
+
+            if (rels.length > 0) {
+                const r = rels[0];
+                // If we are subject, partner is object (and vice versa)
+                partnerId = (r.subject_unit_id == unitId) ? r.object_unit_id : r.subject_unit_id;
+            }
+        }
+
+        // 3. Delete the Requested Unit
+        // (This triggers ON DELETE CASCADE for the unit_relationships row)
+        await conn.query("DELETE FROM logical_units WHERE id = ? AND created_by = ?", [unitId, userId]);
+
+        // 4. Delete the Partner (Conditionally)
+        // Only delete the partner if it is ALSO a link type ('link_subject' or 'link_object')
+        // We do NOT want to delete a 'tablet' or 'prayer' just because a link was removed.
+        if (partnerId) {
+            const [partnerRows] = await conn.query("SELECT unit_type FROM logical_units WHERE id = ?", [partnerId]);
+            if (partnerRows.length > 0) {
+                const pType = partnerRows[0].unit_type;
+                if (pType === 'link_subject' || pType === 'link_object') {
+                    await conn.query("DELETE FROM logical_units WHERE id = ?", [partnerId]);
+                }
+            }
+        }
+
+        await conn.commit();
+        res.json({ success: true, message: "Unit and partners deleted." });
+
+    } catch (err) {
+        if (conn) await conn.rollback();
+        console.error("Delete Error:", err);
+        res.status(500).json({ error: "Database error" });
+    } finally {
+        if (conn) conn.release();
+    }
+});
+
 // END //
 app.listen(PORT, () => {
     console.log(`Primary site running at http://localhost:${PORT}`);
