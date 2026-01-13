@@ -201,17 +201,14 @@ footer {
     color: white;
     font-size: 0.9rem;
 }
-.footer-links {
-    margin-top: 0.5rem;
-}
-
-.footer-links a {
-    color: #004488;
+footer a {
+    color: #fff; 
     text-decoration: none;
-    margin: 0 0.5rem;
+    margin: 0 5px; 
 }
 
-.footer-links a:hover {
+footer a:hover {
+    color: #FAF9F6;
     text-decoration: underline;
 }
 
