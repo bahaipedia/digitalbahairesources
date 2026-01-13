@@ -201,6 +201,19 @@ footer {
     color: white;
     font-size: 0.9rem;
 }
+.footer-links {
+    margin-top: 0.5rem;
+}
+
+.footer-links a {
+    color: #004488;
+    text-decoration: none;
+    margin: 0 0.5rem;
+}
+
+.footer-links a:hover {
+    text-decoration: underline;
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {
