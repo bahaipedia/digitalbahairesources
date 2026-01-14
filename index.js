@@ -886,7 +886,7 @@ app.get('/api/tags', async (req, res) => {
 // Returns the full hierarchy of defined tags
 app.get('/api/tags/tree', async (req, res) => {
     try {
-        const [rows] = await metadataPool.query("SELECT id, label, parent_id, description FROM defined_tags ORDER BY label ASC");
+        const [rows] = await metadataPool.query("SELECT id, label, parent_id, description, created_by, is_official FROM defined_tags ORDER BY label ASC");
 
         // Helper to nest flat list into tree
         const buildTree = (items, parentId = null) => {
@@ -898,9 +898,8 @@ app.get('/api/tags/tree', async (req, res) => {
                 }));
         };
 
-        const tree = buildTree(rows);
-        res.json(tree);
-
+        res.json(buildTree(rows));
+        
     } catch (err) {
         console.error("[API] Tag Tree Error:", err);
         res.status(500).json({ error: "Database error" });
@@ -1022,6 +1021,84 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
     } catch (err) {
         console.error("[API] Fetch Units Error:", err);
         res.status(500).json({ error: "Database error" });
+    }
+});
+
+// GET /api/units/:id/tags
+// Fetch tags for a specific unit (for the Edit form)
+app.get('/api/units/:id/tags', authenticateExtension, async (req, res) => {
+    try {
+        const [rows] = await metadataPool.query(
+            `SELECT t.id, t.label, t.is_official 
+             FROM defined_tags t
+             JOIN unit_tags ut ON t.id = ut.tag_id
+             WHERE ut.unit_id = ?`,
+            [req.params.id]
+        );
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: "Db error" });
+    }
+});
+
+// PUT /api/units/:id/tags
+// Update tags for a unit
+app.put('/api/units/:id/tags', authenticateExtension, async (req, res) => {
+    const unitId = req.params.id;
+    const { tags } = req.body; // Array of tag IDs
+    const userId = req.user.uid;
+
+    try {
+        // 1. Verify Ownership (or Admin)
+        const [unit] = await metadataPool.query("SELECT created_by FROM logical_units WHERE id = ?", [unitId]);
+        if (unit.length === 0) return res.status(404).json({ error: "Unit not found" });
+        
+        if (unit[0].created_by !== userId && req.user.role !== 'admin') {
+            return res.status(403).json({ error: "Unauthorized" });
+        }
+
+        const conn = await metadataPool.getConnection();
+        await conn.beginTransaction();
+
+        // 2. Wipe existing tags
+        await conn.query("DELETE FROM unit_tags WHERE unit_id = ?", [unitId]);
+
+        // 3. Insert new tags
+        if (tags && tags.length > 0) {
+             const values = tags.map(tagId => [unitId, tagId]);
+             await conn.query("INSERT INTO unit_tags (unit_id, tag_id) VALUES ?", [values]);
+        }
+
+        await conn.commit();
+        conn.release();
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Update failed" });
+    }
+});
+
+// DELETE /api/units/:id
+app.delete('/api/units/:id', authenticateExtension, async (req, res) => {
+    const unitId = req.params.id;
+    const userId = req.user.uid;
+
+    try {
+        const [unit] = await metadataPool.query("SELECT created_by FROM logical_units WHERE id = ?", [unitId]);
+        if (unit.length === 0) return res.status(404).json({ error: "Unit not found" });
+
+        if (unit[0].created_by !== userId && req.user.role !== 'admin') {
+            return res.status(403).json({ error: "Unauthorized" });
+        }
+
+        // logical_units has a CASCADE delete on unit_tags usually, 
+        // but let's delete strictly.
+        await metadataPool.query("DELETE FROM unit_tags WHERE unit_id = ?", [unitId]);
+        await metadataPool.query("DELETE FROM logical_units WHERE id = ?", [unitId]);
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "Delete failed" });
     }
 });
 
