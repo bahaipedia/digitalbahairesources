@@ -1035,7 +1035,8 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
         text_content, 
         author, 
         unit_type,
-        tags
+        tags,
+        title
     } = req.body;
 
     // Basic Validation
@@ -1063,7 +1064,7 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
         } else {
             // STUB NEW ARTICLE
             // FIX: Use the title from the context, fallback only if absolutely necessary
-            const articleTitle = title || "Unknown Title"; 
+            const articleTitle = title || "Unknown Title";
 
             const [result] = await conn.query(
                 `INSERT INTO articles 
