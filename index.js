@@ -909,7 +909,7 @@ app.get('/api/tags/tree', async (req, res) => {
 
 // POST /api/tags
 // Create a new Personal Tag (or Official if admin)
-app.post('/api/tags', authenticateToken, async (req, res) => {
+app.post('/api/tags', authenticateExtension, async (req, res) => {
     const { label, is_official } = req.body;
     // req.user comes from your JWT middleware
     const userId = req.user.id; 
