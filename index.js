@@ -1027,6 +1027,9 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
 
 // CONTRIBUTE LOGICAL UNIT (Protected)
 app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
+    // 1. Debugging: Log exactly what the extension is sending
+    // console.log("Received Payload:", JSON.stringify(req.body, null, 2)); 
+
     const { 
         source_code, 
         source_page_id, 
@@ -1034,15 +1037,23 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
         end_char_index, 
         text_content, 
         author, 
-        unit_type,
-        tags,
-        title
+        unit_type, 
+        tags
     } = req.body;
 
-    // Resolve Title: Check root first, then context object
-    const payloadTitle = req.body.title || (context && context.title);
+    // 2. Resolve Title Strategy: 
+    // - Priority 1: Check root 'title' (Standard)
+    // - Priority 2: Check 'context.title' (If frontend nests it)
+    const payloadTitle = req.body.title || (req.body.context && req.body.context.title);
 
-    // Basic Validation
+    // 3. Strict Validation: Fail immediately if Title is missing
+    if (!payloadTitle || typeof payloadTitle !== 'string' || payloadTitle.trim() === '') {
+        console.error("[API] Blocked write: Payload missing title.", req.body);
+        return res.status(400).json({ 
+            error: "Missing Title. Cannot create article without a valid title." 
+        });
+    }
+
     if (!source_code || !source_page_id || !text_content) {
         return res.status(400).json({ error: "Missing required fields." });
     }
@@ -1062,25 +1073,16 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
 
         let articleId;
         if (articleRows.length > 0) {
-            // Case 1: Article Exists - Use it
+            // Case 1: Article Exists
             articleId = articleRows[0].id;
         } else {
-            // Case 2: Article Missing - Create it (Lazy Load)
-            
-            // STRICT VALIDATION: If we don't have a title, we ABORT.
-            if (!payloadTitle || payloadTitle.trim() === "Unknown Title" || payloadTitle.trim() === "") {
-                await conn.rollback();
-                console.error(`[API] Rejected write: Missing title for page ${source_page_id}`);
-                return res.status(400).json({ 
-                    error: "Data Integrity Violation: Cannot create new article without a valid title." 
-                });
-            }
-
+            // Case 2: Article Missing (Lazy Load)
+            // We use the strictly validated payloadTitle here
             const [result] = await conn.query(
                 `INSERT INTO articles 
                 (source_code, source_page_id, title, latest_rev_id, is_active) 
                 VALUES (?, ?, ?, ?, ?)`,
-                [source_code, source_page_id, articleTitle, 0, 1]
+                [source_code, source_page_id, payloadTitle, 0, 1]
             );
             articleId = result.insertId;
         }
