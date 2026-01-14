@@ -867,7 +867,7 @@ app.get('/api/tags', async (req, res) => {
 
     try {
         const query = `
-            SELECT id, tag_label AS label 
+            SELECT id, label 
             FROM defined_tags 
             WHERE label LIKE ? 
             LIMIT 10
@@ -939,7 +939,7 @@ app.post('/api/tags', authenticateExtension, async (req, res) => {
             is_official: !!officialFlag 
         });
 
-    } catch (err: any) {
+    } catch (err) {
         // 2. Handle Duplicates (Race condition or re-adding existing)
         if (err.code === 'ER_DUP_ENTRY') {
             // Fetch the existing tag ID for this user so the UI can select it
