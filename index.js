@@ -907,6 +907,52 @@ app.get('/api/tags/tree', async (req, res) => {
     }
 });
 
+// POST /api/tags
+// Create a new Personal Tag (or Official if admin)
+app.post('/api/tags', authenticateToken, async (req, res) => {
+    const { label, is_official } = req.body;
+    // req.user comes from your JWT middleware
+    const userId = req.user.id; 
+
+    if (!label || label.trim() === '') {
+        return res.status(400).json({ error: "Label is required" });
+    }
+
+    try {
+        // 1. Try to insert
+        const query = `
+            INSERT INTO defined_tags (label, created_by, is_official) 
+            VALUES (?, ?, ?)
+        `;
+        
+        // Force is_official to 0 unless you have specific admin logic here
+        const officialFlag = is_official ? 1 : 0; 
+        
+        const [result] = await metadataPool.query(query, [label.trim(), userId, officialFlag]);
+        
+        res.json({ 
+            id: result.insertId, 
+            label: label.trim(), 
+            is_official: !!officialFlag 
+        });
+
+    } catch (err: any) {
+        // 2. Handle Duplicates gracefully
+        if (err.code === 'ER_DUP_ENTRY') {
+            // If the user already has this tag, return the existing one so the UI selects it
+            const [rows] = await metadataPool.query(
+                "SELECT id, label, is_official FROM defined_tags WHERE label = ? AND created_by = ?", 
+                [label.trim(), userId]
+            );
+            if (rows.length > 0) {
+                return res.json(rows[0]);
+            }
+        }
+        console.error("[API] Create Tag Error:", err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
 // GET LOGICAL UNITS (Read Path - Updated for Permissions)
 app.get('/api/units', authenticateExtension, async (req, res) => {
     // Now accepts tag_id as an alternative filter
