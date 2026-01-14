@@ -1039,20 +1039,22 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
         title
     } = req.body;
 
+    // Resolve Title: Check root first, then context object
+    const payloadTitle = req.body.title || (context && context.title);
+
     // Basic Validation
     if (!source_code || !source_page_id || !text_content) {
         return res.status(400).json({ error: "Missing required fields." });
     }
 
     const userId = req.user.uid; 
-
     let conn;
+
     try {
         conn = await metadataPool.getConnection();
         await conn.beginTransaction();
 
-        // A. Resolve Article ID (Get or Create Logic)
-        // Check if article exists
+        // A. Resolve Article ID
         const [articleRows] = await conn.query(
             "SELECT id FROM articles WHERE source_code = ? AND source_page_id = ?",
             [source_code, source_page_id]
@@ -1060,11 +1062,19 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
 
         let articleId;
         if (articleRows.length > 0) {
+            // Case 1: Article Exists - Use it
             articleId = articleRows[0].id;
         } else {
-            // STUB NEW ARTICLE
-            // FIX: Use the title from the context, fallback only if absolutely necessary
-            const articleTitle = title || "Unknown Title";
+            // Case 2: Article Missing - Create it (Lazy Load)
+            
+            // STRICT VALIDATION: If we don't have a title, we ABORT.
+            if (!payloadTitle || payloadTitle.trim() === "Unknown Title" || payloadTitle.trim() === "") {
+                await conn.rollback();
+                console.error(`[API] Rejected write: Missing title for page ${source_page_id}`);
+                return res.status(400).json({ 
+                    error: "Data Integrity Violation: Cannot create new article without a valid title." 
+                });
+            }
 
             const [result] = await conn.query(
                 `INSERT INTO articles 
