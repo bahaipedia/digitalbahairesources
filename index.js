@@ -1010,6 +1010,36 @@ app.put('/api/tags/hierarchy', authenticateExtension, async (req, res) => {
     }
 });
 
+// PUT /api/tags/:id
+// Rename a specific tag
+app.put('/api/tags/:id', authenticateExtension, async (req, res) => {
+    const tagId = req.params.id;
+    const { label } = req.body;
+    const userId = req.user.uid;
+
+    if (!label || typeof label !== 'string' || !label.trim()) {
+        return res.status(400).json({ error: "Valid label is required" });
+    }
+
+    try {
+        const query = "UPDATE defined_tags SET label = ? WHERE id = ? AND created_by = ?";
+        const [result] = await metadataPool.query(query, [label.trim(), tagId, userId]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Tag not found or unauthorized" });
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        // Handle duplicate labels if your schema enforces unique (label, created_by)
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: "A tag with this name already exists." });
+        }
+        console.error(err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
 // GET LOGICAL UNITS (Read Path - Updated for Permissions)
 app.get('/api/units', authenticateExtension, async (req, res) => {
     // Now accepts tag_id as an alternative filter
