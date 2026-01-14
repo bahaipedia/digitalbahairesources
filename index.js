@@ -976,6 +976,7 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
                 u.id, 
                 a.source_code,
                 a.source_page_id,
+                a.title,
                 u.article_id, 
                 u.start_char_index, 
                 u.end_char_index, 
