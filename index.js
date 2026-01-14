@@ -1051,21 +1051,25 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
         await conn.beginTransaction();
 
         // A. Resolve Article ID (Get or Create Logic)
-        let articleId;
+        // Check if article exists
         const [articleRows] = await conn.query(
             "SELECT id FROM articles WHERE source_code = ? AND source_page_id = ?",
             [source_code, source_page_id]
         );
 
+        let articleId;
         if (articleRows.length > 0) {
             articleId = articleRows[0].id;
         } else {
-            // Stub the article if it doesn't exist yet
+            // STUB NEW ARTICLE
+            // FIX: Use the title from the context, fallback only if absolutely necessary
+            const articleTitle = title || "Unknown Title"; 
+
             const [result] = await conn.query(
                 `INSERT INTO articles 
                 (source_code, source_page_id, title, latest_rev_id, is_active) 
                 VALUES (?, ?, ?, ?, ?)`,
-                [source_code, source_page_id, "Auto-Discovered Page", 0, 1]
+                [source_code, source_page_id, articleTitle, 0, 1]
             );
             articleId = result.insertId;
         }
