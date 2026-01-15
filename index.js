@@ -1136,7 +1136,8 @@ app.patch('/api/units/batch_realign', authenticateExtension, async (req, res) =>
                 // Healed
                 await updatePosStmt.execute([
                     update.start_char_index, 
-                    update.end_char_index, 
+                    update.end_char_index,
+                    update.text_content,
                     update.id
                 ]);
             }
