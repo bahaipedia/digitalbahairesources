@@ -1122,7 +1122,7 @@ app.patch('/api/units/batch_realign', authenticateExtension, async (req, res) =>
 
         // Prepare statements for efficiency
         const updatePosStmt = await conn.prepare(
-            "UPDATE logical_units SET start_char_index = ?, end_char_index = ?, broken_index = 0 WHERE id = ?"
+            "UPDATE logical_units SET start_char_index = ?, end_char_index = ?, text_content = ?, broken_index = 0 WHERE id = ?"
         );
         const markBrokenStmt = await conn.prepare(
             "UPDATE logical_units SET broken_index = 1 WHERE id = ?"
