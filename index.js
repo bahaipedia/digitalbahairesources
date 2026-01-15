@@ -1107,6 +1107,54 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
     }
 });
 
+// BATCH REALIGN (The Healer Endpoint)
+app.patch('/api/units/batch_realign', authenticateExtension, async (req, res) => {
+    const { updates } = req.body; // Expects [{ id, start_char_index, end_char_index, broken_index }]
+    
+    if (!updates || !Array.isArray(updates) || updates.length === 0) {
+        return res.status(400).json({ error: "No updates provided" });
+    }
+
+    let conn;
+    try {
+        conn = await metadataPool.getConnection();
+        await conn.beginTransaction();
+
+        // Prepare statements for efficiency
+        const updatePosStmt = await conn.prepare(
+            "UPDATE logical_units SET start_char_index = ?, end_char_index = ?, broken_index = 0 WHERE id = ?"
+        );
+        const markBrokenStmt = await conn.prepare(
+            "UPDATE logical_units SET broken_index = 1 WHERE id = ?"
+        );
+
+        for (const update of updates) {
+            if (update.broken_index) {
+                // Mark as Ghost
+                await markBrokenStmt.execute([update.id]);
+            } else {
+                // Healed
+                await updatePosStmt.execute([
+                    update.start_char_index, 
+                    update.end_char_index, 
+                    update.id
+                ]);
+            }
+        }
+
+        await conn.commit();
+        console.log(`[Healer] Processed ${updates.length} adjustments.`);
+        res.json({ success: true });
+
+    } catch (err) {
+        if (conn) await conn.rollback();
+        console.error("[API] Realign Error:", err);
+        res.status(500).json({ error: "Batch update failed" });
+    } finally {
+        if (conn) conn.release();
+    }
+});
+
 // GET /api/units/:id/tags
 // Fetch tags for a specific unit (for the Edit form)
 app.get('/api/units/:id/tags', authenticateExtension, async (req, res) => {
