@@ -1210,6 +1210,50 @@ app.put('/api/units/:id/tags', authenticateExtension, async (req, res) => {
     }
 });
 
+// PUT /api/units/:id
+// Update unit details (Used by the Repair Tool to fix broken highlights)
+app.put('/api/units/:id', authenticateExtension, async (req, res) => {
+    const unitId = req.params.id;
+    // We explicitly look for these fields, including broken_index
+    const { start_char_index, end_char_index, text_content, broken_index } = req.body;
+    const userId = req.user.uid;
+
+    try {
+        // 1. Verify Ownership (or Admin)
+        const [unit] = await metadataPool.query("SELECT created_by FROM logical_units WHERE id = ?", [unitId]);
+        if (unit.length === 0) return res.status(404).json({ error: "Unit not found" });
+        
+        if (unit[0].created_by !== userId && req.user.role !== 'admin') {
+            return res.status(403).json({ error: "Unauthorized" });
+        }
+
+        // 2. Build Dynamic Update Query
+        const fields = [];
+        const values = [];
+
+        if (start_char_index !== undefined) { fields.push("start_char_index = ?"); values.push(start_char_index); }
+        if (end_char_index !== undefined)   { fields.push("end_char_index = ?");   values.push(end_char_index); }
+        if (text_content !== undefined)     { fields.push("text_content = ?");     values.push(text_content); }
+        if (broken_index !== undefined)     { fields.push("broken_index = ?");     values.push(broken_index); }
+
+        if (fields.length === 0) {
+            return res.json({ success: true, message: "No changes provided" });
+        }
+
+        values.push(unitId); // Add ID for the WHERE clause at the end
+
+        const sql = `UPDATE logical_units SET ${fields.join(', ')} WHERE id = ?`;
+        
+        await metadataPool.query(sql, values);
+
+        res.json({ success: true });
+
+    } catch (err) {
+        console.error("Unit update error:", err);
+        res.status(500).json({ error: "Update failed" });
+    }
+});
+
 // DELETE /api/units/:id
 app.delete('/api/units/:id', authenticateExtension, async (req, res) => {
     const unitId = req.params.id;
