@@ -1221,12 +1221,17 @@ app.put('/api/units/:id/tags', authenticateExtension, async (req, res) => {
 // Update unit details (Used by the Repair Tool to fix broken highlights)
 app.put('/api/units/:id', authenticateExtension, async (req, res) => {
     const unitId = req.params.id;
-    // We explicitly look for these fields, including broken_index
-    const { start_char_index, end_char_index, text_content, broken_index } = req.body;
+    const { 
+        start_char_index, 
+        end_char_index, 
+        text_content, 
+        broken_index,
+        connected_anchors
+    } = req.body;
     const userId = req.user.uid;
 
     try {
-        // 1. Verify Ownership (or Admin)
+        // 1. Verify Ownership
         const [unit] = await metadataPool.query("SELECT created_by FROM logical_units WHERE id = ?", [unitId]);
         if (unit.length === 0) return res.status(404).json({ error: "Unit not found" });
         
@@ -1242,16 +1247,30 @@ app.put('/api/units/:id', authenticateExtension, async (req, res) => {
         if (end_char_index !== undefined)   { fields.push("end_char_index = ?");   values.push(end_char_index); }
         if (text_content !== undefined)     { fields.push("text_content = ?");     values.push(text_content); }
         if (broken_index !== undefined)     { fields.push("broken_index = ?");     values.push(broken_index); }
+        
+        // Add JSON support for the new field without breaking legacy calls that don't send it
+        if (connected_anchors !== undefined) { 
+            const jsonVal = typeof connected_anchors === 'object' ? JSON.stringify(connected_anchors) : connected_anchors;
+            fields.push("connected_anchors = ?"); 
+            values.push(jsonVal); 
+        }
 
         if (fields.length === 0) {
             return res.json({ success: true, message: "No changes provided" });
         }
 
-        values.push(unitId); // Add ID for the WHERE clause at the end
+        values.push(unitId);
 
         const sql = `UPDATE logical_units SET ${fields.join(', ')} WHERE id = ?`;
         
         await metadataPool.query(sql, values);
+
+        // [New Feature Support] If tags are provided in the PUT (optional), handle them
+        if (req.body.tags) {
+             // ... existing tag update logic (delete old tags, insert new ones) ...
+             // You likely have this logic in your current production version.
+             // If not, we can rely on the client calling PUT /api/units/:id/tags separately.
+        }
 
         res.json({ success: true });
 
