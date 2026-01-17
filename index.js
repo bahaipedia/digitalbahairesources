@@ -1040,14 +1040,12 @@ app.put('/api/tags/:id', authenticateExtension, async (req, res) => {
     }
 });
 
-// GET LOGICAL UNITS (Read Path - Updated for Permissions)
+// GET LOGICAL UNITS (Read Path - Updated for Permissions & JSON)
 app.get('/api/units', authenticateExtension, async (req, res) => {
-    // Now accepts tag_id as an alternative filter
     const { source_code, source_page_id, tag_id, limit } = req.query;
     const currentUserId = req.user.uid;
     const currentUserRole = req.user.role;
 
-    // Validate: Must have EITHER (Page context) OR (Tag context)
     if ((!source_code || !source_page_id) && !tag_id) {
         return res.status(400).json({ error: "Must provide source_code+source_page_id OR tag_id" });
     }
@@ -1063,6 +1061,7 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
                 u.start_char_index, 
                 u.end_char_index, 
                 u.text_content, 
+                u.connected_anchors,
                 u.author, 
                 u.unit_type,
                 u.created_by
@@ -1072,12 +1071,12 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
 
         const params = [];
 
-        // SCENARIO A: Fetch by Page (Current behavior)
+        // SCENARIO A: Fetch by Page
         if (source_code && source_page_id) {
             query += ` WHERE a.source_code = ? AND a.source_page_id = ?`;
             params.push(source_code, source_page_id);
         } 
-        // SCENARIO B: Fetch by Tag (Taxonomy Explorer)
+        // SCENARIO B: Fetch by Tag
         else if (tag_id) {
             query += ` 
                 JOIN unit_tags ut ON u.id = ut.unit_id 
@@ -1086,7 +1085,6 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
             params.push(tag_id);
         }
 
-        // Optional Limit for Taxonomy previews
         if (limit) {
             query += ` LIMIT ?`;
             params.push(parseInt(limit));
@@ -1096,10 +1094,13 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
 
         const unitsWithPermissions = rows.map(unit => ({
             ...unit,
+            connected_anchors: (typeof unit.connected_anchors === 'string') 
+                ? JSON.parse(unit.connected_anchors) 
+                : (unit.connected_anchors || []),
             can_delete: (unit.created_by === currentUserId) || (currentUserRole === 'admin')
         }));
 
-        res.json(unitsWithPermissions); // NOTE: Changed return format to Array for consistency with client
+        res.json(unitsWithPermissions);
 
     } catch (err) {
         console.error("[API] Fetch Units Error:", err);
@@ -1278,11 +1279,8 @@ app.delete('/api/units/:id', authenticateExtension, async (req, res) => {
     }
 });
 
-// CONTRIBUTE LOGICAL UNIT (Protected)
+// CONTRIBUTE LOGICAL UNIT
 app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
-    // 1. Debugging: Log exactly what the extension is sending
-    // console.log("Received Payload:", JSON.stringify(req.body, null, 2)); 
-
     const { 
         source_code, 
         source_page_id, 
@@ -1291,20 +1289,14 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
         text_content, 
         author, 
         unit_type, 
-        tags
+        tags,
+        connected_anchors // [UPDATE] New Field
     } = req.body;
 
-    // 2. Resolve Title Strategy: 
-    // - Priority 1: Check root 'title' (Standard)
-    // - Priority 2: Check 'context.title' (If frontend nests it)
     const payloadTitle = req.body.title || (req.body.context && req.body.context.title);
 
-    // 3. Strict Validation: Fail immediately if Title is missing
     if (!payloadTitle || typeof payloadTitle !== 'string' || payloadTitle.trim() === '') {
-        console.error("[API] Blocked write: Payload missing title.", req.body);
-        return res.status(400).json({ 
-            error: "Missing Title. Cannot create article without a valid title." 
-        });
+        return res.status(400).json({ error: "Missing Title." });
     }
 
     if (!source_code || !source_page_id || !text_content) {
@@ -1312,8 +1304,9 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
     }
 
     const userId = req.user.uid; 
-    let conn;
+    const anchorsJson = connected_anchors ? JSON.stringify(connected_anchors) : null;
 
+    let conn;
     try {
         conn = await metadataPool.getConnection();
         await conn.beginTransaction();
@@ -1326,31 +1319,27 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
 
         let articleId;
         if (articleRows.length > 0) {
-            // Case 1: Article Exists
             articleId = articleRows[0].id;
         } else {
-            // Case 2: Article Missing (Lazy Load)
-            // We use the strictly validated payloadTitle here
             const [result] = await conn.query(
-                `INSERT INTO articles 
-                (source_code, source_page_id, title, latest_rev_id, is_active) 
-                VALUES (?, ?, ?, ?, ?)`,
+                `INSERT INTO articles (source_code, source_page_id, title, latest_rev_id, is_active) 
+                 VALUES (?, ?, ?, ?, ?)`,
                 [source_code, source_page_id, payloadTitle, 0, 1]
             );
             articleId = result.insertId;
         }
 
-        // B. Insert Logical Unit
+        // B. Insert Logical Unit [UPDATE] Added connected_anchors
         const [unitResult] = await conn.query(
             `INSERT INTO logical_units 
-            (article_id, start_char_index, end_char_index, text_content, author, unit_type, rag_indexed, created_by) 
-            VALUES (?, ?, ?, ?, ?, ?, 0, ?)`,
-            [articleId, start_char_index, end_char_index, text_content, author, unit_type, userId]
+            (article_id, start_char_index, end_char_index, text_content, connected_anchors, author, unit_type, rag_indexed, created_by) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+            [articleId, start_char_index, end_char_index, text_content, anchorsJson, author, unit_type, userId]
         );
         
         const unitId = unitResult.insertId;
 
-        // --- START NEW TAG LOGIC ---
+        // C. Link Tags
         if (tags && Array.isArray(tags) && tags.length > 0) {
             for (const tag of tags) {
                 let tagId = tag;
