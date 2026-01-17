@@ -6,6 +6,7 @@ const winston = require('winston');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const semver = require('semver');
 const { exec } = require('child_process');
 
 // AWS SDK
@@ -61,7 +62,23 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/js', express.static(path.join(__dirname, 'node_modules/chart.js/dist')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+const MIN_CLIENT_VERSION = '2.3.0'; // For the Baha'i Text Annotation Chrome Extension, routes starting ~ line 700
 const authenticateExtension = (req, res, next) => {
+    // --- STEP 1: Version Check ---
+    // If header is missing, default to '0.0.0'
+    const clientVersion = req.get('X-Client-Version') || '0.0.0';
+
+    // Validate format (semver.valid returns null if string is garbage)
+    const validClientVersion = semver.valid(clientVersion) ? clientVersion : '0.0.0';
+
+    if (semver.lt(validClientVersion, MIN_CLIENT_VERSION)) {
+        return res.status(426).json({ 
+            error: "Upgrade Required",
+            message: `Your extension version (${clientVersion}) is outdated. Please update to ${MIN_CLIENT_VERSION} or higher.`
+        });
+    }
+
+    // --- STEP 2: Token Verification ---
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: 'No token provided' });
 
