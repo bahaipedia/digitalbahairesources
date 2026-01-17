@@ -9,6 +9,9 @@ const jwt = require('jsonwebtoken');
 const semver = require('semver');
 const { exec } = require('child_process');
 
+// For the Baha'i Text Annotation Chrome Extension, routes starting ~ line 700
+const MIN_CLIENT_VERSION = '2.3.0';
+
 // AWS SDK
 const { S3Client, ListObjectsV2Command } = require("@aws-sdk/client-s3");
 const { EC2Client, StartInstancesCommand, DescribeInstancesCommand } = require("@aws-sdk/client-ec2");
@@ -62,7 +65,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/js', express.static(path.join(__dirname, 'node_modules/chart.js/dist')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-const MIN_CLIENT_VERSION = '2.3.0'; // For the Baha'i Text Annotation Chrome Extension, routes starting ~ line 700
+
 const authenticateExtension = (req, res, next) => {
     // --- STEP 1: Version Check ---
     // If header is missing, default to '0.0.0'
