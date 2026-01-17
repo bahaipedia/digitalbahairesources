@@ -1256,7 +1256,6 @@ app.put('/api/units/:id', authenticateExtension, async (req, res) => {
 
         if (start_char_index !== undefined) { fields.push("start_char_index = ?"); values.push(start_char_index); }
         if (end_char_index !== undefined)   { fields.push("end_char_index = ?");   values.push(end_char_index); }
-        if (text_content !== undefined)     { fields.push("text_content = ?");     values.push(text_content); }
         if (broken_index !== undefined)     { fields.push("broken_index = ?");     values.push(broken_index); }
         
         if (connected_anchors !== undefined) { 
@@ -1457,14 +1456,17 @@ app.get('/api/relationships', authenticateExtension, async (req, res) => {
             JOIN articles a_o ON o.article_id = a_o.id
 
             WHERE 
-                (a_s.source_code = ? AND a_s.source_page_id = ?)
+                ((a_s.source_code = ? AND a_s.source_page_id = ?)
                 OR 
-                (a_o.source_code = ? AND a_o.source_page_id = ?)
+                (a_o.source_code = ? AND a_o.source_page_id = ?))
+                AND (r.created_by = ?)
         `;
-
+        
+        const userId = req.user.uid;
         const [rows] = await metadataPool.query(query, [
             source_code, source_page_id, 
-            source_code, source_page_id
+            source_code, source_page_id,
+            userId
         ]);
 
         res.json(rows);
