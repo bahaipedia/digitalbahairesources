@@ -1110,7 +1110,7 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
 
 // BATCH REALIGN (The Healer Endpoint)
 app.patch('/api/units/batch_realign', authenticateExtension, async (req, res) => {
-    const { updates } = req.body; // Expects [{ id, start_char_index, end_char_index, broken_index }]
+    const { updates } = req.body; 
     
     if (!updates || !Array.isArray(updates) || updates.length === 0) {
         return res.status(400).json({ error: "No updates provided" });
@@ -1121,9 +1121,11 @@ app.patch('/api/units/batch_realign', authenticateExtension, async (req, res) =>
         conn = await metadataPool.getConnection();
         await conn.beginTransaction();
 
-        // Prepare statements for efficiency
+        // [UPDATE] Prepared statement now includes connected_anchors
         const updatePosStmt = await conn.prepare(
-            "UPDATE logical_units SET start_char_index = ?, end_char_index = ?, text_content = ?, broken_index = 0 WHERE id = ?"
+            `UPDATE logical_units 
+             SET start_char_index = ?, end_char_index = ?, text_content = ?, connected_anchors = ?, broken_index = 0 
+             WHERE id = ?`
         );
         const markBrokenStmt = await conn.prepare(
             "UPDATE logical_units SET broken_index = 1 WHERE id = ?"
@@ -1131,14 +1133,18 @@ app.patch('/api/units/batch_realign', authenticateExtension, async (req, res) =>
 
         for (const update of updates) {
             if (update.broken_index) {
-                // Mark as Ghost
                 await markBrokenStmt.execute([update.id]);
             } else {
-                // Healed
+                // Ensure JSON format
+                const anchors = update.connected_anchors 
+                    ? JSON.stringify(update.connected_anchors) 
+                    : null;
+
                 await updatePosStmt.execute([
                     update.start_char_index, 
                     update.end_char_index,
                     update.text_content,
+                    anchors, // [UPDATE]
                     update.id
                 ]);
             }
