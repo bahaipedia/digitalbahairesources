@@ -1040,7 +1040,7 @@ app.put('/api/tags/:id', authenticateExtension, async (req, res) => {
     }
 });
 
-// GET LOGICAL UNITS (Read Path - Updated for Permissions & JSON)
+// GET LOGICAL UNITS (Read Path - Updated for Hybrid Permissions)
 app.get('/api/units', authenticateExtension, async (req, res) => {
     const { source_code, source_page_id, tag_id, limit } = req.query;
     const currentUserId = req.user.uid;
@@ -1073,13 +1073,20 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
 
         // SCENARIO A: Fetch by Page
         if (source_code && source_page_id) {
-            // PERMISSION FIX: Added "AND u.created_by = ?"
-            query += ` WHERE a.source_code = ? AND a.source_page_id = ? AND u.created_by = ?`;
+            // PERMISSION FIX: 
+            // 1. If type is 'user_highlight', MUST match currentUserId
+            // 2. All other types (metadata) are visible to everyone
+            query += ` 
+                WHERE a.source_code = ? 
+                AND a.source_page_id = ? 
+                AND (u.unit_type != 'user_highlight' OR u.created_by = ?)
+            `;
             params.push(source_code, source_page_id, currentUserId);
         } 
         // SCENARIO B: Fetch by Tag
         else if (tag_id) {
-            // PERMISSION FIX: Added "AND u.created_by = ?"
+            // NOTE: Tags are strictly personal in your system, so we keep the strict check here.
+            // If you later add "Public Official Tags", you would relax this logic similar to above.
             query += ` 
                 JOIN unit_tags ut ON u.id = ut.unit_id 
                 WHERE ut.tag_id = ? AND u.created_by = ?
@@ -1099,6 +1106,7 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
             connected_anchors: (typeof unit.connected_anchors === 'string') 
                 ? JSON.parse(unit.connected_anchors) 
                 : (unit.connected_anchors || []),
+            // Frontend uses this to show/hide "Delete" buttons
             can_delete: (unit.created_by === currentUserId) || (currentUserRole === 'admin')
         }));
 
