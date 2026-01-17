@@ -1110,6 +1110,59 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
     }
 });
 
+// BATCH GET LOGICAL UNITS (Read Path for 'lib' fragments)
+// Endpoint: POST /api/units/batch
+app.post('/api/units/batch', authenticateExtension, async (req, res) => {
+    const { source_code, source_page_ids } = req.body;
+    const currentUserId = req.user.uid;
+    const currentUserRole = req.user.role;
+
+    // Validate Input
+    if (!source_code || !Array.isArray(source_page_ids) || source_page_ids.length === 0) {
+        return res.status(400).json({ error: "Must provide source_code and an array of source_page_ids" });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                u.id, 
+                a.source_code,
+                a.source_page_id,
+                a.title,
+                u.article_id, 
+                u.start_char_index, 
+                u.end_char_index, 
+                u.text_content, 
+                u.connected_anchors,
+                u.author, 
+                u.unit_type,
+                u.created_by
+            FROM logical_units u
+            JOIN articles a ON u.article_id = a.id
+            WHERE a.source_code = ? 
+              AND a.source_page_id IN (?) 
+              AND u.created_by = ?
+        `;
+
+        // Note: mysql2 driver automatically expands the array for IN (?)
+        const [rows] = await metadataPool.query(query, [source_code, source_page_ids, currentUserId]);
+
+        const unitsWithPermissions = rows.map(unit => ({
+            ...unit,
+            connected_anchors: (typeof unit.connected_anchors === 'string') 
+                ? JSON.parse(unit.connected_anchors) 
+                : (unit.connected_anchors || []),
+            can_delete: (unit.created_by === currentUserId) || (currentUserRole === 'admin')
+        }));
+
+        res.json({ units: unitsWithPermissions });
+
+    } catch (err) {
+        console.error("[API] Batch Fetch Units Error:", err);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
 // BATCH REALIGN (The Healer Endpoint)
 app.patch('/api/units/batch_realign', authenticateExtension, async (req, res) => {
     const { updates } = req.body; 
