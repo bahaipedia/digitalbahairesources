@@ -1073,16 +1073,18 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
 
         // SCENARIO A: Fetch by Page
         if (source_code && source_page_id) {
-            query += ` WHERE a.source_code = ? AND a.source_page_id = ?`;
-            params.push(source_code, source_page_id);
+            // PERMISSION FIX: Added "AND u.created_by = ?"
+            query += ` WHERE a.source_code = ? AND a.source_page_id = ? AND u.created_by = ?`;
+            params.push(source_code, source_page_id, currentUserId);
         } 
         // SCENARIO B: Fetch by Tag
         else if (tag_id) {
+            // PERMISSION FIX: Added "AND u.created_by = ?"
             query += ` 
                 JOIN unit_tags ut ON u.id = ut.unit_id 
-                WHERE ut.tag_id = ? 
+                WHERE ut.tag_id = ? AND u.created_by = ?
             `;
-            params.push(tag_id);
+            params.push(tag_id, currentUserId);
         }
 
         if (limit) {
