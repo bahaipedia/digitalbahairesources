@@ -1129,11 +1129,7 @@ app.post('/api/units/batch', authenticateExtension, async (req, res) => {
     }
 
     try {
-        // [CRITICAL FIX] Manually create placeholders: e.g., "?, ?, ?"
-        // This prevents mysql2 from misinterpreting the array parameter location
-        const placeholders = source_page_ids.map(() => '?').join(',');
-
-        const query = `
+        let query = `
             SELECT 
                 u.id, 
                 a.source_code,
@@ -1150,12 +1146,27 @@ app.post('/api/units/batch', authenticateExtension, async (req, res) => {
             FROM logical_units u
             JOIN articles a ON u.article_id = a.id
             WHERE a.source_code = ? 
-              AND a.source_page_id IN (${placeholders}) 
               AND u.created_by = ?
         `;
 
-        // Flatten parameters: Code first, then ALL IDs, then User ID
-        const params = [source_code, ...source_page_ids, currentUserId];
+        const params = [source_code, currentUserId];
+
+        // --- BRANCHING LOGIC ---
+        if (source_code === 'lib') {
+            // STRATEGY A: BAHAI.ORG (JSON Anchors Only)
+            // We search purely for overlap between the requested IDs (strings) and stored anchors
+            // Requires MariaDB 10.9+ or MySQL 8.0+
+            query += ` AND JSON_OVERLAPS(u.connected_anchors, ?)`;
+            params.push(JSON.stringify(source_page_ids)); // Pass ["0555...", "0556..."] as JSON string
+        } else {
+            // STRATEGY B: MEDIAWIKI (Integer IDs Only)
+            // Standard Page ID lookup for wikis
+            const placeholders = source_page_ids.map(() => '?').join(',');
+            query += ` AND a.source_page_id IN (${placeholders})`;
+            
+            // Ensure inputs are integers for safety
+            source_page_ids.forEach(id => params.push(parseInt(id, 10)));
+        }
 
         const [rows] = await metadataPool.query(query, params);
 
@@ -1167,13 +1178,13 @@ app.post('/api/units/batch', authenticateExtension, async (req, res) => {
             can_delete: (unit.created_by === currentUserId) || (req.user.role === 'admin')
         }));
         
-        console.log(`[API] Batch requested ${source_page_ids.length} IDs -> Returned ${rows.length} units.`);
+        console.log(`[API] Batch requested ${source_page_ids.length} IDs for '${source_code}' -> Returned ${rows.length} units.`);
 
         res.json({ units: unitsWithPermissions });
 
     } catch (err) {
         console.error("[API] Batch Fetch Units Error:", err);
-        res.status(500).json({ error: "Database error" });
+        res.status(500).json({ error: "Database error", details: err.message });
     }
 });
 
