@@ -787,8 +787,22 @@ app.post('/api/search/query', async (req, res) => {
 // RAG & EXTENSION API
 // ==================================================================
 
+// Since /auth/verify-session is public (no token), it needs its own lightweight middleware
+const requireClientVersion = (req, res, next) => {
+    const clientVersion = req.get('X-Client-Version') || '0.0.0';
+    const validClientVersion = semver.valid(clientVersion) ? clientVersion : '0.0.0';
+
+    if (semver.lt(validClientVersion, MIN_CLIENT_VERSION)) {
+        return res.status(426).json({ 
+            error: "Upgrade Required",
+            message: `Your extension version (${clientVersion}) is outdated. Please update to ${MIN_CLIENT_VERSION} or higher.`
+        });
+    }
+    next();
+};
+
 // AUTH HANDSHAKE: Exchange Wiki Session Cookie for API JWT
-app.post('/auth/verify-session', async (req, res) => {
+app.post('/auth/verify-session', requireClientVersion, async (req, res) => {
     // CHANGE: Accept credentials instead of cookie
     const { username, bot_password } = req.body;
 
@@ -875,7 +889,7 @@ app.post('/auth/verify-session', async (req, res) => {
  * Autocomplete endpoint for the RAG Librarian
  * Query Param: ?search=abc
  */
-app.get('/api/tags', async (req, res) => {
+app.get('/api/tags', authenticateExtension, async (req, res) => {
     const { search } = req.query;
 
     if (!search) {
