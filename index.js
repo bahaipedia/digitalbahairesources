@@ -1415,8 +1415,33 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
 
     } catch (err) {
         if (conn) await conn.rollback();
-        console.error("Contribution Error:", err);
-        res.status(500).json({ error: "Database transaction failed", details: err.message });
+
+        // --- DEBUGGING BLOCK ---
+        console.error("\n========== CONTRIBUTION ERROR ==========");
+        console.error("SQL Error Code:", err.code);
+        console.error("SQL Message:", err.sqlMessage || err.message);
+        
+        // Log the payload that failed
+        console.error("Payload Data:", {
+            source_code,
+            source_page_id,
+            userId: req.user.uid,
+            unit_type,
+            connected_anchors_type: typeof connected_anchors,
+            tags_payload: tags
+        });
+
+        if (err.sql) {
+            console.error("Failed Query Snippet:", err.sql.substring(0, 200));
+        }
+        console.error("========================================\n");
+        // -----------------------
+
+        res.status(500).json({ 
+            error: "Database transaction failed", 
+            // Send the actual SQL message to the frontend for this debug session
+            details: err.sqlMessage || err.message 
+        });
     } finally {
         if (conn) conn.release();
     }
