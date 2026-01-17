@@ -1505,6 +1505,7 @@ app.get('/api/relationships', authenticateExtension, async (req, res) => {
                 r.object_unit_id,
                 r.relationship_type,
                 r.weight,
+                r.created_by,
                 
                 -- Expand Subject Info
                 s.text_content as subject_text,
@@ -1523,20 +1524,27 @@ app.get('/api/relationships', authenticateExtension, async (req, res) => {
             JOIN articles a_o ON o.article_id = a_o.id
 
             WHERE 
-                ((a_s.source_code = ? AND a_s.source_page_id = ?)
+                (a_s.source_code = ? AND a_s.source_page_id = ?)
                 OR 
-                (a_o.source_code = ? AND a_o.source_page_id = ?))
-                AND (r.created_by = ?)
+                (a_o.source_code = ? AND a_o.source_page_id = ?)
+            
+            -- PERMISSION FIX: Removed "AND r.created_by = ?" 
+            -- Relationships are public metadata.
         `;
         
-        const userId = req.user.uid;
+        // We pass the parameters twice (once for subject match, once for object match)
         const [rows] = await metadataPool.query(query, [
             source_code, source_page_id, 
-            source_code, source_page_id,
-            userId
+            source_code, source_page_id
         ]);
 
-        res.json(rows);
+        // Add permission flag for frontend UI
+        const rowsWithPermissions = rows.map(r => ({
+            ...r,
+            can_delete: (r.created_by === req.user.uid) || (req.user.role === 'admin')
+        }));
+
+        res.json(rowsWithPermissions);
 
     } catch (err) {
         console.error("[API] Get Relationships Error:", err);
@@ -1723,8 +1731,9 @@ app.delete('/api/tags/:id', authenticateExtension, async (req, res) => {
 
 // DELETE KNOWLEDGE UNIT (With Partner Cleanup)
 app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) => {
-    const unitId = parseInt(req.params.id, 10); // Ensure int
+    const unitId = parseInt(req.params.id, 10);
     const userId = req.user.uid;
+    const userRole = req.user.role;
 
     if (isNaN(unitId)) return res.status(400).json({ error: "Invalid ID" });
 
@@ -1733,15 +1742,25 @@ app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) =
         conn = await metadataPool.getConnection();
         await conn.beginTransaction();
 
-        // 1. Get the unit to be deleted
+        // 1. Fetch Unit to check ownership & type
         const [units] = await conn.query("SELECT * FROM logical_units WHERE id = ?", [unitId]);
+        
         if (units.length === 0) {
             await conn.rollback();
             return res.status(404).json({ error: "Unit not found" });
         }
+        
         const unitToDelete = units[0];
 
-        // 2. Identify Partner (Run this BEFORE deleting the main unit)
+        // 2. Strict Permission Check (Backend Enforcement)
+        if (unitToDelete.created_by !== userId && userRole !== 'admin') {
+            await conn.rollback();
+            return res.status(403).json({ error: "Unauthorized. You can only delete your own contributions." });
+        }
+
+        // 3. Identify Partner (For Link Tab)
+        // If this unit is part of a relationship (link_subject/link_object), we often want to delete the partner too
+        // so we don't leave a dangling "half-link".
         let partnerId = null;
         if (unitToDelete.unit_type === 'link_subject' || unitToDelete.unit_type === 'link_object') {
             const [rels] = await conn.query(`
@@ -1752,33 +1771,21 @@ app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) =
 
             if (rels.length > 0) {
                 const r = rels[0];
-                // Compare as Numbers to be safe
-                if (Number(r.subject_unit_id) === unitId) {
-                    partnerId = r.object_unit_id;
-                } else {
-                    partnerId = r.subject_unit_id;
-                }
+                partnerId = (Number(r.subject_unit_id) === unitId) ? r.object_unit_id : r.subject_unit_id;
             }
         }
 
-        // 3. Delete the Targeted Unit (Cascades to unit_relationships)
-        const [delResult] = await conn.query(
-            "DELETE FROM logical_units WHERE id = ? AND created_by = ?", 
-            [unitId, userId]
-        );
+        // 4. Delete the Target Unit
+        // (Cascading Foreign Keys will automatically remove the row from unit_relationships)
+        await conn.query("DELETE FROM logical_units WHERE id = ?", [unitId]);
 
-        // Security Check: Did the user actually own the unit?
-        if (delResult.affectedRows === 0) {
-             await conn.rollback();
-             return res.status(403).json({ error: "Permission denied or unit already deleted." });
-        }
-
-        // 4. Delete Partner (If applicable)
+        // 5. Delete Partner (If applicable and it's also a link node)
         if (partnerId) {
-            // Double check partner is also a strictly deletable link type
             const [pRows] = await conn.query("SELECT unit_type FROM logical_units WHERE id = ?", [partnerId]);
             if (pRows.length > 0) {
                 const pType = pRows[0].unit_type;
+                // Only auto-delete the partner if it is strictly a link node. 
+                // Do NOT auto-delete if the partner is a 'tablet' or 'user_highlight' that was linked to.
                 if (pType === 'link_subject' || pType === 'link_object') {
                     await conn.query("DELETE FROM logical_units WHERE id = ?", [partnerId]);
                 }
@@ -1786,7 +1793,7 @@ app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) =
         }
 
         await conn.commit();
-        res.json({ success: true, partner_deleted: !!partnerId });
+        res.json({ success: true });
 
     } catch (err) {
         if (conn) await conn.rollback();
