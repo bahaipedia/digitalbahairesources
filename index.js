@@ -1115,14 +1115,15 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
 app.post('/api/units/batch', authenticateExtension, async (req, res) => {
     const { source_code, source_page_ids } = req.body;
     const currentUserId = req.user.uid;
-    const currentUserRole = req.user.role;
 
-    // Validate Input
     if (!source_code || !Array.isArray(source_page_ids) || source_page_ids.length === 0) {
-        return res.status(400).json({ error: "Must provide source_code and an array of source_page_ids" });
+        return res.status(400).json({ error: "Invalid input" });
     }
 
     try {
+        // 1. Manually create placeholders for the IN clause (e.g., "?, ?, ?")
+        const placeholders = source_page_ids.map(() => '?').join(',');
+
         const query = `
             SELECT 
                 u.id, 
@@ -1140,25 +1141,28 @@ app.post('/api/units/batch', authenticateExtension, async (req, res) => {
             FROM logical_units u
             JOIN articles a ON u.article_id = a.id
             WHERE a.source_code = ? 
-              AND a.source_page_id IN (?) 
+              AND a.source_page_id IN (${placeholders}) 
               AND u.created_by = ?
         `;
 
-        // Note: mysql2 driver automatically expands the array for IN (?)
-        const [rows] = await metadataPool.query(query, [source_code, source_page_ids, currentUserId]);
+        // 2. Flatten the parameters array: [code, ...ids, userId]
+        const params = [source_code, ...source_page_ids, currentUserId];
+
+        const [rows] = await metadataPool.query(query, params);
 
         const unitsWithPermissions = rows.map(unit => ({
             ...unit,
             connected_anchors: (typeof unit.connected_anchors === 'string') 
                 ? JSON.parse(unit.connected_anchors) 
                 : (unit.connected_anchors || []),
-            can_delete: (unit.created_by === currentUserId) || (currentUserRole === 'admin')
+            can_delete: (unit.created_by === currentUserId) || (req.user.role === 'admin')
         }));
 
+        console.log(`[API] Batch fetched ${source_page_ids.length} IDs -> Found ${rows.length} units.`);
         res.json({ units: unitsWithPermissions });
 
     } catch (err) {
-        console.error("[API] Batch Fetch Units Error:", err);
+        console.error("[API] Batch Fetch Error:", err);
         res.status(500).json({ error: "Database error" });
     }
 });
