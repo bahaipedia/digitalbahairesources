@@ -1157,6 +1157,7 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
 app.post('/api/units/batch', authenticateExtension, async (req, res) => {
     const { source_code, source_page_ids } = req.body;
     const currentUserId = req.user.uid;
+    const currentUserRole = req.user.role;
 
     if (!source_code || !Array.isArray(source_page_ids) || source_page_ids.length === 0) {
         return res.status(400).json({ error: "Invalid input" });
@@ -1180,12 +1181,24 @@ app.post('/api/units/batch', authenticateExtension, async (req, res) => {
             FROM logical_units u
             JOIN articles a ON u.article_id = a.id
             WHERE a.source_code = ? 
-              AND u.created_by = ?
         `;
 
-        const params = [source_code, currentUserId];
+        // [FIX] Updated Params: Code, UserID, UserRole
+        const params = [source_code, currentUserId, currentUserRole];
 
-        // --- BRANCHING LOGIC ---
+        // [FIX] Hybrid Permission Logic
+        // 1. Show if it's NOT a user_highlight (Public Data like Tablets)
+        // 2. OR if I created it
+        // 3. OR if I am an Admin (I can see everyone's private highlights)
+        query += `
+            AND (
+                u.unit_type != 'user_highlight' 
+                OR u.created_by = ?
+                OR ? = 'admin'
+            )
+        `;
+
+        // --- BRANCHING LOGIC (JSON vs INT) ---
         if (source_code === 'lib') {
             // STRATEGY A: BAHAI.ORG (JSON Anchors Only)
             // We search purely for overlap between the requested IDs (strings) and stored anchors
