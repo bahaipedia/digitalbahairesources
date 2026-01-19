@@ -10,7 +10,7 @@ const semver = require('semver');
 const { exec } = require('child_process');
 
 // For the Baha'i Text Annotation Chrome Extension, routes starting ~ line 700
-const MIN_CLIENT_VERSION = '2.4.0';
+const MIN_CLIENT_VERSION = '2.5.0';
 
 // AWS SDK
 const { S3Client, ListObjectsV2Command } = require("@aws-sdk/client-s3");
@@ -922,26 +922,26 @@ app.get('/api/tags', authenticateExtension, async (req, res) => {
 // Returns the full hierarchy of defined tags
 // Accepts ?scope=mine to filter by user
 app.get('/api/tags/tree', authenticateExtension, async (req, res) => {
-    const scope = req.query.scope; // 'mine' or undefined
+    const format = req.query.format;
     const userId = req.user.uid;
 
     try {
-        let query = "SELECT id, label, parent_id, description, created_by, is_official FROM defined_tags";
-        const params = [];
+        // ALWAYS filter by the current user. "View Example" (official tags) is removed.
+        const query = `
+            SELECT id, label, parent_id, description, created_by, is_official 
+            FROM defined_tags 
+            WHERE created_by = ? 
+            ORDER BY label ASC
+        `;
 
-        if (scope === 'mine') {
-            query += " WHERE created_by = ?";
-            params.push(userId);
-        } else {
-            // View Examples (Official Only)
-            query += " WHERE is_official = 1";
+        const [rows] = await metadataPool.query(query, [userId]);
+
+        // If Flat List is requested, return rows directly
+        if (format === 'flat') {
+            return res.json(rows);
         }
-        
-        query += " ORDER BY label ASC";
 
-        const [rows] = await metadataPool.query(query, params);
-
-        // Helper to nest flat list into tree
+        // Build Tree
         const buildTree = (items, parentId = null) => {
             return items
                 .filter(item => item.parent_id === parentId)
@@ -951,9 +951,6 @@ app.get('/api/tags/tree', authenticateExtension, async (req, res) => {
                 }));
         };
 
-        // If scope is mine, we might have orphans if their parent was official 
-        // (assuming mixed trees aren't allowed per your description "Each user only sees their own tags").
-        // If mixed trees ARE allowed, logic changes, but adhering to your strict separation:
         res.json(buildTree(rows, null));
         
     } catch (err) {
