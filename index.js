@@ -1569,11 +1569,13 @@ app.get('/api/relationships', authenticateExtension, async (req, res) => {
                 s.text_content as subject_text,
                 s.unit_type as subject_type,
                 a_s.source_page_id as subject_page_id,
+                a_s.source_code as subject_source_code,
 
                 -- Expand Object Info
                 o.text_content as object_text,
                 o.unit_type as object_type,
-                a_o.source_page_id as object_page_id
+                a_o.source_page_id as object_page_id,
+                a_o.source_code as object_source_code
 
             FROM unit_relationships r
             JOIN logical_units s ON r.subject_unit_id = s.id
@@ -1585,18 +1587,13 @@ app.get('/api/relationships', authenticateExtension, async (req, res) => {
                 (a_s.source_code = ? AND a_s.source_page_id = ?)
                 OR 
                 (a_o.source_code = ? AND a_o.source_page_id = ?)
-            
-            -- PERMISSION FIX: Removed "AND r.created_by = ?" 
-            -- Relationships are public metadata.
         `;
         
-        // We pass the parameters twice (once for subject match, once for object match)
         const [rows] = await metadataPool.query(query, [
             source_code, source_page_id, 
             source_code, source_page_id
         ]);
 
-        // Add permission flag for frontend UI
         const rowsWithPermissions = rows.map(r => ({
             ...r,
             can_delete: (r.created_by === req.user.uid) || (req.user.role === 'admin')
