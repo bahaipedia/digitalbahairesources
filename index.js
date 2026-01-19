@@ -10,7 +10,7 @@ const semver = require('semver');
 const { exec } = require('child_process');
 
 // For the Baha'i Text Annotation Chrome Extension, routes starting ~ line 700
-const MIN_CLIENT_VERSION = '2.3.0';
+const MIN_CLIENT_VERSION = '2.4.0';
 
 // AWS SDK
 const { S3Client, ListObjectsV2Command } = require("@aws-sdk/client-s3");
@@ -1570,12 +1570,14 @@ app.get('/api/relationships', authenticateExtension, async (req, res) => {
                 s.unit_type as subject_type,
                 a_s.source_page_id as subject_page_id,
                 a_s.source_code as subject_source_code,
+                a_s.title as subject_page_title,
 
                 -- Expand Object Info
                 o.text_content as object_text,
                 o.unit_type as object_type,
                 a_o.source_page_id as object_page_id,
-                a_o.source_code as object_source_code
+                a_o.source_code as object_source_code,
+                a_o.title as object_page_title
 
             FROM unit_relationships r
             JOIN logical_units s ON r.subject_unit_id = s.id
