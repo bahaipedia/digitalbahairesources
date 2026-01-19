@@ -894,6 +894,7 @@ app.post('/auth/verify-session', requireClientVersion, async (req, res) => {
  */
 app.get('/api/tags', authenticateExtension, async (req, res) => {
     const { search } = req.query;
+    const userId = req.user.uid; 
 
     if (!search) {
         return res.json([]);
@@ -904,10 +905,11 @@ app.get('/api/tags', authenticateExtension, async (req, res) => {
             SELECT id, label 
             FROM defined_tags 
             WHERE label LIKE ? 
+            AND created_by = ?
             LIMIT 10
         `;
         
-        const [rows] = await metadataPool.query(query, [`%${search}%`]);
+        const [rows] = await metadataPool.query(query, [`%${search}%`, userId]);
         
         res.json(rows);
     } catch (err) {
