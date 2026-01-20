@@ -35,12 +35,13 @@
             <div class="step-box">
                 <h2>Step 2: Run the Downloader</h2>
                 <p>Save the code below as <code>download_images.py</code> in the same folder as your <code>media_manifest.json</code> and run it.</p>
-                <div class="code-block">
-<pre>
+                <div class="code-block-container" style="position: relative;">
+                    <button class="copy-btn" id="copyBtn">Copy Code</button>
+                    <div class="code-block">
+<pre id="pythonCode">
 import json
 import os
 import requests
-import hashlib
 
 # Configuration
 MANIFEST_FILE = 'media_manifest.json'
@@ -82,6 +83,7 @@ def main():
 if __name__ == "__main__":
     main()
 </pre>
+                    </div>
                 </div>
             </div>
 
@@ -90,6 +92,26 @@ if __name__ == "__main__":
     <%- include('partials/footer') %>
 
     <script>
+        // Clipboard functionality
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const code = document.getElementById('pythonCode').innerText;
+            const btn = document.getElementById('copyBtn');
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        });
+
+        // Manifest generation functionality
         document.getElementById('manifestForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const category = document.getElementById('categoryInput').value;
@@ -115,7 +137,6 @@ if __name__ == "__main__":
                     } else {
                         document.getElementById('file-count').textContent = data.count;
                         
-                        // Create downloadable blob
                         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                         const url = URL.createObjectURL(blob);
                         const link = document.getElementById('download-link');
