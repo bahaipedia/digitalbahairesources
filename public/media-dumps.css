@@ -41,16 +41,24 @@
     display: inline-block;
     margin-top: 10px;
 }
-.code-block-container {
+/* Container for the whole box */
+.code-wrapper {
+    position: relative;
     background: #f4f4f4;
     border-radius: 4px;
     border: 1px solid #ddd;
+    margin-top: 10px;
 }
+
+/* The actual text area */
 .code-wrapper pre {
     padding: 16px;
     overflow: auto;
     margin: 0;
+    font-family: monospace;
 }
+
+/* The button styling */
 .copy-btn {
     position: absolute;
     top: 8px;
@@ -65,11 +73,14 @@
     justify-content: center;
     transition: background-color 0.2s;
     color: #57606a;
+    z-index: 10;
 }
+
 .copy-btn:hover {
-    background-color: #f3f4f6;
-    border-color: rgba(27, 31, 36, 0.15);
+    background-color: #e0e0e0;
+    border-color: rgba(27, 31, 36, 0.5);
 }
+
 .copy-btn svg {
     fill: currentColor;
     width: 16px;
