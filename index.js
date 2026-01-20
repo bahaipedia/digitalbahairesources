@@ -59,6 +59,16 @@ const metadataPool = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0
 });
+// Pool for MediaWiki Images
+const mediaPool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER_MEDIA,
+    password: process.env.DB_PASSWORD_MEDIA,
+    database: process.env.DB_NAME_MEDIA,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
@@ -135,6 +145,18 @@ function formatDumpDate(dateStr) {
     // Use 2nd day to avoid any timezone day-rollover issues
     const date = new Date(`${year}-${month}-02`); 
     return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+}
+
+// Helper to calculate MediaWiki S3 URL
+function getMediaWikiS3Url(filename) {
+    // Standardize spaces to underscores
+    const safeName = filename.replace(/ /g, '_');
+    // Calculate MD5
+    const hash = crypto.createHash('md5').update(safeName).digest('hex');
+    const p1 = hash.substring(0, 1);
+    const p2 = hash.substring(0, 2);
+    // Construct URL (Adjust domain if using a specific regional bucket for the manifest)
+    return `https://s3.us-east-1.amazonaws.com/bahaimedia/${p1}/${p2}/${encodeURIComponent(safeName)}`;
 }
 
 // Routes
@@ -252,6 +274,82 @@ app.get('/database-dumps', async (req, res) => {
         console.error("Error fetching S3 objects:", err);
         logger.error("Error fetching S3 objects:", err); // Log to Winston
         res.status(500).send('Server Error: Could not load database dumps.');
+    }
+});
+
+// Route to render the Media Downloader Page
+app.get('/database-dumps/media', (req, res) => {
+    res.render('media-dumps');
+});
+// API Endpoint to Generate Manifest
+app.post('/api/media/generate-manifest', async (req, res) => {
+    const rootCategory = req.body.category;
+    
+    if (!rootCategory) {
+        return res.status(400).json({ error: 'Category is required' });
+    }
+
+    try {
+        // Recursive CTE to find all subcategories and their images
+        // Note: Filters out redirects and non-files
+        const query = `
+            WITH RECURSIVE CategoryTree AS (
+                -- Anchor: The selected root category
+                SELECT page_title AS category_name, page_id 
+                FROM page 
+                WHERE page_title = ? AND page_namespace = 14
+                
+                UNION DISTINCT
+                
+                -- Recursive: Subcategories
+                SELECT p.page_title, p.page_id
+                FROM page p
+                INNER JOIN categorylinks cl ON p.page_id = cl.cl_from
+                INNER JOIN CategoryTree ct ON cl.cl_to = ct.category_name
+                WHERE p.page_namespace = 14
+            )
+            -- Select files belonging to these categories
+            SELECT 
+                ct.category_name AS folder,
+                p.page_title AS filename,
+                img.img_size AS size,
+                img.img_sha1 AS sha1
+            FROM CategoryTree ct
+            INNER JOIN categorylinks cl ON cl.cl_to = ct.category_name
+            INNER JOIN page p ON p.page_id = cl.cl_from
+            INNER JOIN image img ON img.img_name = p.page_title
+            WHERE p.page_namespace = 6;
+        `;
+
+        const [rows] = await mediaPool.execute(query, [rootCategory.replace(/ /g, '_')]);
+
+        if (rows.length === 0) {
+            return res.json({ count: 0, files: [] });
+        }
+
+        // Transform into Manifest Format
+        const manifest = rows.map(row => {
+            // Decode category name for folder path (e.g. "Bahá'í_Houses_of_Worship" -> "Bahá'í Houses of Worship")
+            const cleanFolder = row.folder.replace(/_/g, ' ');
+            const cleanFilename = row.filename.replace(/_/g, ' ');
+            
+            return {
+                url: getMediaWikiS3Url(row.filename),
+                path: `${cleanFolder}/${cleanFilename}`,
+                size: row.size,
+                hash: row.sha1
+            };
+        });
+
+        res.json({
+            count: manifest.length,
+            root_category: rootCategory,
+            files: manifest
+        });
+
+    } catch (err) {
+        logger.error("Error generating media manifest:", err);
+        res.status(500).json({ error: 'Database error generating manifest.' });
     }
 });
 
