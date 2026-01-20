@@ -1,3 +1,81 @@
+/* Category Explorer Widget */
+.explorer-container {
+    border: 1px solid #ccc;
+    background: #fff;
+    border-radius: 4px;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.explorer-search {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    background: #f9f9f9;
+}
+
+.explorer-search input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.explorer-tree {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    list-style: none;
+    margin: 0;
+}
+
+/* Tree Items */
+.tree-item {
+    margin-bottom: 4px;
+    position: relative;
+}
+
+.tree-row {
+    display: flex;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.tree-toggle {
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 12px;
+    user-select: none;
+    transition: transform 0.1s;
+}
+
+.tree-toggle:hover { color: #000; font-weight: bold; }
+.tree-toggle.expanded { transform: rotate(90deg); }
+.tree-toggle.empty { opacity: 0; cursor: default; }
+
+.tree-checkbox { margin: 0 8px 0 4px; }
+
+.tree-label {
+    cursor: pointer;
+    font-size: 14px;
+}
+.tree-label:hover { text-decoration: underline; }
+
+/* Subtree indentation */
+.tree-children {
+    list-style: none;
+    margin: 0;
+    padding-left: 22px;
+    display: none; /* Hidden by default */
+    border-left: 1px solid #eee;
+}
+
+.tree-children.visible { display: block; }
 .step-box {
     background: #f8f9fa;
     border: 1px solid #ddd;
