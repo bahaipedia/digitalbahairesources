@@ -18,12 +18,16 @@
 
             <div class="step-box">
                 <h2>Step 1: Select Categories</h2>
-                <p>Search for categories and check the boxes for the ones you want. Subcategories are automatically included in the download.</p>
+                <p>Search for categories and check the boxes for the ones you want. You can perform multiple searches to build your list.</p>
                 
                 <div class="explorer-container">
                     <div class="explorer-search">
                         <input type="text" id="catSearch" placeholder="Type to search categories (e.g. 'House', 'Bahá')..." autocomplete="off">
                     </div>
+                    
+                    <div id="selectedArea" class="selected-area">
+                        </div>
+
                     <ul id="treeRoot" class="explorer-tree">
                         <li class="empty-state">Start typing above to find categories.</li>
                     </ul>
@@ -68,15 +72,11 @@ def process_file(url, path, file_hash, seen_hashes):
     # 1. Check if we have this file anywhere else on disk (Deduplication)
     if file_hash in seen_hashes:
         existing_path = seen_hashes[file_hash]
-        
-        # Only link if the target doesn't exist yet
         if not os.path.exists(path):
             try:
-                # Create a Hard Link (points to same data, 0 extra space)
                 print(f"Linking: {path} -> {existing_path}")
                 os.link(existing_path, path)
             except OSError:
-                # Fallback: Copy file locally (saves bandwidth, uses space)
                 print(f"Copying local: {path}")
                 shutil.copyfile(existing_path, path)
         return
@@ -84,7 +84,6 @@ def process_file(url, path, file_hash, seen_hashes):
     # 2. Check if file already exists at this specific path (Resume support)
     if os.path.exists(path):
         print(f"Skipping (exists): {path}")
-        # Remember this path for future duplicates
         if file_hash:
             seen_hashes[file_hash] = path
         return
@@ -94,15 +93,11 @@ def process_file(url, path, file_hash, seen_hashes):
     try:
         r = requests.get(url, stream=True)
         r.raise_for_status()
-        
         with open(path, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
-        
-        # Record success for future linking
         if file_hash:
             seen_hashes[file_hash] = path
-            
     except Exception as e:
         print(f"Error downloading {path}: {e}")
 
@@ -115,10 +110,7 @@ def main():
         data = json.load(f)
 
     print(f"Starting download of {data['count']} files...")
-    
-    # Dictionary to map {hash: file_path}
     seen_hashes = {}
-
     for file in data['files']:
         process_file(file['url'], file['path'], file.get('hash'), seen_hashes)
 
@@ -163,7 +155,11 @@ if __name__ == "__main__":
         const searchInput = document.getElementById('catSearch');
         const generateBtn = document.getElementById('generateBtn');
         const summarySpan = document.getElementById('selection-summary');
+        const selectedArea = document.getElementById('selectedArea');
         
+        // GLOBAL STATE: Keeps track of selected categories across searches
+        const selectedCategories = new Set();
+
         // 1. Search Debounce
         let debounceTimer;
         searchInput.addEventListener('input', (e) => {
@@ -186,7 +182,7 @@ if __name__ == "__main__":
                     return;
                 }
 
-                // Render Search Results as Root Nodes
+                // Render Search Results
                 categories.forEach(catName => {
                     const node = createTreeNode(catName);
                     treeRoot.appendChild(node);
@@ -202,10 +198,6 @@ if __name__ == "__main__":
             const li = document.createElement('li');
             li.className = 'tree-item';
             
-            // HTML Structure: 
-            // <div> [Toggle] [Checkbox] [Label] </div>
-            // <ul> (Children) </ul>
-            
             const row = document.createElement('div');
             row.className = 'tree-row';
             
@@ -217,16 +209,27 @@ if __name__ == "__main__":
             checkbox.type = 'checkbox';
             checkbox.className = 'tree-checkbox';
             checkbox.value = catName;
-            checkbox.addEventListener('change', updateSummary);
+            
+            // CHECK STATE: If this category is already in our Set, check it
+            if (selectedCategories.has(catName)) {
+                checkbox.checked = true;
+            }
+
+            // LISTENER: Update Set and UI when clicked
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked) {
+                    addSelection(catName);
+                } else {
+                    removeSelection(catName);
+                }
+            });
             
             const label = document.createElement('span');
             label.className = 'tree-label';
             label.textContent = catName;
-            
-            // Clicking label checks the box
             label.addEventListener('click', () => {
                 checkbox.checked = !checkbox.checked;
-                updateSummary();
+                checkbox.dispatchEvent(new Event('change'));
             });
 
             row.appendChild(toggle);
@@ -234,20 +237,17 @@ if __name__ == "__main__":
             row.appendChild(label);
             li.appendChild(row);
 
-            // Container for children
             const childContainer = document.createElement('ul');
             childContainer.className = 'tree-children';
             li.appendChild(childContainer);
 
-            // Toggle Logic (Lazy Load)
+            // Lazy Load Logic
             let loaded = false;
             toggle.addEventListener('click', async () => {
                 if (childContainer.classList.contains('visible')) {
-                    // Collapse
                     childContainer.classList.remove('visible');
                     toggle.classList.remove('expanded');
                 } else {
-                    // Expand
                     toggle.classList.add('expanded');
                     childContainer.classList.add('visible');
                     
@@ -256,12 +256,10 @@ if __name__ == "__main__":
                         try {
                             const res = await fetch(`/api/media/subcategories?parent=${encodeURIComponent(catName)}`);
                             const children = await res.json();
-                            
-                            childContainer.innerHTML = ''; // Clear loading
+                            childContainer.innerHTML = ''; 
                             
                             if (children.length === 0) {
                                 childContainer.innerHTML = '<li style="padding:5px 0 0 25px; color:#ccc; font-style:italic;">No subcategories</li>';
-                                // Disable toggle if no children
                                 toggle.classList.add('empty');
                             } else {
                                 children.forEach(childName => {
@@ -279,27 +277,64 @@ if __name__ == "__main__":
             return li;
         }
 
-        function updateSummary() {
-            const checked = document.querySelectorAll('.tree-checkbox:checked');
-            summarySpan.textContent = `${checked.length} categories selected`;
+        // 3. State Management Functions
+        function addSelection(name) {
+            selectedCategories.add(name);
+            renderSelectedTags();
+            updateSummary();
         }
 
-        // 3. Generate Manifest Submit Logic
+        function removeSelection(name) {
+            selectedCategories.delete(name);
+            renderSelectedTags();
+            updateSummary();
+            
+            // If the item is currently visible in the search list, uncheck it there too
+            const checkboxes = document.querySelectorAll(`.tree-checkbox[value="${name}"]`);
+            checkboxes.forEach(cb => cb.checked = false);
+        }
+
+        function renderSelectedTags() {
+            selectedArea.innerHTML = '';
+            
+            if (selectedCategories.size > 0) {
+                selectedArea.classList.add('has-items');
+                selectedCategories.forEach(name => {
+                    const tag = document.createElement('span');
+                    tag.className = 'selected-tag';
+                    tag.innerHTML = `${name} <span class="remove-tag" title="Remove">×</span>`;
+                    
+                    // Click 'x' to remove
+                    tag.querySelector('.remove-tag').addEventListener('click', () => {
+                        removeSelection(name);
+                    });
+                    
+                    selectedArea.appendChild(tag);
+                });
+            } else {
+                selectedArea.classList.remove('has-items');
+            }
+        }
+
+        function updateSummary() {
+            summarySpan.textContent = `${selectedCategories.size} categories selected`;
+        }
+
+        // 4. Generate Manifest Submit Logic
         generateBtn.addEventListener('click', async () => {
             const errorMsg = document.getElementById('error-msg');
             const resultBox = document.getElementById('manifest-result');
-            const checkboxes = document.querySelectorAll('.tree-checkbox:checked');
 
             errorMsg.style.display = 'none';
             resultBox.style.display = 'none';
 
-            if (checkboxes.length === 0) {
+            if (selectedCategories.size === 0) {
                 errorMsg.textContent = "Please select at least one category.";
                 errorMsg.style.display = 'block';
                 return;
             }
 
-            const selectedCategories = Array.from(checkboxes).map(cb => cb.value);
+            const selectedArray = Array.from(selectedCategories);
             generateBtn.disabled = true;
             generateBtn.textContent = "Generating...";
 
@@ -307,7 +342,7 @@ if __name__ == "__main__":
                 const response = await fetch('/api/media/generate-manifest', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ categories: selectedCategories })
+                    body: JSON.stringify({ categories: selectedArray })
                 });
 
                 const data = await response.json();
