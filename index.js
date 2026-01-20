@@ -281,23 +281,75 @@ app.get('/database-dumps', async (req, res) => {
 app.get('/database-dumps/media', (req, res) => {
     res.render('media-dumps');
 });
-// API Endpoint to Generate Manifest
+// 1. Search Categories (for the "Type to find..." box)
+app.get('/api/media/search-categories', async (req, res) => {
+    const query = req.query.q;
+    if (!query || query.length < 2) return res.json([]);
+
+    try {
+        const sql = `
+            SELECT page_title 
+            FROM page 
+            WHERE page_namespace = 14 
+            AND page_title LIKE ? 
+            ORDER BY page_title ASC 
+            LIMIT 50
+        `;
+        // Search for "Query%" (starts with)
+        const [rows] = await mediaPool.execute(sql, [query.replace(/ /g, '_') + '%']);
+        
+        const results = rows.map(r => r.page_title.toString('utf8').replace(/_/g, ' '));
+        res.json(results);
+    } catch (err) {
+        logger.error("Search error:", err);
+        res.status(500).json({ error: "Search failed" });
+    }
+});
+
+// 2. Get Subcategories (Lazy Loading)
+app.get('/api/media/subcategories', async (req, res) => {
+    const parent = req.query.parent;
+    if (!parent) return res.json([]);
+
+    try {
+        const sql = `
+            SELECT p.page_title
+            FROM page p
+            JOIN categorylinks cl ON p.page_id = cl.cl_from
+            WHERE cl.cl_to = ? 
+            AND p.page_namespace = 14
+            ORDER BY p.page_title ASC
+        `;
+        const [rows] = await mediaPool.execute(sql, [parent.replace(/ /g, '_')]);
+        
+        const children = rows.map(r => r.page_title.toString('utf8').replace(/_/g, ' '));
+        res.json(children);
+    } catch (err) {
+        logger.error("Subcategory fetch error:", err);
+        res.status(500).json({ error: "Fetch failed" });
+    }
+});
+
+// 3. Generate Manifest (Accepts Array of Categories)
 app.post('/api/media/generate-manifest', async (req, res) => {
-    const rootCategory = req.body.category;
+    // Expecting an array now: { categories: ["Abdu'l-Bahá", "Temples"] }
+    const rootCategories = req.body.categories;
     
-    if (!rootCategory) {
-        return res.status(400).json({ error: 'Category is required' });
+    if (!rootCategories || !Array.isArray(rootCategories) || rootCategories.length === 0) {
+        return res.status(400).json({ error: 'At least one category is required' });
     }
 
     try {
-        // Recursive CTE to find all subcategories and their images
-        // Note: Filters out redirects and non-files
+        // Prepare placeholders for IN clause
+        const placeholders = rootCategories.map(() => '?').join(',');
+        const safeCategories = rootCategories.map(c => c.replace(/ /g, '_'));
+
         const query = `
             WITH RECURSIVE CategoryTree AS (
-                -- Anchor: The selected root category
+                -- Anchor: Select ALL selected root categories
                 SELECT page_title AS category_name, page_id 
                 FROM page 
-                WHERE page_title = ? AND page_namespace = 14
+                WHERE page_title IN (${placeholders}) AND page_namespace = 14
                 
                 UNION DISTINCT
                 
@@ -308,7 +360,6 @@ app.post('/api/media/generate-manifest', async (req, res) => {
                 INNER JOIN CategoryTree ct ON cl.cl_to = ct.category_name
                 WHERE p.page_namespace = 14
             )
-            -- Select files belonging to these categories
             SELECT 
                 ct.category_name AS folder,
                 p.page_title AS filename,
@@ -321,29 +372,23 @@ app.post('/api/media/generate-manifest', async (req, res) => {
             WHERE p.page_namespace = 6;
         `;
 
-        const [rows] = await mediaPool.execute(query, [rootCategory.replace(/ /g, '_')]);
+        const [rows] = await mediaPool.execute(query, safeCategories);
 
         if (rows.length === 0) {
             return res.json({ count: 0, files: [] });
         }
 
-        // Transform into Manifest Format
         const manifest = rows.map(row => {
-            // MediaWiki stores text as binary, so we must convert Buffer -> String
             const folderStr = row.folder.toString('utf8');
             const filenameStr = row.filename.toString('utf8');
-            
-            // Check if sha1 is a buffer (depends on schema version) and convert if needed
             const hashStr = Buffer.isBuffer(row.sha1) ? row.sha1.toString('utf8') : row.sha1;
 
-            // Decode category name for folder path
             const cleanFolder = folderStr.replace(/_/g, ' ');
             const cleanFilename = filenameStr.replace(/_/g, ' ');
             
             return {
-                // Ensure we pass the original string (with underscores) to the S3 URL generator
                 url: getMediaWikiS3Url(filenameStr),
-                path: `${cleanFolder}/${cleanFilename}`,
+                path: `${cleanFolder}/${cleanFilename}`, // Files will be organized by their specific sub-folder
                 size: row.size,
                 hash: hashStr
             };
@@ -351,7 +396,7 @@ app.post('/api/media/generate-manifest', async (req, res) => {
 
         res.json({
             count: manifest.length,
-            root_category: rootCategory,
+            root_category: rootCategories.join(', '),
             files: manifest
         });
 
