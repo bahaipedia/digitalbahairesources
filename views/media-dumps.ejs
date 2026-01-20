@@ -166,9 +166,7 @@ if __name__ == "__main__":
                     return;
                 }
                 categories.forEach(catName => {
-                    // Root nodes are never "inherited", so ancestorSelected is false
-                    const node = createTreeNode(catName, false);
-                    treeRoot.appendChild(node);
+                    treeRoot.appendChild(createTreeNode(catName));
                 });
             } catch (err) {
                 console.error(err);
@@ -177,8 +175,7 @@ if __name__ == "__main__":
         }
 
         // 2. Create Tree Node Helper
-        // ancestorSelected: Boolean indicating if a parent node is already checked
-        function createTreeNode(catName, ancestorSelected) {
+        function createTreeNode(catName) {
             const li = document.createElement('li');
             li.className = 'tree-item';
             
@@ -193,14 +190,9 @@ if __name__ == "__main__":
             checkbox.type = 'checkbox';
             checkbox.className = 'tree-checkbox';
             checkbox.value = catName;
-            
-            // LOGIC: Inherited Selection vs Explicit Selection
-            if (ancestorSelected) {
-                // If parent is checked, I must be checked and disabled (implicit selection)
-                checkbox.checked = true;
-                checkbox.disabled = true;
-            } else if (selectedCategories.has(catName)) {
-                // If I was explicitly selected previously
+
+            // CHECK STATE: If explicitly selected, check it.
+            if (selectedCategories.has(catName)) {
                 checkbox.checked = true;
             }
 
@@ -253,12 +245,19 @@ if __name__ == "__main__":
                                 childContainer.innerHTML = '<li style="padding:5px 0 0 25px; color:#ccc; font-style:italic;">No subcategories</li>';
                                 toggle.classList.add('empty');
                             } else {
-                                // Determine state for children:
-                                // They are selected if *I* am checked (whether I am disabled or not)
-                                const isThisNodeChecked = checkbox.checked;
+                                // Check parent state dynamically right now
+                                const isParentChecked = checkbox.checked;
                                 
                                 children.forEach(childName => {
-                                    childContainer.appendChild(createTreeNode(childName, isThisNodeChecked));
+                                    const childNode = createTreeNode(childName);
+                                    childContainer.appendChild(childNode);
+                                    
+                                    // If parent is checked, immediately lock the new child
+                                    if (isParentChecked) {
+                                        const childCb = childNode.querySelector('.tree-checkbox');
+                                        childCb.checked = true;
+                                        childCb.disabled = true;
+                                    }
                                 });
                             }
                             loaded = true;
@@ -279,27 +278,9 @@ if __name__ == "__main__":
             renderSelectedTags();
             updateSummary();
             
-            // CASCADING LOGIC:
-            // When I am selected, find all my currently visible children.
-            // If they are explicitly selected, remove them (since I cover them now).
-            // Then Disable them and Check them.
+            // Lock all children
             if (liNode) {
-                const childCheckboxes = liNode.querySelectorAll('.tree-children .tree-checkbox');
-                childCheckboxes.forEach(childCb => {
-                    const childName = childCb.value;
-                    
-                    // If child was explicitly selected, remove it from the list
-                    // because the parent now covers it.
-                    if (selectedCategories.has(childName)) {
-                        selectedCategories.delete(childName);
-                    }
-                    
-                    // Visually lock the child
-                    childCb.checked = true;
-                    childCb.disabled = true;
-                });
-                renderSelectedTags(); // Re-render in case we removed children
-                updateSummary();
+                toggleChildState(liNode, true);
             }
         }
 
@@ -308,19 +289,33 @@ if __name__ == "__main__":
             renderSelectedTags();
             updateSummary();
             
-            // CASCADING LOGIC:
-            // When I am deselected, unlock all children.
+            // Unlock all children
             if (liNode) {
-                const childCheckboxes = liNode.querySelectorAll('.tree-children .tree-checkbox');
-                childCheckboxes.forEach(childCb => {
-                    // Reset to default state
+                toggleChildState(liNode, false);
+            }
+        }
+
+        // Helper to Recursively Lock/Unlock children
+        function toggleChildState(parentNode, shouldLock) {
+            const childCheckboxes = parentNode.querySelectorAll('.tree-children .tree-checkbox');
+            childCheckboxes.forEach(childCb => {
+                if (shouldLock) {
+                    // Lock: Remove from explicit list (since parent covers it), Check, and Disable
+                    if (selectedCategories.has(childCb.value)) {
+                        selectedCategories.delete(childCb.value);
+                    }
+                    childCb.checked = true;
+                    childCb.disabled = true;
+                } else {
+                    // Unlock: Uncheck and Enable
                     childCb.checked = false;
                     childCb.disabled = false;
-                    
-                    // Note: We do NOT re-add them to selectedCategories. 
-                    // Unchecking a parent unchecks the whole branch.
-                });
-            }
+                    // Note: We do NOT add back to selectedCategories. Unchecking parent clears the branch.
+                }
+            });
+            // Re-render because we might have modified selectedCategories in the loop
+            renderSelectedTags();
+            updateSummary();
         }
 
         function renderSelectedTags() {
@@ -333,14 +328,12 @@ if __name__ == "__main__":
                     tag.innerHTML = `${name} <span class="remove-tag" title="Remove">×</span>`;
                     
                     tag.querySelector('.remove-tag').addEventListener('click', () => {
-                        // Find the checkbox in the DOM if it exists and uncheck it
-                        // This triggers the 'change' event which handles the logic
                         const cb = document.querySelector(`.tree-checkbox[value="${name}"]`);
                         if (cb && !cb.disabled) {
                             cb.checked = false;
                             cb.dispatchEvent(new Event('change'));
                         } else {
-                            // If DOM element not found (e.g. searching elsewhere), just remove from state
+                            // Fallback if node not visible
                             selectedCategories.delete(name);
                             renderSelectedTags();
                             updateSummary();
