@@ -18,7 +18,8 @@
 
             <div class="step-box">
                 <h2>Step 1: Select Categories</h2>
-                <p>Search for categories and check the boxes for the ones you want. You can perform multiple searches to build your list.</p>
+                <p>Search for categories and check the boxes for the ones you want. <br>
+                <small style="color: #666;">* Selecting a parent category automatically includes all its subcategories.</small></p>
                 
                 <div class="explorer-container">
                     <div class="explorer-search">
@@ -66,10 +67,7 @@ import shutil
 MANIFEST_FILE = 'media_manifest.json'
 
 def process_file(url, path, file_hash, seen_hashes):
-    # Ensure directory exists
     os.makedirs(os.path.dirname(path), exist_ok=True)
-
-    # 1. Check if we have this file anywhere else on disk (Deduplication)
     if file_hash in seen_hashes:
         existing_path = seen_hashes[file_hash]
         if not os.path.exists(path):
@@ -81,14 +79,11 @@ def process_file(url, path, file_hash, seen_hashes):
                 shutil.copyfile(existing_path, path)
         return
 
-    # 2. Check if file already exists at this specific path (Resume support)
     if os.path.exists(path):
         print(f"Skipping (exists): {path}")
-        if file_hash:
-            seen_hashes[file_hash] = path
+        if file_hash: seen_hashes[file_hash] = path
         return
 
-    # 3. Download fresh from network
     print(f"Downloading: {path}")
     try:
         r = requests.get(url, stream=True)
@@ -96,8 +91,7 @@ def process_file(url, path, file_hash, seen_hashes):
         with open(path, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
-        if file_hash:
-            seen_hashes[file_hash] = path
+        if file_hash: seen_hashes[file_hash] = path
     except Exception as e:
         print(f"Error downloading {path}: {e}")
 
@@ -105,15 +99,12 @@ def main():
     if not os.path.exists(MANIFEST_FILE):
         print(f"Error: {MANIFEST_FILE} not found.")
         return
-
     with open(MANIFEST_FILE, 'r', encoding='utf-8') as f:
         data = json.load(f)
-
     print(f"Starting download of {data['count']} files...")
     seen_hashes = {}
     for file in data['files']:
         process_file(file['url'], file['path'], file.get('hash'), seen_hashes)
-
     print("\nDownload complete.")
 
 if __name__ == "__main__":
@@ -132,20 +123,16 @@ if __name__ == "__main__":
             const code = document.getElementById('pythonCode').innerText;
             const btn = document.getElementById('copyBtn');
             const svg = btn.querySelector('svg');
-            
             navigator.clipboard.writeText(code).then(() => {
                 const originalPath = svg.innerHTML;
                 svg.innerHTML = '<path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path>';
                 btn.style.borderColor = '#2da44e';
                 btn.style.color = '#2da44e';
-
                 setTimeout(() => {
                     svg.innerHTML = originalPath;
                     btn.style.borderColor = '';
                     btn.style.color = '';
                 }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy: ', err);
             });
         });
 
@@ -157,7 +144,7 @@ if __name__ == "__main__":
         const summarySpan = document.getElementById('selection-summary');
         const selectedArea = document.getElementById('selectedArea');
         
-        // GLOBAL STATE: Keeps track of selected categories across searches
+        // GLOBAL STATE: Keeps track of explicitly selected categories
         const selectedCategories = new Set();
 
         // 1. Search Debounce
@@ -169,22 +156,18 @@ if __name__ == "__main__":
 
         async function performSearch(query) {
             if (query.length < 2) return;
-            
             treeRoot.innerHTML = '<li style="padding:10px; color:#666;">Searching...</li>';
-            
             try {
                 const res = await fetch(`/api/media/search-categories?q=${encodeURIComponent(query)}`);
                 const categories = await res.json();
-                
                 treeRoot.innerHTML = '';
                 if (categories.length === 0) {
                     treeRoot.innerHTML = '<li class="empty-state">No matches found.</li>';
                     return;
                 }
-
-                // Render Search Results
                 categories.forEach(catName => {
-                    const node = createTreeNode(catName);
+                    // Root nodes are never "inherited", so ancestorSelected is false
+                    const node = createTreeNode(catName, false);
                     treeRoot.appendChild(node);
                 });
             } catch (err) {
@@ -194,7 +177,8 @@ if __name__ == "__main__":
         }
 
         // 2. Create Tree Node Helper
-        function createTreeNode(catName) {
+        // ancestorSelected: Boolean indicating if a parent node is already checked
+        function createTreeNode(catName, ancestorSelected) {
             const li = document.createElement('li');
             li.className = 'tree-item';
             
@@ -210,17 +194,22 @@ if __name__ == "__main__":
             checkbox.className = 'tree-checkbox';
             checkbox.value = catName;
             
-            // CHECK STATE: If this category is already in our Set, check it
-            if (selectedCategories.has(catName)) {
+            // LOGIC: Inherited Selection vs Explicit Selection
+            if (ancestorSelected) {
+                // If parent is checked, I must be checked and disabled (implicit selection)
+                checkbox.checked = true;
+                checkbox.disabled = true;
+            } else if (selectedCategories.has(catName)) {
+                // If I was explicitly selected previously
                 checkbox.checked = true;
             }
 
-            // LISTENER: Update Set and UI when clicked
+            // LISTENER: Handle clicks
             checkbox.addEventListener('change', () => {
                 if (checkbox.checked) {
-                    addSelection(catName);
+                    addSelection(catName, li);
                 } else {
-                    removeSelection(catName);
+                    removeSelection(catName, li);
                 }
             });
             
@@ -228,8 +217,10 @@ if __name__ == "__main__":
             label.className = 'tree-label';
             label.textContent = catName;
             label.addEventListener('click', () => {
-                checkbox.checked = !checkbox.checked;
-                checkbox.dispatchEvent(new Event('change'));
+                if (!checkbox.disabled) {
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change'));
+                }
             });
 
             row.appendChild(toggle);
@@ -262,8 +253,12 @@ if __name__ == "__main__":
                                 childContainer.innerHTML = '<li style="padding:5px 0 0 25px; color:#ccc; font-style:italic;">No subcategories</li>';
                                 toggle.classList.add('empty');
                             } else {
+                                // Determine state for children:
+                                // They are selected if *I* am checked (whether I am disabled or not)
+                                const isThisNodeChecked = checkbox.checked;
+                                
                                 children.forEach(childName => {
-                                    childContainer.appendChild(createTreeNode(childName));
+                                    childContainer.appendChild(createTreeNode(childName, isThisNodeChecked));
                                 });
                             }
                             loaded = true;
@@ -278,25 +273,58 @@ if __name__ == "__main__":
         }
 
         // 3. State Management Functions
-        function addSelection(name) {
+        
+        function addSelection(name, liNode) {
             selectedCategories.add(name);
             renderSelectedTags();
             updateSummary();
+            
+            // CASCADING LOGIC:
+            // When I am selected, find all my currently visible children.
+            // If they are explicitly selected, remove them (since I cover them now).
+            // Then Disable them and Check them.
+            if (liNode) {
+                const childCheckboxes = liNode.querySelectorAll('.tree-children .tree-checkbox');
+                childCheckboxes.forEach(childCb => {
+                    const childName = childCb.value;
+                    
+                    // If child was explicitly selected, remove it from the list
+                    // because the parent now covers it.
+                    if (selectedCategories.has(childName)) {
+                        selectedCategories.delete(childName);
+                    }
+                    
+                    // Visually lock the child
+                    childCb.checked = true;
+                    childCb.disabled = true;
+                });
+                renderSelectedTags(); // Re-render in case we removed children
+                updateSummary();
+            }
         }
 
-        function removeSelection(name) {
+        function removeSelection(name, liNode) {
             selectedCategories.delete(name);
             renderSelectedTags();
             updateSummary();
             
-            // If the item is currently visible in the search list, uncheck it there too
-            const checkboxes = document.querySelectorAll(`.tree-checkbox[value="${name}"]`);
-            checkboxes.forEach(cb => cb.checked = false);
+            // CASCADING LOGIC:
+            // When I am deselected, unlock all children.
+            if (liNode) {
+                const childCheckboxes = liNode.querySelectorAll('.tree-children .tree-checkbox');
+                childCheckboxes.forEach(childCb => {
+                    // Reset to default state
+                    childCb.checked = false;
+                    childCb.disabled = false;
+                    
+                    // Note: We do NOT re-add them to selectedCategories. 
+                    // Unchecking a parent unchecks the whole branch.
+                });
+            }
         }
 
         function renderSelectedTags() {
             selectedArea.innerHTML = '';
-            
             if (selectedCategories.size > 0) {
                 selectedArea.classList.add('has-items');
                 selectedCategories.forEach(name => {
@@ -304,9 +332,19 @@ if __name__ == "__main__":
                     tag.className = 'selected-tag';
                     tag.innerHTML = `${name} <span class="remove-tag" title="Remove">×</span>`;
                     
-                    // Click 'x' to remove
                     tag.querySelector('.remove-tag').addEventListener('click', () => {
-                        removeSelection(name);
+                        // Find the checkbox in the DOM if it exists and uncheck it
+                        // This triggers the 'change' event which handles the logic
+                        const cb = document.querySelector(`.tree-checkbox[value="${name}"]`);
+                        if (cb && !cb.disabled) {
+                            cb.checked = false;
+                            cb.dispatchEvent(new Event('change'));
+                        } else {
+                            // If DOM element not found (e.g. searching elsewhere), just remove from state
+                            selectedCategories.delete(name);
+                            renderSelectedTags();
+                            updateSummary();
+                        }
                     });
                     
                     selectedArea.appendChild(tag);
@@ -317,10 +355,10 @@ if __name__ == "__main__":
         }
 
         function updateSummary() {
-            summarySpan.textContent = `${selectedCategories.size} categories selected`;
+            summarySpan.textContent = `${selectedCategories.size} root categories selected`;
         }
 
-        // 4. Generate Manifest Submit Logic
+        // 4. Generate Manifest
         generateBtn.addEventListener('click', async () => {
             const errorMsg = document.getElementById('error-msg');
             const resultBox = document.getElementById('manifest-result');
@@ -353,13 +391,11 @@ if __name__ == "__main__":
                         errorMsg.style.display = 'block';
                     } else {
                         document.getElementById('file-count').textContent = data.count;
-                        
                         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                         const url = URL.createObjectURL(blob);
                         const link = document.getElementById('download-link');
                         link.href = url;
                         link.download = `media_manifest.json`;
-                        
                         resultBox.style.display = 'block';
                     }
                 } else {
