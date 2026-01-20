@@ -35,9 +35,14 @@
             <div class="step-box">
                 <h2>Step 2: Run the Downloader</h2>
                 <p>Save the code below as <code>download_images.py</code> in the same folder as your <code>media_manifest.json</code> and run it.</p>
-                <div class="code-block-container" style="position: relative;">
-                    <button class="copy-btn" id="copyBtn">Copy Code</button>
-                    <div class="code-block">
+                
+                <div class="code-wrapper">
+                    <button class="copy-btn" id="copyBtn" aria-label="Copy to clipboard" title="Copy">
+                        <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true">
+                            <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"></path>
+                            <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path>
+                        </svg>
+                    </button>
 <pre id="pythonCode">
 import json
 import os
@@ -83,7 +88,6 @@ def main():
 if __name__ == "__main__":
     main()
 </pre>
-                    </div>
                 </div>
             </div>
 
@@ -96,15 +100,19 @@ if __name__ == "__main__":
         document.getElementById('copyBtn').addEventListener('click', () => {
             const code = document.getElementById('pythonCode').innerText;
             const btn = document.getElementById('copyBtn');
+            const svg = btn.querySelector('svg');
             
             navigator.clipboard.writeText(code).then(() => {
-                const originalText = btn.textContent;
-                btn.textContent = 'Copied!';
-                btn.classList.add('copied');
-                
+                // Visual feedback: Change icon to checkmark
+                const originalPath = svg.innerHTML;
+                svg.innerHTML = '<path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path>';
+                btn.style.borderColor = '#2da44e';
+                btn.style.color = '#2da44e';
+
                 setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.classList.remove('copied');
+                    svg.innerHTML = originalPath;
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
                 }, 2000);
             }).catch(err => {
                 console.error('Failed to copy: ', err);
