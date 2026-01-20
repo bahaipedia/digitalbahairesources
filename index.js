@@ -347,15 +347,14 @@ app.post('/api/media/generate-manifest', async (req, res) => {
         const query = `
             WITH RECURSIVE CategoryTree AS (
                 -- Anchor: Select ALL selected root categories
-                -- CAST page_title to CHAR to ensure CONCAT works correctly for the tree_path
-                SELECT page_title AS category_name, page_id, CAST(page_title AS CHAR(255)) AS tree_path, 0 AS depth
+                -- CAST to CHAR(1024) to prevent "Data too long" errors on deep folder paths
+                SELECT page_title AS category_name, page_id, CAST(page_title AS CHAR(1024)) AS tree_path, 0 AS depth
                 FROM page 
                 WHERE page_title IN (${placeholders}) AND page_namespace = 14
                 
                 UNION DISTINCT
                 
                 -- Recursive: Subcategories
-                -- Ensure both the previous path and the new title are treated as strings
                 SELECT p.page_title, p.page_id, CONCAT(ct.tree_path, '/', CAST(p.page_title AS CHAR(255))), ct.depth + 1
                 FROM page p
                 INNER JOIN categorylinks cl ON p.page_id = cl.cl_from
