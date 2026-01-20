@@ -156,7 +156,7 @@ function getMediaWikiS3Url(filename) {
     const p1 = hash.substring(0, 1);
     const p2 = hash.substring(0, 2);
     // Construct URL (Adjust domain if using a specific regional bucket for the manifest)
-    return `https://s3.us-east-1.amazonaws.com/bahaimedia/${p1}/${p2}/${encodeURIComponent(safeName)}`;
+    return `https://file.bahai.media/${p1}/${p2}/${encodeURIComponent(safeName)}`;
 }
 
 // Routes
