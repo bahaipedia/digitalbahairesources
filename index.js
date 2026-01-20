@@ -329,15 +329,23 @@ app.post('/api/media/generate-manifest', async (req, res) => {
 
         // Transform into Manifest Format
         const manifest = rows.map(row => {
-            // Decode category name for folder path (e.g. "Bahá'í_Houses_of_Worship" -> "Bahá'í Houses of Worship")
-            const cleanFolder = row.folder.replace(/_/g, ' ');
-            const cleanFilename = row.filename.replace(/_/g, ' ');
+            // MediaWiki stores text as binary, so we must convert Buffer -> String
+            const folderStr = row.folder.toString('utf8');
+            const filenameStr = row.filename.toString('utf8');
+            
+            // Check if sha1 is a buffer (depends on schema version) and convert if needed
+            const hashStr = Buffer.isBuffer(row.sha1) ? row.sha1.toString('utf8') : row.sha1;
+
+            // Decode category name for folder path
+            const cleanFolder = folderStr.replace(/_/g, ' ');
+            const cleanFilename = filenameStr.replace(/_/g, ' ');
             
             return {
-                url: getMediaWikiS3Url(row.filename),
+                // Ensure we pass the original string (with underscores) to the S3 URL generator
+                url: getMediaWikiS3Url(filenameStr),
                 path: `${cleanFolder}/${cleanFilename}`,
                 size: row.size,
-                hash: row.sha1
+                hash: hashStr
             };
         });
 
