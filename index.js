@@ -347,21 +347,24 @@ app.post('/api/media/generate-manifest', async (req, res) => {
         const query = `
             WITH RECURSIVE CategoryTree AS (
                 -- Anchor: Select ALL selected root categories
-                SELECT page_title AS category_name, page_id 
+                -- Initialize tree_path with the root category name
+                SELECT page_title AS category_name, page_id, page_title AS tree_path, 0 AS depth
                 FROM page 
                 WHERE page_title IN (${placeholders}) AND page_namespace = 14
                 
                 UNION DISTINCT
                 
                 -- Recursive: Subcategories
-                SELECT p.page_title, p.page_id
+                -- Append child name to the path: "Parent/Child"
+                -- Limit depth to 15 to prevent crashes from circular category loops
+                SELECT p.page_title, p.page_id, CONCAT(ct.tree_path, '/', p.page_title), ct.depth + 1
                 FROM page p
                 INNER JOIN categorylinks cl ON p.page_id = cl.cl_from
                 INNER JOIN CategoryTree ct ON cl.cl_to = ct.category_name
-                WHERE p.page_namespace = 14
+                WHERE p.page_namespace = 14 AND ct.depth < 15
             )
             SELECT 
-                ct.category_name AS folder,
+                ct.tree_path AS folder, -- Return the full path (Parent/Child/Subchild)
                 p.page_title AS filename,
                 img.img_size AS size,
                 img.img_sha1 AS sha1
