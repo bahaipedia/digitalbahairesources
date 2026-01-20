@@ -17,220 +17,329 @@
             <p>Use this tool to generate a download manifest for specific image categories. This allows you to download full-resolution images while preserving the category structure (bahai.media categories become folders and sub-folders on your computer).</p>
 
             <div class="step-box">
-    <h2>Step 1: Select Categories</h2>
-    <p>Search for categories and check the boxes for the ones you want. Subcategories are automatically included in the download.</p>
-    
-    <div class="explorer-container">
-        <div class="explorer-search">
-            <input type="text" id="catSearch" placeholder="Type to search categories (e.g. 'House', 'Bahá')..." autocomplete="off">
-        </div>
-        <ul id="treeRoot" class="explorer-tree">
-            <li style="color: #666; padding: 10px; text-align: center;">Start typing above to find categories.</li>
-        </ul>
-    </div>
+                <h2>Step 1: Select Categories</h2>
+                <p>Search for categories and check the boxes for the ones you want. Subcategories are automatically included in the download.</p>
+                
+                <div class="explorer-container">
+                    <div class="explorer-search">
+                        <input type="text" id="catSearch" placeholder="Type to search categories (e.g. 'House', 'Bahá')..." autocomplete="off">
+                    </div>
+                    <ul id="treeRoot" class="explorer-tree">
+                        <li class="empty-state">Start typing above to find categories.</li>
+                    </ul>
+                </div>
 
-    <div style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
-        <button id="generateBtn" class="btn-generate">Generate Manifest</button>
-        <span id="selection-summary" style="color: #666;">0 categories selected</span>
-    </div>
+                <div style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
+                    <button id="generateBtn" class="btn-generate">Generate Manifest</button>
+                    <span id="selection-summary" style="color: #666;">0 categories selected</span>
+                </div>
 
-    <div id="manifest-result">
-        <p><strong>Success!</strong> Found <span id="file-count">0</span> images.</p>
-        <a id="download-link" href="#" class="btn-download-json" download="media_manifest.json">Download manifest.json</a>
-    </div>
-    <p id="error-msg" style="color: red; display: none; margin-top: 10px;"></p>
-</div>
+                <div id="manifest-result">
+                    <p><strong>Success!</strong> Found <span id="file-count">0</span> images.</p>
+                    <a id="download-link" href="#" class="btn-download-json" download="media_manifest.json">Download manifest.json</a>
+                </div>
+                <p id="error-msg" style="color: red; display: none; margin-top: 10px;"></p>
+            </div>
 
-<%- include('partials/footer') %>
+            <div class="step-box">
+                <h2>Step 2: Run the Downloader</h2>
+                <p>Save the code below as <code>download_images.py</code> in the same folder as your <code>media_manifest.json</code> and run it.</p>
+                
+                <div class="code-wrapper">
+                    <button class="copy-btn" id="copyBtn" aria-label="Copy to clipboard" title="Copy">
+                        <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true">
+                            <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"></path>
+                            <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path>
+                        </svg>
+                    </button>
+<pre id="pythonCode">
+import json
+import os
+import requests
+import shutil
 
-<script>
-    // --- Copy Button Logic (Unchanged) ---
-    document.getElementById('copyBtn').addEventListener('click', () => {
-        const code = document.getElementById('pythonCode').innerText;
-        navigator.clipboard.writeText(code);
-        // (Optional: visual feedback code here)
-    });
+# Configuration
+MANIFEST_FILE = 'media_manifest.json'
 
-    // --- EXPLORER WIDGET LOGIC ---
-    
-    const treeRoot = document.getElementById('treeRoot');
-    const searchInput = document.getElementById('catSearch');
-    const generateBtn = document.getElementById('generateBtn');
-    const summarySpan = document.getElementById('selection-summary');
-    
-    // 1. Search Debounce
-    let debounceTimer;
-    searchInput.addEventListener('input', (e) => {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => performSearch(e.target.value), 300);
-    });
+def process_file(url, path, file_hash, seen_hashes):
+    # Ensure directory exists
+    os.makedirs(os.path.dirname(path), exist_ok=True)
 
-    async function performSearch(query) {
-        if (query.length < 2) return;
+    # 1. Check if we have this file anywhere else on disk (Deduplication)
+    if file_hash in seen_hashes:
+        existing_path = seen_hashes[file_hash]
         
-        treeRoot.innerHTML = '<li style="padding:10px; color:#666;">Searching...</li>';
+        # Only link if the target doesn't exist yet
+        if not os.path.exists(path):
+            try:
+                # Create a Hard Link (points to same data, 0 extra space)
+                print(f"Linking: {path} -> {existing_path}")
+                os.link(existing_path, path)
+            except OSError:
+                # Fallback: Copy file locally (saves bandwidth, uses space)
+                print(f"Copying local: {path}")
+                shutil.copyfile(existing_path, path)
+        return
+
+    # 2. Check if file already exists at this specific path (Resume support)
+    if os.path.exists(path):
+        print(f"Skipping (exists): {path}")
+        # Remember this path for future duplicates
+        if file_hash:
+            seen_hashes[file_hash] = path
+        return
+
+    # 3. Download fresh from network
+    print(f"Downloading: {path}")
+    try:
+        r = requests.get(url, stream=True)
+        r.raise_for_status()
         
-        try {
-            const res = await fetch(`/api/media/search-categories?q=${encodeURIComponent(query)}`);
-            const categories = await res.json();
+        with open(path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+        
+        # Record success for future linking
+        if file_hash:
+            seen_hashes[file_hash] = path
             
-            treeRoot.innerHTML = '';
-            if (categories.length === 0) {
-                treeRoot.innerHTML = '<li style="padding:10px; color:#666;">No matches found.</li>';
+    except Exception as e:
+        print(f"Error downloading {path}: {e}")
+
+def main():
+    if not os.path.exists(MANIFEST_FILE):
+        print(f"Error: {MANIFEST_FILE} not found.")
+        return
+
+    with open(MANIFEST_FILE, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    print(f"Starting download of {data['count']} files...")
+    
+    # Dictionary to map {hash: file_path}
+    seen_hashes = {}
+
+    for file in data['files']:
+        process_file(file['url'], file['path'], file.get('hash'), seen_hashes)
+
+    print("\nDownload complete.")
+
+if __name__ == "__main__":
+    main()
+</pre>
+                </div>
+            </div>
+
+        </section>
+    </main>
+    <%- include('partials/footer') %>
+
+    <script>
+        // --- Copy Button Logic ---
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const code = document.getElementById('pythonCode').innerText;
+            const btn = document.getElementById('copyBtn');
+            const svg = btn.querySelector('svg');
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const originalPath = svg.innerHTML;
+                svg.innerHTML = '<path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path>';
+                btn.style.borderColor = '#2da44e';
+                btn.style.color = '#2da44e';
+
+                setTimeout(() => {
+                    svg.innerHTML = originalPath;
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        });
+
+        // --- EXPLORER WIDGET LOGIC ---
+        
+        const treeRoot = document.getElementById('treeRoot');
+        const searchInput = document.getElementById('catSearch');
+        const generateBtn = document.getElementById('generateBtn');
+        const summarySpan = document.getElementById('selection-summary');
+        
+        // 1. Search Debounce
+        let debounceTimer;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => performSearch(e.target.value), 300);
+        });
+
+        async function performSearch(query) {
+            if (query.length < 2) return;
+            
+            treeRoot.innerHTML = '<li style="padding:10px; color:#666;">Searching...</li>';
+            
+            try {
+                const res = await fetch(`/api/media/search-categories?q=${encodeURIComponent(query)}`);
+                const categories = await res.json();
+                
+                treeRoot.innerHTML = '';
+                if (categories.length === 0) {
+                    treeRoot.innerHTML = '<li class="empty-state">No matches found.</li>';
+                    return;
+                }
+
+                // Render Search Results as Root Nodes
+                categories.forEach(catName => {
+                    const node = createTreeNode(catName);
+                    treeRoot.appendChild(node);
+                });
+            } catch (err) {
+                console.error(err);
+                treeRoot.innerHTML = '<li style="color:red; padding:10px;">Error searching.</li>';
+            }
+        }
+
+        // 2. Create Tree Node Helper
+        function createTreeNode(catName) {
+            const li = document.createElement('li');
+            li.className = 'tree-item';
+            
+            // HTML Structure: 
+            // <div> [Toggle] [Checkbox] [Label] </div>
+            // <ul> (Children) </ul>
+            
+            const row = document.createElement('div');
+            row.className = 'tree-row';
+            
+            const toggle = document.createElement('span');
+            toggle.className = 'tree-toggle';
+            toggle.textContent = '▶'; 
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'tree-checkbox';
+            checkbox.value = catName;
+            checkbox.addEventListener('change', updateSummary);
+            
+            const label = document.createElement('span');
+            label.className = 'tree-label';
+            label.textContent = catName;
+            
+            // Clicking label checks the box
+            label.addEventListener('click', () => {
+                checkbox.checked = !checkbox.checked;
+                updateSummary();
+            });
+
+            row.appendChild(toggle);
+            row.appendChild(checkbox);
+            row.appendChild(label);
+            li.appendChild(row);
+
+            // Container for children
+            const childContainer = document.createElement('ul');
+            childContainer.className = 'tree-children';
+            li.appendChild(childContainer);
+
+            // Toggle Logic (Lazy Load)
+            let loaded = false;
+            toggle.addEventListener('click', async () => {
+                if (childContainer.classList.contains('visible')) {
+                    // Collapse
+                    childContainer.classList.remove('visible');
+                    toggle.classList.remove('expanded');
+                } else {
+                    // Expand
+                    toggle.classList.add('expanded');
+                    childContainer.classList.add('visible');
+                    
+                    if (!loaded) {
+                        childContainer.innerHTML = '<li style="padding:5px 0 0 25px; color:#999;">Loading...</li>';
+                        try {
+                            const res = await fetch(`/api/media/subcategories?parent=${encodeURIComponent(catName)}`);
+                            const children = await res.json();
+                            
+                            childContainer.innerHTML = ''; // Clear loading
+                            
+                            if (children.length === 0) {
+                                childContainer.innerHTML = '<li style="padding:5px 0 0 25px; color:#ccc; font-style:italic;">No subcategories</li>';
+                                // Disable toggle if no children
+                                toggle.classList.add('empty');
+                            } else {
+                                children.forEach(childName => {
+                                    childContainer.appendChild(createTreeNode(childName));
+                                });
+                            }
+                            loaded = true;
+                        } catch (err) {
+                            childContainer.innerHTML = '<li style="color:red">Error loading.</li>';
+                        }
+                    }
+                }
+            });
+
+            return li;
+        }
+
+        function updateSummary() {
+            const checked = document.querySelectorAll('.tree-checkbox:checked');
+            summarySpan.textContent = `${checked.length} categories selected`;
+        }
+
+        // 3. Generate Manifest Submit Logic
+        generateBtn.addEventListener('click', async () => {
+            const errorMsg = document.getElementById('error-msg');
+            const resultBox = document.getElementById('manifest-result');
+            const checkboxes = document.querySelectorAll('.tree-checkbox:checked');
+
+            errorMsg.style.display = 'none';
+            resultBox.style.display = 'none';
+
+            if (checkboxes.length === 0) {
+                errorMsg.textContent = "Please select at least one category.";
+                errorMsg.style.display = 'block';
                 return;
             }
 
-            // Render Search Results as Root Nodes
-            categories.forEach(catName => {
-                const node = createTreeNode(catName);
-                treeRoot.appendChild(node);
-            });
-        } catch (err) {
-            console.error(err);
-            treeRoot.innerHTML = '<li style="color:red">Error searching.</li>';
-        }
-    }
+            const selectedCategories = Array.from(checkboxes).map(cb => cb.value);
+            generateBtn.disabled = true;
+            generateBtn.textContent = "Generating...";
 
-    // 2. Create Tree Node Helper
-    function createTreeNode(catName) {
-        const li = document.createElement('li');
-        li.className = 'tree-item';
-        
-        // HTML Structure: 
-        // <div> [Toggle] [Checkbox] [Label] </div>
-        // <ul> (Children) </ul>
-        
-        const row = document.createElement('div');
-        row.className = 'tree-row';
-        
-        const toggle = document.createElement('span');
-        toggle.className = 'tree-toggle';
-        toggle.textContent = '▶'; 
-        
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'tree-checkbox';
-        checkbox.value = catName;
-        checkbox.addEventListener('change', updateSummary);
-        
-        const label = document.createElement('span');
-        label.className = 'tree-label';
-        label.textContent = catName;
-        // Clicking label checks the box
-        label.addEventListener('click', () => {
-            checkbox.checked = !checkbox.checked;
-            updateSummary();
-        });
+            try {
+                const response = await fetch('/api/media/generate-manifest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ categories: selectedCategories })
+                });
 
-        row.appendChild(toggle);
-        row.appendChild(checkbox);
-        row.appendChild(label);
-        li.appendChild(row);
+                const data = await response.json();
 
-        // Container for children
-        const childContainer = document.createElement('ul');
-        childContainer.className = 'tree-children';
-        li.appendChild(childContainer);
-
-        // Toggle Logic (Lazy Load)
-        let loaded = false;
-        toggle.addEventListener('click', async () => {
-            if (childContainer.classList.contains('visible')) {
-                // Collapse
-                childContainer.classList.remove('visible');
-                toggle.classList.remove('expanded');
-            } else {
-                // Expand
-                toggle.classList.add('expanded');
-                childContainer.classList.add('visible');
-                
-                if (!loaded) {
-                    childContainer.innerHTML = '<li style="padding:5px 0 0 25px; color:#999;">Loading...</li>';
-                    try {
-                        const res = await fetch(`/api/media/subcategories?parent=${encodeURIComponent(catName)}`);
-                        const children = await res.json();
+                if (response.ok) {
+                    if (data.count === 0) {
+                        errorMsg.textContent = "No images found in the selected categories.";
+                        errorMsg.style.display = 'block';
+                    } else {
+                        document.getElementById('file-count').textContent = data.count;
                         
-                        childContainer.innerHTML = ''; // Clear loading
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.getElementById('download-link');
+                        link.href = url;
+                        link.download = `media_manifest.json`;
                         
-                        if (children.length === 0) {
-                            childContainer.innerHTML = '<li style="padding:5px 0 0 25px; color:#ccc; font-style:italic;">No subcategories</li>';
-                        } else {
-                            children.forEach(childName => {
-                                childContainer.appendChild(createTreeNode(childName));
-                            });
-                        }
-                        loaded = true;
-                    } catch (err) {
-                        childContainer.innerHTML = '<li style="color:red">Error loading.</li>';
+                        resultBox.style.display = 'block';
                     }
+                } else {
+                    errorMsg.textContent = data.error || "Server error.";
+                    errorMsg.style.display = 'block';
                 }
+            } catch (err) {
+                console.error(err);
+                errorMsg.textContent = "Network error.";
+                errorMsg.style.display = 'block';
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = "Generate Manifest";
             }
         });
-
-        return li;
-    }
-
-    function updateSummary() {
-        const checked = document.querySelectorAll('.tree-checkbox:checked');
-        summarySpan.textContent = `${checked.length} categories selected`;
-    }
-
-    // 3. Generate Manifest Submit Logic
-    generateBtn.addEventListener('click', async () => {
-        const errorMsg = document.getElementById('error-msg');
-        const resultBox = document.getElementById('manifest-result');
-        const checkboxes = document.querySelectorAll('.tree-checkbox:checked');
-
-        errorMsg.style.display = 'none';
-        resultBox.style.display = 'none';
-
-        if (checkboxes.length === 0) {
-            errorMsg.textContent = "Please select at least one category.";
-            errorMsg.style.display = 'block';
-            return;
-        }
-
-        const selectedCategories = Array.from(checkboxes).map(cb => cb.value);
-        generateBtn.disabled = true;
-        generateBtn.textContent = "Generating...";
-
-        try {
-            const response = await fetch('/api/media/generate-manifest', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categories: selectedCategories })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                if (data.count === 0) {
-                    errorMsg.textContent = "No images found in the selected categories.";
-                    errorMsg.style.display = 'block';
-                } else {
-                    document.getElementById('file-count').textContent = data.count;
-                    
-                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.getElementById('download-link');
-                    link.href = url;
-                    link.download = `media_manifest.json`;
-                    
-                    resultBox.style.display = 'block';
-                }
-            } else {
-                errorMsg.textContent = data.error || "Server error.";
-                errorMsg.style.display = 'block';
-            }
-        } catch (err) {
-            console.error(err);
-            errorMsg.textContent = "Network error.";
-            errorMsg.style.display = 'block';
-        } finally {
-            generateBtn.disabled = false;
-            generateBtn.textContent = "Generate Manifest";
-        }
-    });
-</script>
+    </script>
 </body>
 </html>
