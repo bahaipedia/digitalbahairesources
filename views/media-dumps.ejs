@@ -19,7 +19,7 @@
             <div class="step-box">
                 <h2>Step 1: Select Categories</h2>
                 <p>Search for categories and check the boxes for the ones you want. <br>
-                <small style="color: #666;">* Selecting a parent category automatically includes all its subcategories.</small></p>
+                <small style="color: #666;">Press the <strong>▶</strong> icon to show sub-categories</small></p>
                 
                 <div class="explorer-container">
                     <div class="explorer-search">
@@ -245,7 +245,7 @@ if __name__ == "__main__":
                             childContainer.innerHTML = ''; 
                             
                             if (children.length === 0) {
-                                childContainer.innerHTML = '<li style="padding:5px 0 0 25px; color:#ccc; font-style:italic;">No subcategories</li>';
+                                childContainer.innerHTML = '<li style="padding:0 0 0 25px; color:#ccc; font-style:italic; font-size: medium;">No subcategories</li>';
                                 toggle.classList.add('empty');
                             } else {
                                 children.forEach(childName => {
