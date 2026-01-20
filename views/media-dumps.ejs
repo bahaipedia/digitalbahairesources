@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Archive Downloader</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/database-dumps.css">
+    <link rel="icon" href="/images/dbs-favicon.png" type="image/png">
+    <style>
+        .step-box {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: monospace;
+            margin-top: 10px;
+        }
+        #manifest-result {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 5px;
+        }
+        .btn-generate {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-generate:hover { background-color: #0056b3; }
+        .btn-download-json {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header', { mini: false }) %>
+    <main>
+        <section class="content-area">
+            <h1 class="centered">Bahai.media Category Downloader</h1>
+            
+            <p>Use this tool to generate a download manifest for specific image categories. This allows you to download full-resolution images while preserving the category folder structure.</p>
+
+            <div class="step-box">
+                <h2>Step 1: Generate Manifest</h2>
+                <p>Enter a root category (e.g., <em>Bahá'í Houses of Worship</em>). We will find all images in that category and its subcategories.</p>
+                
+                <form id="manifestForm">
+                    <input type="text" id="categoryInput" placeholder="Enter Category Name" required style="padding: 10px; width: 300px; font-size: 16px;">
+                    <button type="submit" class="btn-generate">Generate Manifest</button>
+                </form>
+
+                <div id="manifest-result">
+                    <p><strong>Success!</strong> Found <span id="file-count">0</span> images.</p>
+                    <a id="download-link" href="#" class="btn-download-json" download="media_manifest.json">Download manifest.json</a>
+                </div>
+                <p id="error-msg" style="color: red; display: none; margin-top: 10px;"></p>
+            </div>
+
+            <div class="step-box">
+                <h2>Step 2: Run the Downloader</h2>
+                <p>Save the code below as <code>download_images.py</code> in the same folder as your <code>media_manifest.json</code> and run it.</p>
+                <div class="code-block">
+<pre>
+import json
+import os
+import requests
+import hashlib
+
+# Configuration
+MANIFEST_FILE = 'media_manifest.json'
+
+def download_file(url, path, expected_hash):
+    if os.path.exists(path):
+        print(f"Skipping (exists): {path}")
+        return
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    
+    print(f"Downloading: {path}")
+    try:
+        r = requests.get(url, stream=True)
+        r.raise_for_status()
+        
+        with open(path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+                
+    except Exception as e:
+        print(f"Error downloading {path}: {e}")
+
+def main():
+    if not os.path.exists(MANIFEST_FILE):
+        print(f"Error: {MANIFEST_FILE} not found.")
+        return
+
+    with open(MANIFEST_FILE, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    print(f"Starting download of {data['count']} files for '{data['root_category']}'...")
+    
+    for file in data['files']:
+        download_file(file['url'], file['path'], file['hash'])
+
+    print("\nDownload complete.")
+
+if __name__ == "__main__":
+    main()
+</pre>
+                </div>
+            </div>
+
+        </section>
+    </main>
+    <%- include('partials/footer') %>
+
+    <script>
+        document.getElementById('manifestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const category = document.getElementById('categoryInput').value;
+            const errorMsg = document.getElementById('error-msg');
+            const resultBox = document.getElementById('manifest-result');
+            
+            errorMsg.style.display = 'none';
+            resultBox.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/media/generate-manifest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ category })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (data.count === 0) {
+                        errorMsg.textContent = "No images found in this category hierarchy.";
+                        errorMsg.style.display = 'block';
+                    } else {
+                        document.getElementById('file-count').textContent = data.count;
+                        
+                        // Create downloadable blob
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.getElementById('download-link');
+                        link.href = url;
+                        link.download = `${category.replace(/ /g, '_')}_manifest.json`;
+                        
+                        resultBox.style.display = 'block';
+                    }
+                } else {
+                    errorMsg.textContent = data.error || "An error occurred.";
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.textContent = "Network error. Please try again.";
+                errorMsg.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
