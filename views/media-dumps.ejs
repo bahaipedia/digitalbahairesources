@@ -166,8 +166,11 @@ if __name__ == "__main__":
                     return;
                 }
                 categories.forEach(catName => {
+                    // Create root nodes. Pass null/false for ancestor state.
                     treeRoot.appendChild(createTreeNode(catName));
                 });
+                // After rebuilding tree, apply current selection logic
+                updateTreeVisuals(); 
             } catch (err) {
                 console.error(err);
                 treeRoot.innerHTML = '<li style="color:red; padding:10px;">Error searching.</li>';
@@ -178,6 +181,8 @@ if __name__ == "__main__":
         function createTreeNode(catName) {
             const li = document.createElement('li');
             li.className = 'tree-item';
+            // Store category name on the LI for the traverser to find easily
+            li.dataset.category = catName; 
             
             const row = document.createElement('div');
             row.className = 'tree-row';
@@ -191,18 +196,16 @@ if __name__ == "__main__":
             checkbox.className = 'tree-checkbox';
             checkbox.value = catName;
 
-            // CHECK STATE: If explicitly selected, check it.
-            if (selectedCategories.has(catName)) {
-                checkbox.checked = true;
-            }
-
-            // LISTENER: Handle clicks
+            // LISTENER: Only update Data State, then trigger Visual Refresh
             checkbox.addEventListener('change', () => {
                 if (checkbox.checked) {
-                    addSelection(catName, li);
+                    selectedCategories.add(catName);
                 } else {
-                    removeSelection(catName, li);
+                    selectedCategories.delete(catName);
                 }
+                // Refresh Tags and Tree
+                renderSelectedTags();
+                updateTreeVisuals();
             });
             
             const label = document.createElement('span');
@@ -245,20 +248,11 @@ if __name__ == "__main__":
                                 childContainer.innerHTML = '<li style="padding:5px 0 0 25px; color:#ccc; font-style:italic;">No subcategories</li>';
                                 toggle.classList.add('empty');
                             } else {
-                                // Check parent state dynamically right now
-                                const isParentChecked = checkbox.checked;
-                                
                                 children.forEach(childName => {
-                                    const childNode = createTreeNode(childName);
-                                    childContainer.appendChild(childNode);
-                                    
-                                    // If parent is checked, immediately lock the new child
-                                    if (isParentChecked) {
-                                        const childCb = childNode.querySelector('.tree-checkbox');
-                                        childCb.checked = true;
-                                        childCb.disabled = true;
-                                    }
+                                    childContainer.appendChild(createTreeNode(childName));
                                 });
+                                // Apply visual state to the new nodes
+                                updateTreeVisuals();
                             }
                             loaded = true;
                         } catch (err) {
@@ -271,51 +265,57 @@ if __name__ == "__main__":
             return li;
         }
 
-        // 3. State Management Functions
-        
-        function addSelection(name, liNode) {
-            selectedCategories.add(name);
-            renderSelectedTags();
+        // 3. THE FIX: Recursive Visual Update
+        // This function ensures the DOM always matches the Logic (State).
+        // It walks the entire visible tree from top to bottom.
+        function updateTreeVisuals() {
+            // Start traversing from the root UL
+            const rootItems = treeRoot.querySelectorAll(':scope > .tree-item');
+            rootItems.forEach(item => traverseNode(item, false));
             updateSummary();
-            
-            // Lock all children
-            if (liNode) {
-                toggleChildState(liNode, true);
-            }
         }
 
-        function removeSelection(name, liNode) {
-            selectedCategories.delete(name);
-            renderSelectedTags();
-            updateSummary();
+        function traverseNode(liNode, ancestorIsSelected) {
+            const checkbox = liNode.querySelector(':scope > .tree-row > .tree-checkbox');
+            const catName = checkbox.value;
+            const childContainer = liNode.querySelector(':scope > .tree-children');
             
-            // Unlock all children
-            if (liNode) {
-                toggleChildState(liNode, false);
-            }
-        }
+            // Logic: Am I selected?
+            // 1. If an ancestor is selected, I am IMPLICITLY selected (Locked)
+            // 2. If no ancestor, I might be EXPLICITLY selected (User clicked me)
+            
+            let amISelected = false;
 
-        // Helper to Recursively Lock/Unlock children
-        function toggleChildState(parentNode, shouldLock) {
-            const childCheckboxes = parentNode.querySelectorAll('.tree-children .tree-checkbox');
-            childCheckboxes.forEach(childCb => {
-                if (shouldLock) {
-                    // Lock: Remove from explicit list (since parent covers it), Check, and Disable
-                    if (selectedCategories.has(childCb.value)) {
-                        selectedCategories.delete(childCb.value);
-                    }
-                    childCb.checked = true;
-                    childCb.disabled = true;
-                } else {
-                    // Unlock: Uncheck and Enable
-                    childCb.checked = false;
-                    childCb.disabled = false;
-                    // Note: We do NOT add back to selectedCategories. Unchecking parent clears the branch.
+            if (ancestorIsSelected) {
+                // Locked State
+                checkbox.checked = true;
+                checkbox.disabled = true;
+                amISelected = true; // Pass this down to children
+                
+                // If I was explicitly selected before, remove me from explicit list
+                // (Cleanup to avoid double-counting)
+                if (selectedCategories.has(catName)) {
+                    selectedCategories.delete(catName);
+                    renderSelectedTags(); // Refresh tags if we removed one
                 }
-            });
-            // Re-render because we might have modified selectedCategories in the loop
-            renderSelectedTags();
-            updateSummary();
+            } else {
+                // Unlocked State (Interactive)
+                checkbox.disabled = false;
+                
+                if (selectedCategories.has(catName)) {
+                    checkbox.checked = true;
+                    amISelected = true;
+                } else {
+                    checkbox.checked = false;
+                    amISelected = false;
+                }
+            }
+
+            // Recurse to children (if they exist/are loaded)
+            if (childContainer) {
+                const children = childContainer.querySelectorAll(':scope > .tree-item');
+                children.forEach(child => traverseNode(child, amISelected));
+            }
         }
 
         function renderSelectedTags() {
@@ -328,16 +328,9 @@ if __name__ == "__main__":
                     tag.innerHTML = `${name} <span class="remove-tag" title="Remove">×</span>`;
                     
                     tag.querySelector('.remove-tag').addEventListener('click', () => {
-                        const cb = document.querySelector(`.tree-checkbox[value="${name}"]`);
-                        if (cb && !cb.disabled) {
-                            cb.checked = false;
-                            cb.dispatchEvent(new Event('change'));
-                        } else {
-                            // Fallback if node not visible
-                            selectedCategories.delete(name);
-                            renderSelectedTags();
-                            updateSummary();
-                        }
+                        selectedCategories.delete(name);
+                        renderSelectedTags();
+                        updateTreeVisuals(); // This will unlock the checkbox in the tree
                     });
                     
                     selectedArea.appendChild(tag);
