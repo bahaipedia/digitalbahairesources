@@ -1,0 +1,43 @@
+.step-box {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+.code-block {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-family: monospace;
+    margin-top: 10px;
+}
+#manifest-result {
+    display: none;
+    margin-top: 20px;
+    padding: 15px;
+    background: #e8f5e9;
+    border: 1px solid #c8e6c9;
+    border-radius: 5px;
+}
+.btn-generate {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+.btn-generate:hover { background-color: #0056b3; }
+.btn-download-json {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 10px;
+}
