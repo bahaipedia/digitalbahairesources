@@ -10,7 +10,7 @@ const semver = require('semver');
 const { exec } = require('child_process');
 
 // For the Baha'i Text Annotation Chrome Extension, routes starting ~ line 700
-const MIN_CLIENT_VERSION = '2.5.0';
+const MIN_CLIENT_VERSION = '2.5.1';
 
 // AWS SDK
 const { S3Client, ListObjectsV2Command } = require("@aws-sdk/client-s3");
