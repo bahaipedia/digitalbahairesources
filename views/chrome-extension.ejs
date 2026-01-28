@@ -36,8 +36,76 @@
                     <p>Your categorized study notes do more than organize your own thoughts—they improve the collective intelligence of the community. This data directly enhances the hybrid RAG AI at <a href="https://bahai.chat">Bahai.chat</a>, helping it provide more accurate and context-aware answers.</p>
                 </div>
             </div>
+
+            <hr class="divider" style="margin-top: 50px;">
+
+            <h2 style="text-align: center; color: #005bb5;">Look Inside the Extension</h2>
+            
+            <div class="carousel-container">
+                <div class="carousel-slide fade">
+                    <img src="https://raw.githubusercontent.com/bahaipedia/digitalbahairesources/refs/heads/main/public/images/chrome-extension-tags.png" alt="Screenshot of Tagging Tab">
+                    <div class="slide-caption">
+                        <h3>Tab 1: The Tagging Interface</h3>
+                        <p>[Placeholder explanation: This tab allows you to highlight text on a Baha'i reference site and instantly assign existing tags or create new ones. You can see your recently used tags for quick access.]</p>
+                    </div>
+                </div>
+            
+                <div class="carousel-slide fade">
+                    <img src="https://raw.githubusercontent.com/bahaipedia/digitalbahairesources/refs/heads/main/public/images/chrome-extension-label.png" alt="Screenshot of Hierarchy Tab">
+                    <div class="slide-caption">
+                        <h3>Tab 2: Hierarchy Manager</h3>
+                        <p>[Placeholder explanation: Organize your tags here. Drag and drop tags to create parent-child relationships, building a structured knowledge tree similar to Evernote stacks.]</p>
+                    </div>
+                </div>
+            
+                <div class="carousel-slide fade">
+                    <img src="https://raw.githubusercontent.com/bahaipedia/digitalbahairesources/refs/heads/main/public/images/chrome-extension-qanda.png" alt="Screenshot of Item Identifier Tab">
+                    <div class="slide-caption">
+                        <h3>Tab 3: Crowdsourced Item Identifier</h3>
+                        <p>[Placeholder explanation: Use this tab when viewing large periodicals like Star of the West. Define the boundaries of specific items (e.g., a Tablet, a letter) and categorize its type to help researchers find it later.]</p>
+                    </div>
+                </div>
+
+                 <div class="carousel-slide fade">
+                    <img src="https://raw.githubusercontent.com/bahaipedia/digitalbahairesources/refs/heads/main/public/images/chrome-extension-link.png" alt="Screenshot of Settings Tab">
+                    <div class="slide-caption">
+                        <h3>Tab 4: Settings & Export</h3>
+                        <p>[Placeholder explanation: Manage your account connection, export your personal tag data, and adjust extension preferences here.]</p>
+                    </div>
+                </div>
+            
+                <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+                <a class="next" onclick="plusSlides(1)">&#10095;</a>
+            </div>
+
         </section>
     </main>
     <%- include('partials/footer') %>
+
+    <script>
+        let slideIndex = 1;
+        showSlides(slideIndex);
+
+        // Next/previous controls
+        function plusSlides(n) {
+        showSlides(slideIndex += n);
+        }
+
+        // Thumbnail image controls
+        function currentSlide(n) {
+        showSlides(slideIndex = n);
+        }
+
+        function showSlides(n) {
+        let i;
+        let slides = document.getElementsByClassName("carousel-slide");
+        if (n > slides.length) {slideIndex = 1}
+        if (n < 1) {slideIndex = slides.length}
+        for (i = 0; i < slides.length; i++) {
+            slides[i].style.display = "none";
+        }
+        slides[slideIndex-1].style.display = "block";
+        }
+    </script>
 </body>
 </html>
