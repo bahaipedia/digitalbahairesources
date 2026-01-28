@@ -77,6 +77,91 @@
     margin: 0;
 }
 
+/* Slideshow container */
+.carousel-container {
+    max-width: 850px;
+    position: relative;
+    margin: 40px auto;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden; /* Ensures images stay within rounded corners */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* Hide the slides by default */
+.carousel-slide {
+    display: none;
+}
+
+/* Slide images */
+.carousel-slide img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-bottom: 1px solid #eee;
+}
+
+/* Caption text block below the image */
+.slide-caption {
+    padding: 25px;
+    text-align: left;
+    background-color: #fbfbfb;
+}
+
+.slide-caption h3 {
+    color: #005bb5;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.slide-caption p {
+    font-size: 1rem !important; /* Override base font size */
+    color: #555;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Next & previous buttons */
+.prev, .next {
+    cursor: pointer;
+    position: absolute;
+    /* Position them centered relative to the IMAGE part, roughly */
+    top: 40%; 
+    width: auto;
+    padding: 16px;
+    margin-top: -22px;
+    color: white;
+    font-weight: bold;
+    font-size: 24px;
+    transition: 0.3s ease;
+    border-radius: 0 3px 3px 0;
+    user-select: none;
+    background-color: rgba(0, 0, 0, 0.3); /* Semi-transparent black */
+}
+
+/* Position the "next button" to the right */
+.next {
+    right: 0;
+    border-radius: 3px 0 0 3px;
+}
+
+/* On hover, add a darker black background color */
+.prev:hover, .next:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Fading animation effect for slides */
+.fade {
+    animation-name: fade;
+    animation-duration: 0.8s;
+}
+
+@keyframes fade {
+    from {opacity: .7}
+    to {opacity: 1}
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .feature-grid {
