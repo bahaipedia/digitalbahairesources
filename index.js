@@ -162,6 +162,7 @@ function getMediaWikiS3Url(filename) {
 // Routes
 app.get('/', (req, res) => res.render('index'));
 app.get('/about', (req, res) => res.render('about'));
+app.get('/chrome-extension', (req, res) => res.render('chrome-extension'));
 app.get('/current-activity', (req, res) => res.render('current-activity'));
 app.get('/contact', (req, res) => res.render('contact'));
 app.get('/bahaipedia', (req, res) => res.render('bahaipedia'));
