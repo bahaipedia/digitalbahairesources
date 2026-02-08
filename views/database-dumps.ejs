@@ -23,7 +23,11 @@
                 <strong>Media Downloads:</strong> To download images and other assets from bahai.media, use the <a href="/database-dumps/media">Media Download Tool</a>.
             </div>
             
-            <% const months = Object.keys(dumpsByMonth); %>
+            <% 
+                const months = Object.keys(dumpsByMonth).sort((a, b) => {
+                    return new Date(b) - new Date(a);
+                });
+            %>
             
             <% if (months.length === 0) { %>
                 <p>No database dumps are currently available. Please check back later.</p>
