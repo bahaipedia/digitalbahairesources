@@ -31,10 +31,10 @@
             <h3>How We Handle Traffic</h3>
             <p>Our technology stack routes and manages traffic using the following components:</p>
             <ul>
-                <li><strong>Nginx</strong>: Acts as the primary web server and reverse proxy, handling HTTPS traffic and forwarding requests to Varnish.</li>
+                <li><strong>Nginx</strong>: Acts as the primary web server, reverse proxy, and L2 cache.</li>
                 <li><strong>Varnish</strong>: Caches and stores frequently accessed pages served to anonymous users, reducing load on the backend. Varnish also analyses incoming requests and will reject those matching certain patterns.</li>
-                <li><strong>Redis</strong>: A second caching layer, primarily for users who are logged in, storing details such as user sessions.</li>
-                <li><strong>Elasticsearch</strong>: Fast, full-text search capabilities across our content.</li>
+                <li><strong>Redis (local)/KeyDB (global)</strong>: A second caching layer, primarily for users who are logged in, storing details such as user sessions.</li>
+                <li><strong>Opensearch</strong>: Fast, full-text search capabilities across our content.</li>
                 <li><strong>CloudFront</strong>: Our CDN, which distributes and caches static assets (like images, videos, and documents) globally.</li>
                 <li><strong>AWS Lambda</strong>: <a href="https://github.com/bahaipedia/lambda-edge-detect-origin">Cache misses</a> in the CDN are dynamically routed to the closest geographic origin bucket. Lambda also helps <a href="https://github.com/bahaipedia/lambda-bahaimedia-distribute-s3">distribute files</a> after they have been uploaded.</li>
                 <li><strong>Ansible and GitHub</strong>: Configuration files are centrally managed in GitHub, while Ansible automates server-specific changes before deploying updates across all regions.</li>
