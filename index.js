@@ -1046,23 +1046,29 @@ app.post('/auth/verify-session', requireClientVersion, async (req, res) => {
  * Query Param: ?search=abc
  */
 app.get('/api/tags', authenticateExtension, async (req, res) => {
-    const { search } = req.query;
+    // 1. Extract 'limit' from query params
+    const { search, limit } = req.query;
     const userId = req.user.uid; 
 
     if (!search) {
         return res.json([]);
     }
 
+    // 2. Parse limit to an integer, default to 10 if missing or invalid
+    const queryLimit = parseInt(limit) || 10;
+
     try {
+        // 3. Use '?' for the LIMIT clause
         const query = `
             SELECT id, label 
             FROM defined_tags 
             WHERE label LIKE ? 
             AND created_by = ?
-            LIMIT 10
+            LIMIT ?
         `;
         
-        const [rows] = await metadataPool.query(query, [`%${search}%`, userId]);
+        // 4. Pass 'queryLimit' as the third parameter
+        const [rows] = await metadataPool.query(query, [`%${search}%`, userId, queryLimit]);
         
         res.json(rows);
     } catch (err) {
