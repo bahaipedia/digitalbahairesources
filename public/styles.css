@@ -241,22 +241,31 @@ footer a:hover {
 
 /* Sidebar Ad Styling */
 .promo-sidebar {
-    width: 130px;
+    width: 130px; 
+    /* flex-shrink: 0;  <-- REMOVED: No longer needs to shrink/grow in flex container */
     background-color: white;
     border: 1px solid #ddd;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     padding: 15px;
     text-align: center;
+    
+    /* CHANGED: Fixed positioning to right edge of browser as requested */
     position: fixed; 
     right: 0; 
+    
+    /* ADDED: Positioned below the header (approx 140px) and defined height to allow bottom alignment */
     top: 140px; 
-    height: 60vh;
-    z-index: 1000;
+    height: 60vh; /* Sets a fixed height relative to viewport to create the "sidebar area" space */
+    z-index: 1000; /* Ensures it sits above other content if window is narrow */
 }
 
 /* Internal content wrapper for sticky behavior */
 .sidebar-content {
+    /* position: sticky; <-- REMOVED: Parent is now fixed, so sticky is unnecessary/conflicting */
+    /* top: 20px;        <-- REMOVED */
+    
+    /* CHANGED: Flex column that fills height to control vertical spacing */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -324,28 +333,29 @@ footer a:hover {
    ========================================= */
 
 @media (max-width: 900px) {
-    /* Stack Sidebar on top/bottom for medium screens */
+    /* Stack Sidebar on top for medium screens */
     .layout-container {
         flex-direction: column;
         align-items: center;
     }
+
     .promo-sidebar {
+        position: static; 
         width: 100%;
         max-width: 400px;
+        height: auto;
         order: -1; 
         margin-bottom: 20px;
         box-sizing: border-box;
-        position: static; 
-        height: auto; 
     }
+
     .sidebar-content {
-        position: static;
         height: auto;
+        position: static;
     }
+
     .sb-visual {
-        margin-top: 0;
-        margin-bottom: 10px;
-        display: none;
+        display: none; 
     }
 }
 
