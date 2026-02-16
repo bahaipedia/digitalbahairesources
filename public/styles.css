@@ -241,26 +241,24 @@ footer a:hover {
 
 /* Sidebar Ad Styling */
 .promo-sidebar {
-    width: 130px;
+    width: 130px; /* Thin column attached to right */
+    flex-shrink: 0;
     background-color: white;
     border: 1px solid #ddd;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     padding: 15px;
     text-align: center;
-    position: fixed; 
-    right: 0; 
-    top: 140px; 
-    height: 60vh;
-    z-index: 1000;
+    position: relative;
 }
 
 /* Internal content wrapper for sticky behavior */
 .sidebar-content {
+    position: sticky;
+    top: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100%; 
 }
 
 .promo-sidebar h3 {
@@ -283,10 +281,9 @@ footer a:hover {
     width: 40px;
     background: #f7fafc;
     border: 1px solid #edf2f7;
+    margin: 0 auto 10px auto;
     border-radius: 4px;
     border-right: 6px solid #f6c23e; 
-    margin-top: auto; 
-    margin-bottom: 10px;
 }
 
 /* Links in Sidebar */
@@ -332,20 +329,15 @@ footer a:hover {
     .promo-sidebar {
         width: 100%;
         max-width: 400px;
-        order: -1; 
+        order: -1; /* Sidebar goes to top */
         margin-bottom: 20px;
         box-sizing: border-box;
-        position: static; 
-        height: auto; 
     }
     .sidebar-content {
         position: static;
-        height: auto;
     }
     .sb-visual {
-        margin-top: 0;
-        margin-bottom: 10px;
-        display: none;
+        display: none; /* Hide visual on mobile to save space */
     }
 }
 
