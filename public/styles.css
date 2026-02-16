@@ -13,6 +13,7 @@ body {
 }
 body > main {
     flex: 1;
+    position: relative; /* Added to allow absolute positioning of sidebar relative to main content area */
 }
 
 /* Header Styling */
@@ -90,7 +91,7 @@ header {
     font-weight: bold;
 }
 
-/* Sidebar */
+/* Sidebar (Original Stats Sidebar - kept for compatibility) */
 .stats-sidebar {
     background: linear-gradient(145deg, #fcfcfc, #f7f7f7);
     padding: 1rem;
@@ -131,7 +132,9 @@ header {
     display: flex;
     flex-direction: column; 
     gap: 20px;
-    padding: 0;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 .project-row {
     display: flex;
@@ -191,6 +194,97 @@ header {
 .centered {
     text-align: center;
 }
+
+/* NEW Promo Sidebar Styling */
+.promo-sidebar {
+    position: absolute; /* Matches height of parent (main) */
+    right: 0;           /* Sticks to browser edge */
+    top: 20px;          /* Aligns with grid top margin */
+    bottom: 20px;       /* Aligns with grid bottom margin (stretches height) */
+    
+    width: 130px;       /* Original requested width */
+    
+    background-color: white;
+    border: 1px solid #ddd;
+    border-right: none; /* Looks attached to the side */
+    border-radius: 8px 0 0 8px;
+    box-shadow: -4px 4px 15px rgba(0, 0, 0, 0.1);
+    
+    padding: 15px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centers content vertically */
+    text-align: center;
+    z-index: 100;
+}
+
+.sidebar-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.sb-badge {
+    background: #fefcbf;
+    color: #744210;
+    font-size: 0.6rem;
+    font-weight: bold;
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+.promo-sidebar h3 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    color: #005bb5;
+    line-height: 1.2;
+}
+
+.promo-sidebar p {
+    font-size: 0.75rem;
+    color: #4a5568;
+    line-height: 1.4;
+    margin: 0 0 15px 0;
+}
+
+.sb-actions {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sb-link {
+    font-size: 0.75rem;
+    color: #005bb5;
+    text-decoration: none;
+    margin-bottom: 5px;
+}
+.sb-link:hover {
+    text-decoration: underline;
+}
+
+.sb-btn {
+    display: block;
+    width: 100%;
+    background-color: #005bb5;
+    color: white;
+    text-decoration: none;
+    padding: 8px 0;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.sb-btn:hover {
+    background-color: #003f8c;
+    text-decoration: none;
+}
+
 /* Footer */
 footer {
     text-align: center;
@@ -210,296 +304,6 @@ footer a:hover {
     text-decoration: underline;
 }
 
-/* Extension Container - Aligns with main content */
-.extension-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px 20px 0 20px; /* Top padding only, bottom handled by element */
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* The Promo Card Design */
-.extension-promo {
-    background: linear-gradient(135deg, #fffcf5 0%, #ffffff 100%);
-    border: 1px solid #e2e8f0;
-    border-left: 5px solid #f6c23e; /* Highlighter Yellow accent */
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.03);
-    overflow: hidden;
-}
-
-.promo-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 25px 35px;
-    gap: 30px;
-}
-
-/* Text Typography */
-.promo-text h2 {
-    font-size: 1.5rem;
-    color: #2d3748;
-    margin: 0 0 10px 0;
-    display: flex;
-    align-items: center;
-}
-
-.new-badge {
-    font-size: 0.75rem;
-    background: #2d3748;
-    color: #fff;
-    padding: 3px 8px;
-    border-radius: 4px;
-    margin-right: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.promo-text p {
-    margin: 0 0 20px 0;
-    color: #4a5568;
-    font-size: 1.05rem;
-    max-width: 500px;
-}
-
-/* Action Button */
-.install-btn {
-    background-color: #005bb5;
-    color: white;
-    text-decoration: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    display: inline-block;
-    transition: background-color 0.2s;
-}
-
-.install-btn:hover {
-    background-color: #003f8c;
-    color: white;
-}
-
-/* Visual Metaphor (Browser with Sidebar) */
-.promo-visual {
-    flex-shrink: 0;
-}
-
-.browser-mockup {
-    width: 140px;
-    height: 100px;
-    background: #fff;
-    border: 2px solid #cbd5e0;
-    border-radius: 6px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 8px 15px rgba(0,0,0,0.05);
-}
-
-.browser-header {
-    height: 10px;
-    background: #edf2f7;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    align-items: center;
-    padding-left: 6px;
-    gap: 3px;
-}
-
-.browser-header .dot {
-    width: 3px;
-    height: 3px;
-    background: #cbd5e0;
-    border-radius: 50%;
-}
-
-.browser-body {
-    flex: 1;
-    display: flex;
-}
-
-.browser-page {
-    flex: 1;
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.browser-page .line {
-    height: 3px;
-    background: #e2e8f0;
-    border-radius: 2px;
-}
-.long { width: 80%; }
-.short { width: 50%; }
-
-/* The Sidebar Animation Part */
-.browser-sidebar {
-    width: 35px;
-    background: #fffdf5;
-    border-left: 1px solid #f6c23e;
-    padding: 5px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.tag-mock { width: 15px; height: 3px; background: #ecc94b; }
-.note-mock { width: 100%; height: 15px; background: #fefcbf; border: 1px solid #f6e05e; }
-
-/* =========================================
-   New 2-Column Layout Styles
-   ========================================= */
-
-/* The parent container that holds the grid and the sidebar side-by-side */
-.layout-wrapper {
-    display: flex;
-    max-width: 1200px;
-    margin: 30px auto;
-    padding: 0 20px;
-    gap: 30px; /* Space between grid and sidebar */
-    align-items: flex-start; /* Ensures sidebar doesn't stretch height if grid is short */
-}
-
-/* The left column (existing grid) gets 70% width */
-.main-grid-column {
-    flex: 3; /* Takes 3 parts space */
-    width: 70%;
-}
-
-/* The right column (new sidebar) gets 30% width */
-.promo-sidebar {
-    flex: 1; /* Takes 1 part space */
-    width: 30%;
-    min-width: 250px; /* Prevents getting too squashed */
-}
-
-/* =========================================
-   Sidebar Ad Styling
-   ========================================= */
-
-/* Makes the sidebar follow down the page as you scroll */
-.sidebar-sticky-content {
-    position: -webkit-sticky; /* Safari */
-    position: sticky;
-    top: 30px; /* Offset from top of screen when scrolling */
-    
-    background: linear-gradient(to bottom, #fffcf5, #ffffff);
-    border: 1px solid #e2e8f0;
-    /* A top border accent looks good for vertical columns */
-    border-top: 4px solid #f6c23e; 
-    border-radius: 8px;
-    padding: 25px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    text-align: center;
-}
-
-.sb-header h3 {
-    margin: 10px 0;
-    color: #2d3748;
-    font-size: 1.3rem;
-}
-
-.new-pill {
-    background: #f6c23e;
-    color: #744210;
-    font-size: 0.7rem;
-    font-weight: bold;
-    padding: 3px 8px;
-    border-radius: 12px;
-    text-transform: uppercase;
-}
-
-.sb-text {
-    color: #4a5568;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    margin-bottom: 20px;
-}
-
-.sb-install-btn {
-    display: block;
-    width: 100%;
-    background-color: #005bb5;
-    color: white;
-    text-decoration: none;
-    padding: 12px;
-    border-radius: 6px;
-    font-weight: 600;
-    transition: background-color 0.2s;
-    box-sizing: border-box; /* Ensures padding doesn't affect width */
-}
-
-.sb-install-btn:hover {
-    background-color: #003f8c;
-    color: white;
-}
-
-.sb-subtext {
-    font-size: 0.8rem;
-    color: #a0aec0;
-    margin-top: 10px;
-}
-
-/* =========================================
-   Vertical Visual Metaphor (CSS Drawing)
-   ========================================= */
-.sb-visual {
-    margin: 20px auto;
-    display: flex;
-    justify-content: center;
-}
-
-.browser-slice-container {
-    display: flex;
-    width: 120px;
-    height: 140px;
-    border: 2px solid #e2e8f0;
-    background: white;
-    border-radius: 6px;
-    overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-}
-
-.browser-slice {
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.main-slice { flex: 2; }
-.side-slice {
-    flex: 1;
-    background: #edf2f7;
-    border-left: 1px solid #e2e8f0;
-    align-items: center;
-    padding-top: 20px;
-}
-
-/* The "Active" state showing the tool working */
-.side-slice.active {
-    background: #fffdf5; /* Subtle yellow tint */
-    border-left: 2px solid #f6c23e;
-}
-
-.line { height: 4px; background: #e2e8f0; border-radius: 2px; }
-.l1 { width: 90%; } .l2 { width: 70%; } .l3 { width: 85%; }
-
-/* CSS faux-icon for a tag */
-.tag-icon {
-    display: block;
-    width: 14px; height: 14px;
-    background: #f6c23e;
-    border-radius: 50%;
-    margin-bottom: 5px;
-    box-shadow: 0 0 0 2px #fffdf5, 0 0 0 4px #f6c23e;
-}
-.note-line { width: 80%; height: 4px; background: #ecc94b; border-radius: 2px; opacity: 0.5;}
-
 /* Responsive Design */
 @media (max-width: 768px) {
     .header-container {
@@ -507,42 +311,20 @@ footer a:hover {
         align-items: center;
         text-align: center;
     }
-    .nav-bar ul {
+    .header-nav-bar ul {
         flex-direction: column;
         gap: 10px;
     }
     .project-row {
-        flex-direction: column;
+        flex-direction: column; 
         align-items: center;
-        gap: 20px; 
+        gap: 20px;
     }
     .project-item {
         width: 100%; 
     }
-    .promo-content {
-        flex-direction: column;
-        text-align: center;
-        padding: 20px;
-    }
-    .promo-text h2 {
-        justify-content: center;
-    }
-    .promo-text p {
-        margin-left: auto;
-        margin-right: auto;
-    }
-    .layout-wrapper {
-        flex-direction: column;
-    }
-    
-    .main-grid-column, .promo-sidebar {
-        width: 100%;
-        flex: none;
-    }
-
-    /* Change sticky behavior on mobile so it doesn't cover content */
-    .sidebar-sticky-content {
-        position: static;
-        margin-top: 30px;
+    /* Hide the right-edge sidebar on mobile to prevent overlap */
+    .promo-sidebar {
+        display: none;
     }
 }
