@@ -10,7 +10,7 @@
 <body>
     <%- include('partials/header', { mini: false }) %>
     <main>
-        <div class="layout-container">
+        <div class="layout-wrapper">
             
             <section class="projects">
                 <div class="project-row">
@@ -65,21 +65,18 @@
                     </div>
                 </div>
             </section>
-        </div>
 
-        <aside class="promo-sidebar">
-            <div class="sidebar-content">
-                <div class="sb-badge">New Tool</div>
-                <h3>Annotation tool</h3>
-                <p>Annotate Bahá’í writings and help organize concepts for personal study or for researchers.</p>
-                
-                <div class="sb-actions">
-                    <a href="https://digitalbahairesources.org/chrome-extension" class="sb-link">Learn more</a>
-                    <a href="https://chromewebstore.google.com/detail/bah%C3%A1%E2%80%99%C3%AD-text-annotation-to/pkicpjodacifjhdmnagelejplaeojdjo" target="_blank" class="sb-btn">Add to Chrome</a>
+            <aside class="promo-sidebar">
+                <div class="sidebar-content">
+                    <div class="sb-badge">New Tool</div>
+                    <h3>Sidebar<br>Notes</h3>
+                    <p>Annotate Bahaipedia without losing context.</p>
+                    <div class="sb-visual"></div>
+                    <a href="LINK_TO_STORE" target="_blank" class="sb-btn">Add to Chrome</a>
                 </div>
-            </div>
-        </aside>
+            </aside>
 
+        </div>
     </main>
     <%- include('partials/footer') %>
 </body>
