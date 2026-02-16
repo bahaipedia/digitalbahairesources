@@ -21,6 +21,8 @@ header {
     color: #333;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
     padding: 25px 0;
+    position: relative;
+    z-index: 10;
 }
 .header-container {
     display: flex;
@@ -90,23 +92,21 @@ header {
     font-weight: bold;
 }
 
-/* Layout Wrapper */
-.layout-container {
-    display: flex;
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 0 20px;
-    gap: 20px;
-    align-items: stretch; /* Forces equal height for grid and sidebar */
+/* Layout Wrapper - Holds centered grid and absolute sidebar */
+.layout-wrapper {
+    position: relative; /* Key for absolute positioning inside */
+    width: 100%;
+    margin: 20px 0;
 }
 
-/* Project styling */
+/* Project styling - Centered Grid */
 .projects {
     display: flex;
     flex-direction: column; 
     gap: 20px;
-    padding: 0;
-    flex: 1; /* Takes up all available space */
+    padding: 0 20px;
+    margin: 0 auto; /* Center the grid */
+    max-width: 1200px;
 }
 .project-row {
     display: flex;
@@ -145,20 +145,22 @@ header {
     height: auto;
 }
 
-/* Sidebar Ad Styling */
+/* Promo Sidebar - Anchored Right + Restored Visuals */
 .promo-sidebar {
-    width: 130px; /* Thin column attached to right */
-    flex-shrink: 0;
-    background-color: white; /* Matches project items */
-    border: 1px solid #ddd; /* Matches project items */
-    border-radius: 8px; /* Matches project items */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Matches project items */
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0; /* Stretches height to match wrapper */
+    width: 140px; 
+    
+    background-color: white; 
+    border-left: 1px solid #ddd;
+    box-shadow: -4px 0 10px rgba(0, 0, 0, 0.05); /* Left-side shadow */
     padding: 15px;
     text-align: center;
-    position: relative;
+    z-index: 5;
 }
 
-/* Internal content wrapper to make sticky behavior work inside the tall card */
 .sidebar-content {
     position: sticky;
     top: 20px;
@@ -200,7 +202,6 @@ header {
     border: 1px solid #edf2f7;
     margin: 0 auto 15px auto;
     border-radius: 4px;
-    /* The yellow right border represents the extension */
     border-right: 6px solid #f6c23e; 
 }
 
@@ -229,6 +230,8 @@ footer {
     background-color: #333;
     color: white;
     font-size: 0.9rem;
+    position: relative;
+    z-index: 10;
 }
 footer a {
     color: #fff; 
@@ -242,21 +245,8 @@ footer a:hover {
 
 /* Responsive */
 @media (max-width: 900px) {
-    .layout-container {
-        flex-direction: column;
-        align-items: center; /* Center items when stacked */
-    }
+    /* Hide the right-edge sidebar if it overlaps content */
     .promo-sidebar {
-        width: 100%;
-        max-width: 400px;
-        order: -1; /* Move to top on mobile */
-        margin-bottom: 20px;
-        box-sizing: border-box;
-    }
-    .sidebar-content {
-        position: static;
-    }
-    .sb-visual {
         display: none;
     }
 }
