@@ -10,37 +10,14 @@
 <body>
     <%- include('partials/header', { mini: false }) %>
     <main>
-        
-        <div class="extension-container">
-            <div class="extension-promo">
-                <div class="promo-content">
-                    <div class="promo-text">
-                        <h2><span class="new-badge">New Tool</span> Contextual Notes</h2>
-                        <p>Don't lose your place. Annotate Bahaipedia and Bahai.works directly in the sidebar while you read.</p>
-                        <a href="LINK_TO_STORE" target="_blank" class="install-btn">Add to Chrome</a>
-                    </div>
-                    <div class="promo-visual">
-                        <div class="browser-mockup">
-                            <div class="browser-header"><span class="dot"></span><span class="dot"></span></div>
-                            <div class="browser-body">
-                                <div class="browser-page">
-                                    <div class="line long"></div><div class="line long"></div><div class="line short"></div>
-                                </div>
-                                <div class="browser-sidebar">
-                                    <div class="tag-mock"></div><div class="note-mock"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <section class="projects">
+    <div class="layout-wrapper">
+
+        <section class="projects main-grid-column">
             <div class="project-row">
                 <div class="project-item">
-                    <a href="https://bahaipedia.org" target="_blank"><img src="https://file.bahai.media/e/ee/Bahaikipedia.png" alt="Bahaipedia Logo" class="project-logo"></a>
-                    <h2><a href="https://bahaipedia.org" target="_blank">Bahaipedia.org</a></h2>
-                    <p>Collaborative encyclopedia about the Bahá’í Faith.</p>
+                     <a href="https://bahaipedia.org" target="_blank"><img src="https://file.bahai.media/e/ee/Bahaikipedia.png" alt="Bahaipedia Logo" class="project-logo"></a>
+                     <h2><a href="https://bahaipedia.org" target="_blank">Bahaipedia.org</a></h2>
+                     <p>Collaborative encyclopedia about the Bahá’í Faith.</p>
                 </div>
                 <div class="project-item">
                     <a href="https://bahai.works" target="_blank"><img src="https://file.bahai.media/e/e9/Bahaiworks-partial-logo.png" alt="Bahaiworks Logo" class="project-logo"></a>
@@ -53,42 +30,40 @@
                     <p>Repository for Bahá’í media files.</p>
                 </div>
             </div>
-            <div class="project-row">
-                <div class="project-item">
-                    <a href="https://bahai9.com" target="_blank"><img src="https://file.bahai.media/4/42/B9logo.png" alt="Bahai9 Logo" class="project-logo"></a>
-                    <h2><a href="https://bahai9.com" target="_blank">Bahai9.com</a></h2>
-                    <p>Organized Bahá’í quotes by topic.</p>
+            </section>
+
+
+        <aside class="promo-sidebar">
+            <div class="sidebar-sticky-content">
+                <div class="sb-header">
+                    <span class="new-pill">New Tool</span>
+                    <h3>Research Companion</h3>
                 </div>
-                <div class="project-item">
-                    <a href="https://bahaidata.org" target="_blank"><img src="https://file.bahai.media/1/12/Bahaidata-clean.png" alt="Bahaidata Logo" class="project-logo"></a>
-                    <h2><a href="https://bahaidata.org" target="_blank">Bahaidata.org</a></h2>
-                    <p>Structured data for all Bahá’í projects.</p>
+                
+                <div class="sb-visual">
+                    <div class="browser-slice-container">
+                        <div class="browser-slice main-slice">
+                            <div class="line l1"></div><div class="line l2"></div><div class="line l3"></div>
+                        </div>
+                        <div class="browser-slice side-slice active">
+                            <i class="tag-icon"></i>
+                            <div class="note-line"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="project-item">
-                    <a href="https://bahai.quest" target="_blank"><img src="https://file.bahai.media/1/16/Bahaiquest_logo.png" alt="Bahaiquest Logo" class="project-logo"></a>
-                    <h2><a href="https://bahai.quest" target="_blank">Bahai.quest</a></h2>
-                    <p>Concordance of the Bahá’í Writings.</p>
-                </div>
+
+                <p class="sb-text">
+                    Don't lose context. Annotate Bahaipedia and Bahai.works directly in your browser sidebar while you read.
+                </p>
+                
+                <a href="LINK_TO_STORE" target="_blank" class="sb-install-btn">
+                    Add to Chrome Sidebar
+                </a>
+                 <p class="sb-subtext">Free • Privacy focused</p>
             </div>
-            <div class="project-row">
-                <div class="project-item">
-                    <a href="https://huququlator.com" target="_blank"><img src="images/huququlator.png" alt="Huququlator Logo" class="project-logo"></a>
-                    <h2><a href="https://huququlator.com" target="_blank">Huququlator.com</a></h2>
-                    <p>Calculator for Ḥuqúqu’lláh obligations.</p>
-                </div>
-                <div class="project-item">
-                    <a href="https://reddit.com/r/bahai/" target="_blank"><img src="images/reddit.png" alt="Reddit Logo" class="project-logo"></a>
-                    <h2><a href="https://reddit.com/r/bahai/" target="_blank">r/bahai</a></h2>
-                    <p>A community on the platform reddit.com.</p>
-                </div>
-                <div class="project-item">
-                    <a href="https://github.com/bahaipedia" target="_blank"><img src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" alt="Github Logo" class="project-logo"></a>
-                    <h2><a href="https://github.com/bahaipedia" target="_blank">GitHub Repository</a></h2>
-                    <p>Documentation and source code for our projects.</p>
-                </div>
-            </div>
-        </section>
-    </main>
-    <%- include('partials/footer') %>
+        </aside>
+
+    </div> </main>
+  <%- include('partials/footer') %>
 </body>
 </html>
