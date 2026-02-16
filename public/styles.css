@@ -212,6 +212,146 @@ footer a:hover {
     text-decoration: underline;
 }
 
+/* Extension Container - Aligns with main content */
+.extension-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 20px 0 20px; /* Top padding only, bottom handled by element */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* The Promo Card Design */
+.extension-promo {
+    background: linear-gradient(135deg, #fffcf5 0%, #ffffff 100%);
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #f6c23e; /* Highlighter Yellow accent */
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+    overflow: hidden;
+}
+
+.promo-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 25px 35px;
+    gap: 30px;
+}
+
+/* Text Typography */
+.promo-text h2 {
+    font-size: 1.5rem;
+    color: #2d3748;
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+}
+
+.new-badge {
+    font-size: 0.75rem;
+    background: #2d3748;
+    color: #fff;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-right: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.promo-text p {
+    margin: 0 0 20px 0;
+    color: #4a5568;
+    font-size: 1.05rem;
+    max-width: 500px;
+}
+
+/* Action Button */
+.install-btn {
+    background-color: #005bb5;
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: inline-block;
+    transition: background-color 0.2s;
+}
+
+.install-btn:hover {
+    background-color: #003f8c;
+    color: white;
+}
+
+/* Visual Metaphor (Browser with Sidebar) */
+.promo-visual {
+    flex-shrink: 0;
+}
+
+.browser-mockup {
+    width: 140px;
+    height: 100px;
+    background: #fff;
+    border: 2px solid #cbd5e0;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+}
+
+.browser-header {
+    height: 10px;
+    background: #edf2f7;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    padding-left: 6px;
+    gap: 3px;
+}
+
+.browser-header .dot {
+    width: 3px;
+    height: 3px;
+    background: #cbd5e0;
+    border-radius: 50%;
+}
+
+.browser-body {
+    flex: 1;
+    display: flex;
+}
+
+.browser-page {
+    flex: 1;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.browser-page .line {
+    height: 3px;
+    background: #e2e8f0;
+    border-radius: 2px;
+}
+.long { width: 80%; }
+.short { width: 50%; }
+
+/* The Sidebar Animation Part */
+.browser-sidebar {
+    width: 35px;
+    background: #fffdf5;
+    border-left: 1px solid #f6c23e;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tag-mock { width: 15px; height: 3px; background: #ecc94b; }
+.note-mock { width: 100%; height: 15px; background: #fefcbf; border: 1px solid #f6e05e; }
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .header-container {
@@ -230,5 +370,17 @@ footer a:hover {
     }
     .project-item {
         width: 100%; 
+    }
+    .promo-content {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+    }
+    .promo-text h2 {
+        justify-content: center;
+    }
+    .promo-text p {
+        margin-left: auto;
+        margin-right: auto;
     }
 }
