@@ -260,6 +260,8 @@ footer a:hover {
     display: flex;
     flex-direction: column;
     align-items: center;
+    height: calc(100vh - 40px);
+    max-height: 100%;
 }
 
 .promo-sidebar h3 {
