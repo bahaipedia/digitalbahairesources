@@ -1,564 +1,374 @@
+/* =========================================
+   CORE STYLES (Original)
+   ========================================= */
+
 /* Main Body styling */
-
 html, body {
-
     height: 100%;
-
     margin: 0;
-
     display: flex;
-
     flex-direction: column;
-
 }
-
 body {
-
     font-family: Arial, sans-serif;
-
     background-color: #f9f9f9;
-
     color: #333;
-
     margin: 0;
-
 }
-
 body > main {
-
     flex: 1;
-
 }
-
-
 
 /* Header Styling */
-
 header {
-
     background-color: #f9f9f9; 
-
     color: #333;
-
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
-
     padding: 25px 0;
-
 }
-
 .header-container {
-
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
-
     max-width: 1200px;
-
     margin: 0 auto;
-
     padding: 0 20px;
-
 }
-
 .mini-header {
-
     background-color: #f9f9f9;
-
     color: #333;
-
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
     padding: 10px 50px;
-
 }
-
 .mini-header .header-container {
-
     max-width: none;
-
     padding: 0 15px;
-
 }
-
-
 
 /* Logo Styling */
-
 .logo-text {
-
     font-family: 'Arial', sans-serif;
-
     font-size: 1.8rem;
-
     font-weight: bold;
-
     color: #005bb5;
-
 }
-
 .logo-text a {
-
     text-decoration: none;
-
     color: #005bb5;
-
     transition: color 0.3s ease;
-
 }
-
 .logo-text span {
-
     color: #333; 
-
     font-weight: normal;
-
 }
-
 .logo-text a:hover {
-
     color: #003f8c;
-
 }
-
-
 
 /* Header Navigation Bar */
-
 .header-nav-bar ul {
-
     list-style: none;
-
     display: flex;
-
     gap: 15px;
-
     margin: 0;
-
     padding: 0;
-
 }
-
 .header-nav-bar li {
-
     margin: 0;
-
 }
-
 .header-nav-bar a {
-
     text-decoration: none;
-
     color: #333;
-
     font-size: 1rem;
-
     padding: 5px 10px;
-
     transition: color 0.3s ease, background-color 0.3s ease;
-
     border-radius: 3px;
-
 }
-
 .header-nav-bar a:hover {
-
     background-color: #005bb5;
-
     color: white;
-
 }
-
 .header-nav-bar .active {
-
     background-color: #005bb5;
-
     color: white;
-
     font-weight: bold;
-
 }
 
-
-
-/* Layout Wrapper */
-
-.layout-container {
-
-    display: flex;
-
-    max-width: 1200px;
-
-    margin: 20px auto;
-
-    padding: 0 20px;
-
-    gap: 20px;
-
-    align-items: stretch; /* Forces equal height for grid and sidebar */
-
+/* Sidebar (General/Internal) */
+.stats-sidebar {
+    background: linear-gradient(145deg, #fcfcfc, #f7f7f7);
+    padding: 1rem;
+    margin-top: 16px;
+    box-shadow: 
+        0 4px 20px rgba(0, 0, 0, 0.08),
+        inset 1px 1px 0 rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    font-size: 1.1rem;
 }
-
-
-
-/* Project styling */
-
-.projects {
-
-    display: flex;
-
-    flex-direction: column; 
-
-    gap: 20px;
-
+.stats-sidebar-menu {
+    list-style-type: none;
     padding: 0;
-
-    flex: 1; /* Takes up all available space */
-
-}
-
-.project-row {
-
-    display: flex;
-
-    justify-content: space-between;
-
-    gap: 30px;
-
-}
-
-.project-item {
-
-    flex: 1; 
-
-    background-color: white;
-
-    border: 1px solid #ddd;
-
-    border-radius: 8px;
-
-    padding: 15px;
-
-    text-align: center;
-
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-
-}
-
-.project-item h2 {
-
-    font-size: 1.2rem;
-
-    margin-bottom: 10px;
-
-    color: #005bb5;
-
-}
-
-.project-item h2 a {
-
-    text-decoration: none;
-
-    color: inherit;
-
-}
-
-.project-item h2 a:hover {
-
-    text-decoration: underline;
-
-}
-
-.project-item p {
-
-    font-size: 0.9rem;
-
     margin: 0;
-
 }
-
-.project-logo {
-
-    display: block;
-
-    margin: 0 auto 10px;
-
-    max-width: 100px;
-
-    height: auto;
-
+.stats-sidebar-menu li {
+    margin: 0.5rem 0;
 }
-
-
-
-/* Sidebar Ad Styling */
-
-.promo-sidebar {
-
-    width: 130px; /* Thin column attached to right */
-
-    flex-shrink: 0;
-
-    background-color: white; /* Matches project items */
-
-    border: 1px solid #ddd; /* Matches project items */
-
-    border-radius: 8px; /* Matches project items */
-
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Matches project items */
-
-    padding: 15px;
-
-    text-align: center;
-
-    position: relative;
-
-}
-
-
-
-/* Internal content wrapper to make sticky behavior work inside the tall card */
-
-.sidebar-content {
-
-    position: sticky;
-
-    top: 20px;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-
-}
-
-
-
-.sb-badge {
-
-    background: #fefcbf;
-
-    color: #744210;
-
-    font-size: 0.65rem;
-
-    font-weight: bold;
-
-    padding: 2px 6px;
-
-    border-radius: 4px;
-
-    margin-bottom: 8px;
-
-    text-transform: uppercase;
-
-}
-
-
-
-.promo-sidebar h3 {
-
-    margin: 0 0 10px 0;
-
-    font-size: 1rem;
-
+.stats-sidebar-menu li a {
+    text-decoration: none;
     color: #2d3748;
-
-    line-height: 1.3;
-
+    font-weight: 500;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+}
+.stats-sidebar-menu li a:hover {
+    background-color: rgba(66, 153, 225, 0.08);
+    color: #4299e1;
 }
 
-
-
-.promo-sidebar p {
-
-    font-size: 0.8rem;
-
-    color: #4a5568;
-
-    line-height: 1.4;
-
-    margin: 0 0 15px 0;
-
+/* Project styling (Standard) */
+.projects {
+    display: flex;
+    flex-direction: column; 
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
-
-
-
-/* Visual Sidebar Metaphor */
-
-.sb-visual {
-
-    height: 60px;
-
-    width: 40px;
-
-    background: #f7fafc;
-
-    border: 1px solid #edf2f7;
-
-    margin: 0 auto 15px auto;
-
-    border-radius: 4px;
-
-    /* The yellow right border represents the extension */
-
-    border-right: 6px solid #f6c23e; 
-
+.project-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
 }
-
-
-
-.sb-btn {
-
+.project-item {
+    flex: 1; 
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.project-item h2 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: #005bb5;
+}
+.project-item h2 a {
+    text-decoration: none;
+    color: inherit;
+}
+.project-item h2 a:hover {
+    text-decoration: underline;
+}
+.project-item p {
+    font-size: 0.9rem;
+    margin: 0;
+}
+.project-logo {
     display: block;
+    margin: 0 auto 10px;
+    max-width: 100px;
+    height: auto;
+}
 
+/* Main Content Area */
+.content-area {
+    max-width: 1200px;
     width: 100%;
-
-    background-color: #005bb5;
-
-    color: white;
-
-    text-decoration: none;
-
-    padding: 8px 0;
-
-    border-radius: 4px;
-
-    font-size: 0.8rem;
-
-    font-weight: bold;
-
-    transition: background-color 0.2s;
-
+    margin: 20px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
 }
-
-
-
-.sb-btn:hover {
-
-    background-color: #003f8c;
-
-    text-decoration: none;
-
+.content-area p, 
+.content-area li {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    font-size: 19px;
 }
-
-
+.centered {
+    text-align: center;
+}
 
 /* Footer */
-
 footer {
-
     text-align: center;
-
     padding: 15px;
-
     background-color: #333;
-
     color: white;
-
     font-size: 0.9rem;
-
 }
-
 footer a {
-
     color: #fff; 
-
     text-decoration: none;
-
     margin: 0 5px; 
-
 }
 
 footer a:hover {
-
     color: #FAF9F6;
-
     text-decoration: underline;
-
 }
 
+/* =========================================
+   NEW HOMEPAGE & SIDEBAR STYLES
+   ========================================= */
 
+/* Layout Wrapper for Homepage */
+.layout-container {
+    display: flex;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+    gap: 20px;
+    align-items: stretch;
+}
 
-/* Responsive */
+/* Overrides for .projects when inside the homepage layout */
+.layout-container .projects {
+    padding: 0;
+    margin: 0;
+    max-width: none;
+    flex: 1; /* Takes available space next to sidebar */
+}
+
+/* Sidebar Ad Styling */
+.promo-sidebar {
+    width: 130px; /* Thin column attached to right */
+    flex-shrink: 0;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    text-align: center;
+    position: relative;
+}
+
+/* Internal content wrapper for sticky behavior */
+.sidebar-content {
+    position: sticky;
+    top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sb-badge {
+    background: #fefcbf;
+    color: #744210;
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.promo-sidebar h3 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    color: #2d3748;
+    line-height: 1.3;
+}
+
+.promo-sidebar p {
+    font-size: 0.8rem;
+    color: #4a5568;
+    line-height: 1.4;
+    margin: 0 0 15px 0;
+}
+
+/* Visual Sidebar Metaphor */
+.sb-visual {
+    height: 60px;
+    width: 40px;
+    background: #f7fafc;
+    border: 1px solid #edf2f7;
+    margin: 0 auto 10px auto;
+    border-radius: 4px;
+    border-right: 6px solid #f6c23e; 
+}
+
+/* Links in Sidebar */
+.sb-learn-more {
+    font-size: 0.75rem;
+    color: #005bb5;
+    text-decoration: none;
+    margin-bottom: 8px;
+    display: block;
+}
+.sb-learn-more:hover {
+    text-decoration: underline;
+}
+
+.sb-btn {
+    display: block;
+    width: 100%;
+    background-color: #005bb5;
+    color: white;
+    text-decoration: none;
+    padding: 8px 0;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.sb-btn:hover {
+    background-color: #003f8c;
+    text-decoration: none;
+}
+
+/* =========================================
+   RESPONSIVE DESIGN
+   ========================================= */
 
 @media (max-width: 900px) {
-
+    /* Stack Sidebar on top/bottom for medium screens */
     .layout-container {
-
         flex-direction: column;
-
-        align-items: center; /* Center items when stacked */
-
+        align-items: center;
     }
-
     .promo-sidebar {
-
         width: 100%;
-
         max-width: 400px;
-
-        order: -1; /* Move to top on mobile */
-
+        order: -1; /* Sidebar goes to top */
         margin-bottom: 20px;
-
         box-sizing: border-box;
-
     }
-
     .sidebar-content {
-
         position: static;
-
     }
-
     .sb-visual {
-
-        display: none;
-
+        display: none; /* Hide visual on mobile to save space */
     }
-
 }
-
-
 
 @media (max-width: 768px) {
-
+    /* Original Responsive Rules */
     .header-container {
-
         flex-direction: column;
-
         align-items: center;
-
         text-align: center;
-
     }
-
-    .header-nav-bar ul {
-
+    .nav-bar ul {
         flex-direction: column;
-
         gap: 10px;
-
     }
-
     .project-row {
-
         flex-direction: column;
-
         align-items: center;
-
         gap: 20px; 
-
     }
-
     .project-item {
-
         width: 100%; 
-
     }
-
 }
-
