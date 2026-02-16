@@ -212,6 +212,57 @@ footer a:hover {
     text-decoration: underline;
 }
 
+/* Add to Main Body styling or Project styling section */
+.home-container {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+/* Update the existing .projects class to remove margin/width constraints */
+.projects {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 0;
+    flex: 1; /* Allows it to fill available space left by sidebar */
+}
+
+/* Sidebar Styling */
+.promo-sidebar {
+    width: 300px;
+    flex-shrink: 0;
+}
+
+.promo-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.promo-image:hover {
+    transform: translateY(-2px);
+}
+
+/* Responsive updates */
+@media (max-width: 950px) {
+    .home-container {
+        flex-direction: column;
+    }
+    
+    .promo-sidebar {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .header-container {
