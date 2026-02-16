@@ -131,9 +131,7 @@ header {
     display: flex;
     flex-direction: column; 
     gap: 20px;
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
+    padding: 0;
 }
 .project-row {
     display: flex;
@@ -352,6 +350,156 @@ footer a:hover {
 .tag-mock { width: 15px; height: 3px; background: #ecc94b; }
 .note-mock { width: 100%; height: 15px; background: #fefcbf; border: 1px solid #f6e05e; }
 
+/* =========================================
+   New 2-Column Layout Styles
+   ========================================= */
+
+/* The parent container that holds the grid and the sidebar side-by-side */
+.layout-wrapper {
+    display: flex;
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+    gap: 30px; /* Space between grid and sidebar */
+    align-items: flex-start; /* Ensures sidebar doesn't stretch height if grid is short */
+}
+
+/* The left column (existing grid) gets 70% width */
+.main-grid-column {
+    flex: 3; /* Takes 3 parts space */
+    width: 70%;
+}
+
+/* The right column (new sidebar) gets 30% width */
+.promo-sidebar {
+    flex: 1; /* Takes 1 part space */
+    width: 30%;
+    min-width: 250px; /* Prevents getting too squashed */
+}
+
+/* =========================================
+   Sidebar Ad Styling
+   ========================================= */
+
+/* Makes the sidebar follow down the page as you scroll */
+.sidebar-sticky-content {
+    position: -webkit-sticky; /* Safari */
+    position: sticky;
+    top: 30px; /* Offset from top of screen when scrolling */
+    
+    background: linear-gradient(to bottom, #fffcf5, #ffffff);
+    border: 1px solid #e2e8f0;
+    /* A top border accent looks good for vertical columns */
+    border-top: 4px solid #f6c23e; 
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    text-align: center;
+}
+
+.sb-header h3 {
+    margin: 10px 0;
+    color: #2d3748;
+    font-size: 1.3rem;
+}
+
+.new-pill {
+    background: #f6c23e;
+    color: #744210;
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+}
+
+.sb-text {
+    color: #4a5568;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.sb-install-btn {
+    display: block;
+    width: 100%;
+    background-color: #005bb5;
+    color: white;
+    text-decoration: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    box-sizing: border-box; /* Ensures padding doesn't affect width */
+}
+
+.sb-install-btn:hover {
+    background-color: #003f8c;
+    color: white;
+}
+
+.sb-subtext {
+    font-size: 0.8rem;
+    color: #a0aec0;
+    margin-top: 10px;
+}
+
+/* =========================================
+   Vertical Visual Metaphor (CSS Drawing)
+   ========================================= */
+.sb-visual {
+    margin: 20px auto;
+    display: flex;
+    justify-content: center;
+}
+
+.browser-slice-container {
+    display: flex;
+    width: 120px;
+    height: 140px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.browser-slice {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.main-slice { flex: 2; }
+.side-slice {
+    flex: 1;
+    background: #edf2f7;
+    border-left: 1px solid #e2e8f0;
+    align-items: center;
+    padding-top: 20px;
+}
+
+/* The "Active" state showing the tool working */
+.side-slice.active {
+    background: #fffdf5; /* Subtle yellow tint */
+    border-left: 2px solid #f6c23e;
+}
+
+.line { height: 4px; background: #e2e8f0; border-radius: 2px; }
+.l1 { width: 90%; } .l2 { width: 70%; } .l3 { width: 85%; }
+
+/* CSS faux-icon for a tag */
+.tag-icon {
+    display: block;
+    width: 14px; height: 14px;
+    background: #f6c23e;
+    border-radius: 50%;
+    margin-bottom: 5px;
+    box-shadow: 0 0 0 2px #fffdf5, 0 0 0 4px #f6c23e;
+}
+.note-line { width: 80%; height: 4px; background: #ecc94b; border-radius: 2px; opacity: 0.5;}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .header-container {
@@ -382,5 +530,19 @@ footer a:hover {
     .promo-text p {
         margin-left: auto;
         margin-right: auto;
+    }
+    .layout-wrapper {
+        flex-direction: column;
+    }
+    
+    .main-grid-column, .promo-sidebar {
+        width: 100%;
+        flex: none;
+    }
+
+    /* Change sticky behavior on mobile so it doesn't cover content */
+    .sidebar-sticky-content {
+        position: static;
+        margin-top: 30px;
     }
 }
