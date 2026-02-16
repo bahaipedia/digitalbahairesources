@@ -260,6 +260,7 @@ footer a:hover {
     display: flex;
     flex-direction: column;
     align-items: center;
+    height: calc(100vh - 60px);
 }
 
 .promo-sidebar h3 {
@@ -282,7 +283,7 @@ footer a:hover {
     width: 40px;
     background: #f7fafc;
     border: 1px solid #edf2f7;
-    margin: 0 auto 10px auto;
+    margin: auto auto 10px auto;
     border-radius: 4px;
     border-right: 6px solid #f6c23e; 
 }
@@ -322,7 +323,6 @@ footer a:hover {
    ========================================= */
 
 @media (max-width: 900px) {
-    /* Stack Sidebar on top/bottom for medium screens */
     .layout-container {
         flex-direction: column;
         align-items: center;
@@ -330,15 +330,16 @@ footer a:hover {
     .promo-sidebar {
         width: 100%;
         max-width: 400px;
-        order: -1; /* Sidebar goes to top */
+        order: -1;
         margin-bottom: 20px;
         box-sizing: border-box;
     }
     .sidebar-content {
         position: static;
+        height: auto;
     }
     .sb-visual {
-        display: none; /* Hide visual on mobile to save space */
+        display: none;
     }
 }
 
