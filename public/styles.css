@@ -90,13 +90,40 @@ header {
     font-weight: bold;
 }
 
-/* Layout Wrapper */
-.layout-container {
+/* Sidebar */
+.stats-sidebar {
+    background: linear-gradient(145deg, #fcfcfc, #f7f7f7);
+    padding: 1rem;
+    margin-top: 16px;
+    box-shadow: 
+        0 4px 20px rgba(0, 0, 0, 0.08),
+        inset 1px 1px 0 rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    font-size: 1.1rem;
+}
+.stats-sidebar-menu {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+.stats-sidebar-menu li {
+    margin: 0.5rem 0;
+}
+.stats-sidebar-menu li a {
+    text-decoration: none;
+    color: #2d3748;
+    font-weight: 500;
+    padding: 8px 10px;
     display: flex;
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 0 20px;
-    gap: 20px;
+    align-items: center;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+}
+.stats-sidebar-menu li a:hover {
+    background-color: rgba(66, 153, 225, 0.08);
+    color: #4299e1;
 }
 
 /* Project styling */
@@ -104,8 +131,9 @@ header {
     display: flex;
     flex-direction: column; 
     gap: 20px;
-    padding: 0;
-    flex: 1; /* Takes up all available space */
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 .project-row {
     display: flex;
@@ -144,102 +172,27 @@ header {
     height: auto;
 }
 
-/* Sidebar Ad Styling */
-.promo-sidebar {
-    /* Fixed Positioning Logic */
-    position: fixed;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%); /* Centers it vertically */
-    z-index: 1000;
-    
-    /* Box Model */
-    width: 220px; /* Increased width to fit the longer text */
-    background-color: white;
+/* Main Content Area */
+.content-area {
+    max-width: 1200px;
+    width: 100%;
+    margin: 20px auto;
     padding: 20px;
-    text-align: center;
-    
-    /* Visuals */
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     border: 1px solid #ddd;
-    border-right: none; 
-    border-radius: 8px 0 0 8px;
-    box-shadow: -4px 4px 15px rgba(0, 0, 0, 0.1);
 }
-
-/* Internal content wrapper to make sticky behavior work inside the tall card */
-.sidebar-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.content-area p, 
+.content-area li {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    font-size: 19px;
 }
-
-.sb-badge {
-    background: #fefcbf;
-    color: #744210;
-    font-size: 0.65rem;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-bottom: 12px;
-    text-transform: uppercase;
+.centered {
+    text-align: center;
 }
-
-.promo-sidebar h3 {
-    margin: 0 0 10px 0;
-    font-size: 1.1rem;
-    color: #005bb5;
-    line-height: 1.3;
-}
-
-.promo-sidebar p {
-    font-size: 0.85rem;
-    color: #4a5568;
-    line-height: 1.5;
-    margin: 0 0 20px 0;
-}
-
-/* Visual Sidebar Metaphor */
-.sb-visual {
-    height: 60px;
-    width: 40px;
-    background: #f7fafc;
-    border: 1px solid #edf2f7;
-    margin: 0 auto 15px auto;
-    border-radius: 4px;
-    /* The yellow right border represents the extension */
-    border-right: 6px solid #f6c23e; 
-}
-.sb-actions {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.sb-link {
-    font-size: 0.85rem;
-    color: #005bb5;
-    text-decoration: none;
-}
-.sb-btn {
-    display: block;
-    width: 100%;
-    background-color: #005bb5;
-    color: white;
-    text-decoration: none;
-    padding: 10px 0;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    font-weight: bold;
-    transition: background-color 0.2s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.sb-btn:hover {
-    background-color: #003f8c;
-    text-decoration: none;
-}
-
 /* Footer */
 footer {
     text-align: center;
@@ -253,51 +206,27 @@ footer a {
     text-decoration: none;
     margin: 0 5px; 
 }
+
 footer a:hover {
     color: #FAF9F6;
     text-decoration: underline;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-    .layout-container {
-        flex-direction: column;
-        align-items: center; /* Center items when stacked */
-    }
-    .promo-sidebar {
-        position: relative;
-        right: auto;
-        top: auto;
-        transform: none;
-        width: 100%;
-        max-width: 600px;
-        margin: 40px auto;
-        border: 1px solid #ddd;
-        border-radius: 8px; 
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .sidebar-content {
-        position: static;
-    }
-    .sb-visual {
-        display: none;
-    }
-}
-
+/* Responsive Design */
 @media (max-width: 768px) {
     .header-container {
         flex-direction: column;
         align-items: center;
         text-align: center;
     }
-    .header-nav-bar ul {
+    .nav-bar ul {
         flex-direction: column;
         gap: 10px;
     }
     .project-row {
-        flex-direction: column;
+        flex-direction: column; 
         align-items: center;
-        gap: 20px; 
+        gap: 20px;
     }
     .project-item {
         width: 100%; 
