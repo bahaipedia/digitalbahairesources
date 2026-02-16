@@ -90,7 +90,7 @@ header {
     font-weight: bold;
 }
 
-/* Sidebar */
+/* Sidebar (Original Stats Sidebar) */
 .stats-sidebar {
     background: linear-gradient(145deg, #fcfcfc, #f7f7f7);
     padding: 1rem;
@@ -193,6 +193,96 @@ header {
 .centered {
     text-align: center;
 }
+
+/* -------------------------------------------------------
+   NEW ADDITION: Fixed Right-Edge Promo Sidebar 
+   This is overlaid and does NOT affect the grid layout.
+   -------------------------------------------------------
+*/
+.promo-sidebar {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 9999;
+    
+    width: 200px; /* Kept narrow as requested */
+    background-color: white;
+    padding: 20px;
+    text-align: center;
+    
+    border: 1px solid #ddd;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    box-shadow: -4px 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sb-badge {
+    background: #fefcbf;
+    color: #744210;
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+.promo-sidebar h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+    color: #005bb5;
+    line-height: 1.3;
+}
+
+.promo-sidebar p {
+    font-size: 0.85rem;
+    color: #4a5568;
+    line-height: 1.4;
+    margin: 0 0 15px 0;
+}
+
+.sb-actions {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sb-link {
+    font-size: 0.8rem;
+    color: #005bb5;
+    text-decoration: none;
+    margin-bottom: 5px;
+}
+.sb-link:hover {
+    text-decoration: underline;
+}
+
+.sb-btn {
+    display: block;
+    width: 100%;
+    background-color: #005bb5;
+    color: white;
+    text-decoration: none;
+    padding: 10px 0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.sb-btn:hover {
+    background-color: #003f8c;
+    text-decoration: none;
+}
+
 /* Footer */
 footer {
     text-align: center;
@@ -213,13 +303,20 @@ footer a:hover {
 }
 
 /* Responsive Design */
+@media (max-width: 1300px) {
+    /* Hide the fixed sidebar if screen is too narrow to prevent overlap */
+    .promo-sidebar {
+        display: none;
+    }
+}
+
 @media (max-width: 768px) {
     .header-container {
         flex-direction: column;
         align-items: center;
         text-align: center;
     }
-    .nav-bar ul {
+    .header-nav-bar ul { /* Fixed class name from 'nav-bar' to 'header-nav-bar' to match HTML */
         flex-direction: column;
         gap: 10px;
     }
