@@ -261,17 +261,6 @@ footer a:hover {
     align-items: center;
 }
 
-.sb-badge {
-    background: #fefcbf;
-    color: #744210;
-    font-size: 0.65rem;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-}
-
 .promo-sidebar h3 {
     margin: 0 0 10px 0;
     font-size: 1rem;
