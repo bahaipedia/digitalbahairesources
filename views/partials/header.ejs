@@ -17,3 +17,27 @@
         </nav>
     </div>
 </header>
+<script>
+    // 1. Check local storage or system preference on load
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // 2. Apply dark mode if saved, OR if no save exists and system is dark
+    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    // 3. Toggle function attached to the navigation link
+    function toggleTheme(e) {
+        e.preventDefault(); // Prevents the page from jumping to top
+        const html = document.documentElement;
+        
+        if (html.getAttribute('data-theme') === 'dark') {
+            html.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+        } else {
+            html.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+</script>
