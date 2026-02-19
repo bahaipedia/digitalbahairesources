@@ -544,6 +544,55 @@ footer a:hover {
         border-color: rgba(255, 255, 255, 0.5);
         color: #fff;
     }
+
+   /* =========================================
+       TRAFFIC STATS & CHARTS
+       ========================================= */
+       
+    /* Traffic Header & Nav */
+    h2 {
+        background-color: #2d2d3a;
+        color: #e0e0e0;
+    }
+    .traffic-nav {
+        background: #1e1e1e;
+        color: #e0e0e0;
+    }
+
+    /* Colored Table Headers (Dimmed for dark mode) */
+    .header-unique-visitors { background-color: #9c5c2b; color: #f8f8f8; }
+    .header-number-visits   { background-color: #949035; color: #f8f8f8; }
+    .header-pages           { background-color: #2b4f99; color: #f8f8f8; }
+    .header-hits            { background-color: #2b8491; color: #f8f8f8; }
+    .header-bandwidth       { background-color: #1a6b60; color: #f8f8f8; }
+
+    /* Tables & Summary Rows */
+    .traffic-summary-table th, .traffic-summary-table td,
+    .monthly-history-table th, .monthly-history-table td,
+    .daily-history-table th, .daily-history-table td {
+        border-color: #444;
+    }
+    .totals-row, .daily-average-row, .daily-totals-row {
+        background-color: #222;
+    }
+
+    /* Styled Select Dropdown */
+    .styled-select {
+        background-color: #1e1e1e;
+        border-color: #555;
+        color: #e0e0e0;
+        /* Updated SVG stroke to light grey (%23e0e0e0) for dark mode */
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e0e0e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    }
+    .styled-select:hover,
+    .styled-select:focus {
+        border-color: #66b3ff; 
+        box-shadow: 0 0 4px rgba(102, 179, 255, 0.4);
+    }
+    .styled-select option {
+        color: #e0e0e0;
+        background-color: #1e1e1e;
+    }
     
     /* Footer */
     footer {
