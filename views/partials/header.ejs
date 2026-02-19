@@ -12,7 +12,7 @@
                 <li><a href="https://docs.digitalbahairesources.org/">Docs</a></li>
                 <li><a href="/current-activity">Current Activity</a></li>
                 <li><a href="/contact">Contact</a></li>
-                <li><a href="#" id="theme-icon" onclick="toggleTheme(event)" title="Toggle Theme" style="font-size: 1.2rem; text-decoration: none;">🌙</a></li>
+                <li><a href="#" id="theme-icon" onclick="toggleTheme(event)" title="Toggle Theme" style="font-size: 1.2rem; text-decoration: none;">☀️</a></li>
             </ul>
         </nav>
     </div>
@@ -25,9 +25,9 @@
     // Set initial theme and icon on load
     if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
         document.documentElement.setAttribute('data-theme', 'dark');
-        if (themeIcon) themeIcon.textContent = '☀️';
-    } else {
         if (themeIcon) themeIcon.textContent = '🌙';
+    } else {
+        if (themeIcon) themeIcon.textContent = '☀️';
     }
 
     // Toggle function
@@ -38,11 +38,11 @@
         if (html.getAttribute('data-theme') === 'dark') {
             html.removeAttribute('data-theme');
             localStorage.setItem('theme', 'light');
-            themeIcon.textContent = '🌙';
+            themeIcon.textContent = '☀️';
         } else {
             html.setAttribute('data-theme', 'dark');
             localStorage.setItem('theme', 'dark');
-            themeIcon.textContent = '☀️';
+            themeIcon.textContent = '🌙';
         }
     }
 </script>
