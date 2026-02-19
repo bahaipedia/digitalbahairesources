@@ -366,7 +366,7 @@ footer a:hover {
 /* =========================================
    DARK MODE SUPPORT (System Preference)
    ========================================= */
-@media (prefers-color-scheme: dark) {
+html[data-theme="dark"] {
     /* Base Body & Header */
     body, header, .mini-header {
         background-color: #121212;
