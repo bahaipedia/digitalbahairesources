@@ -681,6 +681,56 @@ footer a:hover {
     .policy-section h3 {
         color: #cccccc;
     }
+
+   /* =========================================
+       EXTENSION HERO & CAROUSEL
+       ========================================= */
+       
+    /* Hero Section */
+    .hero-text {
+        color: #b0b0b0;
+    }
+
+    .divider {
+        background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+    }
+
+    /* Feature Grid */
+    .feature-card {
+        background-color: #1e1e1e;
+        border-color: #444;
+    }
+
+    .feature-card h2 {
+        color: #66b3ff;
+        border-bottom-color: #444;
+    }
+
+    .feature-card p {
+        color: #e0e0e0;
+    }
+
+    /* Carousel / Slideshow */
+    .carousel-container {
+        background-color: #1e1e1e;
+        border-color: #444;
+    }
+
+    .carousel-slide img {
+        border-bottom-color: #444;
+    }
+
+    .slide-caption {
+        background-color: #222;
+    }
+
+    .slide-caption h3 {
+        color: #66b3ff;
+    }
+
+    .slide-caption p {
+        color: #e0e0e0;
+    }
     
     /* Footer */
     footer {
