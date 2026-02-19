@@ -656,6 +656,31 @@ footer a:hover {
     .map-controls button:hover {
         background-color: #444;
     }
+
+   /* =========================================
+       PRIVACY POLICY
+       ========================================= */
+
+    .policy-container {
+        color: #e0e0e0;
+    }
+
+    .policy-container h1 {
+        color: #ffffff;
+    }
+
+    .last-updated {
+        color: #aaa;
+    }
+
+    .policy-section h2 {
+        border-bottom-color: #444;
+        color: #66b3ff; /* Matches your other blue accents */
+    }
+
+    .policy-section h3 {
+        color: #cccccc;
+    }
     
     /* Footer */
     footer {
