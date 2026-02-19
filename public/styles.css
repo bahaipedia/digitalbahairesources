@@ -631,6 +631,18 @@ html[data-theme="dark"] {
         background-color: #1e1e1e;
     }
 
+   /* Traffic Nav Standard Select Dropdowns */
+    .traffic-nav select {
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+        border: 1px solid #555;
+    }
+    
+    .traffic-nav select option {
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+    }
+
    /* =========================================
        MAP CONTROLS
        ========================================= */
