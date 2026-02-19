@@ -482,6 +482,68 @@ footer a:hover {
         border-left-color: #66b3ff; 
         color: #e0e0e0;
     }
+   /* =========================================
+       MEDIA DUMPS & EXPLORER WIDGET
+       ========================================= */
+       
+    /* Explorer Container */
+    .explorer-container {
+        background: #1e1e1e;
+        border-color: #444;
+    }
+    .explorer-search {
+        background: #2d2d2d;
+        border-color: #444;
+    }
+    .explorer-search input {
+        background: #121212;
+        color: #e0e0e0;
+        border-color: #555;
+    }
+    
+    /* Tree Items */
+    .tree-toggle {
+        color: #aaa;
+    }
+    .tree-toggle:hover {
+        color: #fff;
+    }
+    .tree-children {
+        border-color: #444;
+    }
+    
+    /* Selected Tags Area */
+    .selected-area {
+        background: #122338;
+        border-color: #2a3b4c;
+    }
+    
+    /* Step Boxes & Generated Results */
+    .step-box {
+        background: #1e1e1e;
+        border-color: #444;
+    }
+    #manifest-result {
+        background: #0f291e; /* Dark green hue for success message */
+        border-color: #1b4733;
+        color: #e0e0e0;
+    }
+    
+    /* Code Wrapper & Copy Button */
+    .code-wrapper {
+        background: #1a1a1a;
+        border-color: #444;
+    }
+    
+    .copy-btn {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #aaa;
+    }
+    .copy-btn:hover {
+        background-color: #333;
+        border-color: rgba(255, 255, 255, 0.5);
+        color: #fff;
+    }
     
     /* Footer */
     footer {
