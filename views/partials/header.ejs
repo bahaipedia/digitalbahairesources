@@ -12,32 +12,37 @@
                 <li><a href="https://docs.digitalbahairesources.org/">Docs</a></li>
                 <li><a href="/current-activity">Current Activity</a></li>
                 <li><a href="/contact">Contact</a></li>
-                <li><a href="#" id="theme-toggle" onclick="toggleTheme(event)">🌗 Theme</a></li>
+                <li><a href="#" id="theme-toggle" onclick="toggleTheme(event)">🌗</a></li>
             </ul>
         </nav>
     </div>
 </header>
 <script>
-    // 1. Check local storage or system preference on load
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const themeIcon = document.getElementById('theme-icon');
     
-    // 2. Apply dark mode if saved, OR if no save exists and system is dark
+    // Set initial theme and icon on load
     if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
         document.documentElement.setAttribute('data-theme', 'dark');
+        if (themeIcon) themeIcon.textContent = '☀️';
+    } else {
+        if (themeIcon) themeIcon.textContent = '🌙';
     }
 
-    // 3. Toggle function attached to the navigation link
+    // Toggle function
     function toggleTheme(e) {
-        e.preventDefault(); // Prevents the page from jumping to top
+        e.preventDefault(); 
         const html = document.documentElement;
         
         if (html.getAttribute('data-theme') === 'dark') {
             html.removeAttribute('data-theme');
             localStorage.setItem('theme', 'light');
+            themeIcon.textContent = '🌙';
         } else {
             html.setAttribute('data-theme', 'dark');
             localStorage.setItem('theme', 'dark');
+            themeIcon.textContent = '☀️';
         }
     }
 </script>
