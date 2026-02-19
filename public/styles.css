@@ -362,3 +362,67 @@ footer a:hover {
         width: 100%; 
     }
 }
+
+/* =========================================
+   DARK MODE SUPPORT (System Preference)
+   ========================================= */
+@media (prefers-color-scheme: dark) {
+    /* Base Body & Header */
+    body, header, .mini-header {
+        background-color: #121212;
+        color: #e0e0e0;
+    }
+    header, .mini-header {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Text & Links */
+    .logo-text span, .header-nav-bar a, .content-area p, .content-area li {
+        color: #e0e0e0;
+    }
+    
+    /* Blue Accents - Lightened for contrast against dark backgrounds */
+    .logo-text, .logo-text a, .project-item h2, .sb-learn-more {
+        color: #66b3ff; 
+    }
+    .logo-text a:hover, .project-item h2 a:hover, .sb-learn-more:hover {
+        color: #99ccff;
+    }
+    .header-nav-bar a:hover, .header-nav-bar .active {
+        color: white; 
+    }
+
+    /* Cards & Containers */
+    .project-item, .content-area, .promo-sidebar {
+        background-color: #1e1e1e;
+        border-color: #333;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Sidebar Elements */
+    .promo-sidebar h3, .stats-sidebar-menu li a {
+        color: #e0e0e0;
+    }
+    .promo-sidebar p {
+        color: #b0b0b0;
+    }
+    .sb-visual {
+        background: #2a2a2a;
+        border-color: #444;
+    }
+    
+    /* Stats Sidebar Override */
+    .stats-sidebar {
+        background: linear-gradient(145deg, #222, #1a1a1a);
+        border-color: #333;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    .stats-sidebar-menu li a:hover {
+        background-color: rgba(66, 153, 225, 0.15);
+    }
+    
+    /* Footer */
+    footer {
+        background-color: #0a0a0a;
+    }
+}
