@@ -392,6 +392,14 @@ footer a:hover {
         color: white; 
     }
 
+   /* General Hyperlinks */
+    a {
+        color: #8ab4f8; 
+    }
+    a:hover {
+        color: #aecbfa;
+    }
+
     /* Cards & Containers */
     .project-item, .content-area, .promo-sidebar {
         background-color: #1e1e1e;
