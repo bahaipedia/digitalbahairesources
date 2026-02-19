@@ -593,6 +593,43 @@ footer a:hover {
         color: #e0e0e0;
         background-color: #1e1e1e;
     }
+
+   .autocomplete-items,
+    .data-summary,
+    .selected-titles-container {
+        background-color: #1e1e1e;
+        border-color: #444;
+        color: #e0e0e0;
+    }
+
+    .autocomplete-items li:hover {
+        background-color: #333;
+    }
+
+    #title-input,
+    .data-summary .date-selectors select {
+        background-color: #121212;
+        color: #e0e0e0;
+        border: 1px solid #444;
+    }
+
+    .data-table th,
+    .data-summary h3 {
+        color: #90caf9; 
+    }
+
+    .data-summary {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    #details-table th, 
+    #details-table td {
+        border-color: #444;
+    }
+
+    #details-table th {
+        background-color: #1e1e1e;
+    }
     
     /* Footer */
     footer {
