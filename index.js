@@ -7,7 +7,7 @@ const dotenv = require('dotenv');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const semver = require('semver');
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
 
 // For the Baha'i Text Annotation Chrome Extension, routes starting ~ line 700
 const MIN_CLIENT_VERSION = '2.5.1';
@@ -2017,6 +2017,62 @@ app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) =
     } finally {
         if (conn) conn.release();
     }
+});
+
+// ==================================================================
+// IMAGE AUTO-ANNOTATION (MTCNN + GEMINI)
+// ==================================================================
+app.options('/api/auto-annotate', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', 'https://bahai.media');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.sendStatus(204);
+});
+
+app.post('/api/auto-annotate', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', 'https://bahai.media');
+
+    const { image_url, caption } = req.body;
+    if (!image_url) {
+        return res.status(400).json({ error: 'image_url is required' });
+    }
+
+    // Point to your Python executable (update to your venv path if needed, e.g. '/path/to/venv/bin/python')
+    const pythonBin = process.env.PYTHON_BIN || 'python3';
+    const workerPath = path.join(__dirname, 'annotate_worker.py');
+
+    const py = spawn(pythonBin, [workerPath], {
+        env: { ...process.env } // Passes GEMINI_API_KEY from .env to Python
+    });
+
+    let stdoutData = '';
+    let stderrData = '';
+
+    py.stdout.on('data', (chunk) => { stdoutData += chunk.toString(); });
+    py.stderr.on('data', (chunk) => { stderrData += chunk.toString(); });
+
+    py.on('close', (code) => {
+        if (code !== 0) {
+            logger.error(`[AutoAnnotate] Python exited with ${code}: ${stderrData}`);
+            return res.status(500).json({ error: 'Annotation worker failed', details: stderrData });
+        }
+
+        const match = stdoutData.match(/___JSON_START___([\s\S]*?)___JSON_END___/);
+        if (!match) {
+            logger.error(`[AutoAnnotate] Invalid output: ${stdoutData}`);
+            return res.status(500).json({ error: 'Invalid response from worker' });
+        }
+
+        try {
+            const parsed = JSON.parse(match[1]);
+            res.json(parsed);
+        } catch (err) {
+            res.status(500).json({ error: 'Failed to parse worker JSON' });
+        }
+    });
+
+    py.stdin.write(JSON.stringify({ image_url, caption: caption || '' }));
+    py.stdin.end();
 });
 
 // END //
