@@ -9,12 +9,13 @@ from PIL import Image, ImageDraw, ImageFont
 # Suppress TensorFlow informational logs and oneDNN warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+os.environ['TF_USE_LEGACY_KERAS'] = '1'
 
 import logging
 logging.getLogger('tensorflow').setLevel(logging.FATAL)
 
 import numpy as np
-from mtcnn import MTCNN
+from retinaface import RetinaFace
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
@@ -22,26 +23,34 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 MODEL_NAME = os.environ.get("GEMINI_MODEL_NAME")
 
-DETECTOR = MTCNN()
-
 def detect_faces(pil_image):
     """
-    Takes a PIL image, converts it for MTCNN, and returns a list of bounding boxes.
+    Takes a PIL image, runs RetinaFace, and returns a list of bounding boxes.
     Boxes are padded to include the whole head/hair rather than just the facial features.
     """
-    img_array = np.array(pil_image.convert('RGB'))
+    # RetinaFace expects BGR or RGB numpy array
+    img_array = np.array(pil_image.convert('RGB'))[:, :, ::-1]
     img_h, img_w, _ = img_array.shape
     
-    faces = DETECTOR.detect_faces(img_array)
+    resp = RetinaFace.detect_faces(img_array, threshold=0.5)
+    if not isinstance(resp, dict):
+        return []
+    
+    # Sort faces left-to-right so numbering is predictable
+    face_list = sorted(resp.values(), key=lambda f: f['facial_area'][0])
     
     results = []
-    for i, face in enumerate(faces):
-        x, y, w, h = face['box']
+    for i, face in enumerate(face_list):
+        x1, y1, x2, y2 = [int(v) for v in face['facial_area']]
+        x = x1
+        y = y1
+        w = x2 - x1
+        h = y2 - y1
         
-        # MTCNN boxes are tight on the features. Expand them to capture the whole head.
-        pad_x = int(w * 0.25)       # 25% padding on left/right
-        pad_top = int(h * 0.35)     # 35% padding on top for hair/hats
-        pad_bottom = int(h * 0.15)  # 15% padding on bottom for chin/neck
+        # Expand boxes to capture the whole head/hair
+        pad_x = int(w * 0.20)       # 20% padding on left/right
+        pad_top = int(h * 0.30)     # 30% padding on top for hair/hats
+        pad_bottom = int(h * 0.10)  # 10% padding on bottom for chin/neck
         
         # Calculate new coordinates, ensuring we don't go out of image bounds
         new_x = max(0, x - pad_x)
@@ -52,7 +61,7 @@ def detect_faces(pil_image):
         results.append({
             "id": i + 1,
             "box": [new_x, new_y, new_w, new_h],
-            "confidence": face['confidence']
+            "confidence": float(face.get('score', 1.0))
         })
         
     return results
