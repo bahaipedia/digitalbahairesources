@@ -16,11 +16,11 @@ logging.getLogger('tensorflow').setLevel(logging.FATAL)
 
 import numpy as np
 from retinaface import RetinaFace
-import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
+from google import genai
+from google.genai import types
 
-# Configure Gemini
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+# Initialize the new GenAI Client (automatically uses GEMINI_API_KEY from environment)
+CLIENT = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 MODEL_NAME = os.environ.get("GEMINI_MODEL_NAME")
 
 def detect_faces(pil_image):
@@ -84,8 +84,6 @@ def draw_numbered_boxes(pil_img, faces):
     return img_copy
 
 def map_faces_to_caption(image_with_boxes, caption_text):
-    model = genai.GenerativeModel(MODEL_NAME)
-    
     prompt = f"""
     Analyze this image which has numbered bounding boxes drawn on it, and the following caption:
     "{caption_text}"
@@ -102,15 +100,21 @@ def map_faces_to_caption(image_with_boxes, caption_text):
     If no names are found, return an empty array [].
     """
     
-    safety_settings = {
-        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-    }
+    config = types.GenerateContentConfig(
+        safety_settings=[
+            types.SafetySetting(category="HARM_CATEGORY_HARASSMENT", threshold="BLOCK_NONE"),
+            types.SafetySetting(category="HARM_CATEGORY_HATE_SPEECH", threshold="BLOCK_NONE"),
+            types.SafetySetting(category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="BLOCK_NONE"),
+            types.SafetySetting(category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="BLOCK_NONE"),
+        ]
+    )
 
     try:
-        response = model.generate_content([prompt, image_with_boxes], safety_settings=safety_settings)
+        response = CLIENT.models.generate_content(
+            model=MODEL_NAME,
+            contents=[prompt, image_with_boxes],
+            config=config
+        )
         match = re.search(r'\[.*\]', response.text, re.DOTALL)
         if match:
             return json.loads(match.group(0))
