@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const mysql = require('mysql2/promise');
+const { Pool: PgPool, types: pgTypes } = require('pg');
 const winston = require('winston');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
@@ -49,16 +50,26 @@ const pool = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0
 });
-// Dedicated pool for RAG Metadata
-const metadataPool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER_META,
-    password: process.env.DB_PASSWORD_META,
-    database: process.env.DB_NAME_META,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+// Dedicated pool for RAG Metadata (PostgreSQL `anvar` via least-privilege `extension_api`)
+// Parse PostgreSQL BIGINT (OID 20, e.g. library.articles.source_page_id) as JS numbers to match Chrome Extension expectations
+pgTypes.setTypeParser(20, (val) => (val === null ? null : parseInt(val, 10)));
+
+const metadataPool = new PgPool({
+    host: process.env.PG_HOST || '127.0.0.1',
+    port: parseInt(process.env.PG_PORT || '5432', 10),
+    user: process.env.PG_USER_META,
+    password: process.env.PG_PASSWORD_META,
+    database: process.env.PG_DB_META,
+    max: 10
 });
+
+// Normalize connected_anchors elements to strings so PostgreSQL `jsonb ?| text[]` matches via GIN index
+const normalizeConnectedAnchors = (anchors) => {
+    if (anchors === null || anchors === undefined) return null;
+    const parsed = typeof anchors === 'string' ? JSON.parse(anchors) : anchors;
+    if (!Array.isArray(parsed)) return null;
+    return JSON.stringify(parsed.map(String));
+};
 // Pool for MediaWiki Images
 const mediaPool = mysql.createPool({
     host: process.env.DB_HOST,
@@ -1003,16 +1014,14 @@ app.post('/auth/verify-session', requireClientVersion, async (req, res) => {
             const mwUserId = loginData.lguserid;
             const mwUserName = loginData.lgusername;
 
-            // A. Upsert User in your DB
-            await metadataPool.query(
-                `INSERT INTO api_users (mw_user_id, mw_username, role) 
-                 VALUES (?, ?, 'user') 
-                 ON DUPLICATE KEY UPDATE mw_username = VALUES(mw_username)`,
+            // A. Upsert User in your DB & Get Internal ID
+            const { rows: userRows } = await metadataPool.query(
+                `INSERT INTO knowledge.api_users (mw_user_id, mw_username, role)
+                 VALUES ($1, $2, 'user')
+                 ON CONFLICT (mw_user_id) DO UPDATE SET mw_username = EXCLUDED.mw_username
+                 RETURNING id, role`,
                 [mwUserId, mwUserName]
             );
-
-            // B. Get Internal ID
-            const [userRows] = await metadataPool.query("SELECT id, role FROM api_users WHERE mw_user_id = ?", [mwUserId]);
             
             // C. Issue JWT
             const token = jwt.sign({ 
@@ -1058,17 +1067,17 @@ app.get('/api/tags', authenticateExtension, async (req, res) => {
     const queryLimit = parseInt(limit) || 10;
 
     try {
-        // 3. Use '?' for the LIMIT clause
+        // 3. Use '$1/$2/$3' for the ILIKE and LIMIT clauses
         const query = `
             SELECT id, label 
-            FROM defined_tags 
-            WHERE label LIKE ? 
-            AND created_by = ?
-            LIMIT ?
+            FROM knowledge.defined_tags 
+            WHERE label ILIKE $1 
+            AND created_by = $2
+            LIMIT $3
         `;
         
         // 4. Pass 'queryLimit' as the third parameter
-        const [rows] = await metadataPool.query(query, [`%${search}%`, userId, queryLimit]);
+        const { rows } = await metadataPool.query(query, [`%${search}%`, userId, queryLimit]);
         
         res.json(rows);
     } catch (err) {
@@ -1087,13 +1096,13 @@ app.get('/api/tags/tree', authenticateExtension, async (req, res) => {
     try {
         // ALWAYS filter by the current user. "View Example" (official tags) is removed.
         const query = `
-            SELECT id, label, parent_id, description, created_by, is_official 
-            FROM defined_tags 
-            WHERE created_by = ? 
+            SELECT id, label, parent_id, description, created_by, (is_official)::int AS is_official 
+            FROM knowledge.defined_tags 
+            WHERE created_by = $1 
             ORDER BY label ASC
         `;
 
-        const [rows] = await metadataPool.query(query, [userId]);
+        const { rows } = await metadataPool.query(query, [userId]);
 
         // If Flat List is requested, return rows directly
         if (format === 'flat') {
@@ -1132,30 +1141,27 @@ app.post('/api/tags', authenticateExtension, async (req, res) => {
     const cleanLabel = label.trim();
 
     // Security: Only admins can create official tags. 
-    // If a normal user tries, force it to 0 (Private).
-    const officialFlag = (is_official && userRole === 'admin') ? 1 : 0;
+    // If a normal user tries, force it to false (Private).
+    const officialFlag = Boolean(is_official && userRole === 'admin');
 
     try {
         // 1. Try to insert
         const query = `
-            INSERT INTO defined_tags (label, created_by, is_official) 
-            VALUES (?, ?, ?)
+            INSERT INTO knowledge.defined_tags (label, created_by, is_official) 
+            VALUES ($1, $2, $3)
+            RETURNING id, label, is_official
         `;
         
-        const [result] = await metadataPool.query(query, [cleanLabel, userId, officialFlag]);
+        const { rows } = await metadataPool.query(query, [cleanLabel, userId, officialFlag]);
         
-        res.json({ 
-            id: result.insertId, 
-            label: cleanLabel, 
-            is_official: !!officialFlag 
-        });
+        res.json(rows[0]);
 
     } catch (err) {
         // 2. Handle Duplicates (Race condition or re-adding existing)
-        if (err.code === 'ER_DUP_ENTRY') {
+        if (err.code === '23505') {
             // Fetch the existing tag ID for this user so the UI can select it
-            const [rows] = await metadataPool.query(
-                "SELECT id, label, is_official FROM defined_tags WHERE label = ? AND created_by = ?", 
+            const { rows } = await metadataPool.query(
+                "SELECT id, label, is_official FROM knowledge.defined_tags WHERE label = $1 AND created_by = $2", 
                 [cleanLabel, userId]
             );
             
@@ -1177,28 +1183,28 @@ app.put('/api/tags/hierarchy', authenticateExtension, async (req, res) => {
 
     if (!Array.isArray(updates) || updates.length === 0) return res.json({ success: true });
 
-    const conn = await metadataPool.getConnection();
+    const client = await metadataPool.connect();
     try {
-        await conn.beginTransaction();
+        await client.query('BEGIN');
 
         for (const update of updates) {
             // Security: Ensure user owns the tag they are moving
             // Note: We aren't checking if the *new parent* belongs to them here for speed, 
             // but the foreign key constraint or frontend logic should handle cycles/validity.
-            await conn.query(
-                "UPDATE defined_tags SET parent_id = ? WHERE id = ? AND created_by = ?",
+            await client.query(
+                "UPDATE knowledge.defined_tags SET parent_id = $1 WHERE id = $2 AND created_by = $3",
                 [update.parent_id, update.id, userId]
             );
         }
 
-        await conn.commit();
+        await client.query('COMMIT');
         res.json({ success: true });
     } catch (err) {
-        await conn.rollback();
+        await client.query('ROLLBACK');
         console.error(err);
         res.status(500).json({ error: "Failed to save hierarchy" });
     } finally {
-        conn.release();
+        client.release();
     }
 });
 
@@ -1214,17 +1220,17 @@ app.put('/api/tags/:id', authenticateExtension, async (req, res) => {
     }
 
     try {
-        const query = "UPDATE defined_tags SET label = ? WHERE id = ? AND created_by = ?";
-        const [result] = await metadataPool.query(query, [label.trim(), tagId, userId]);
+        const query = "UPDATE knowledge.defined_tags SET label = $1 WHERE id = $2 AND created_by = $3";
+        const result = await metadataPool.query(query, [label.trim(), tagId, userId]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({ error: "Tag not found or unauthorized" });
         }
 
         res.json({ success: true });
     } catch (err) {
         // Handle duplicate labels if your schema enforces unique (label, created_by)
-        if (err.code === 'ER_DUP_ENTRY') {
+        if (err.code === '23505') {
             return res.status(409).json({ error: "A tag with this name already exists." });
         }
         console.error(err);
@@ -1256,9 +1262,10 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
                 u.connected_anchors,
                 u.author, 
                 u.unit_type,
+                (u.broken_index)::int AS broken_index,
                 u.created_by
-            FROM logical_units u
-            JOIN articles a ON u.article_id = a.id
+            FROM knowledge.logical_units u
+            JOIN library.articles a ON u.article_id = a.id
         `;
 
         const params = [];
@@ -1268,30 +1275,30 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
             // PERMISSION FIX: 
             // 1. If type is 'user_highlight', MUST match currentUserId
             // 2. All other types (metadata) are visible to everyone
-            query += ` 
-                WHERE a.source_code = ? 
-                AND a.source_page_id = ? 
-                AND (u.unit_type != 'user_highlight' OR u.created_by = ?)
-            `;
             params.push(source_code, source_page_id, currentUserId);
+            query += ` 
+                WHERE a.source_code = $1 
+                AND a.source_page_id = $2 
+                AND (u.unit_type != 'user_highlight' OR u.created_by = $3)
+            `;
         } 
         // SCENARIO B: Fetch by Tag
         else if (tag_id) {
             // NOTE: Tags are strictly personal in your system, so we keep the strict check here.
             // If you later add "Public Official Tags", you would relax this logic similar to above.
-            query += ` 
-                JOIN unit_tags ut ON u.id = ut.unit_id 
-                WHERE ut.tag_id = ? AND u.created_by = ?
-            `;
             params.push(tag_id, currentUserId);
+            query += ` 
+                JOIN knowledge.unit_tags ut ON u.id = ut.unit_id 
+                WHERE ut.tag_id = $1 AND u.created_by = $2
+            `;
         }
 
         if (limit) {
-            query += ` LIMIT ?`;
-            params.push(parseInt(limit));
+            params.push(parseInt(limit, 10));
+            query += ` LIMIT $${params.length}`;
         }
 
-        const [rows] = await metadataPool.query(query, params);
+        const { rows } = await metadataPool.query(query, params);
 
         const unitsWithPermissions = rows.map(unit => ({
             ...unit,
@@ -1335,10 +1342,11 @@ app.post('/api/units/batch', authenticateExtension, async (req, res) => {
                 u.connected_anchors,
                 u.author, 
                 u.unit_type,
+                (u.broken_index)::int AS broken_index,
                 u.created_by
-            FROM logical_units u
-            JOIN articles a ON u.article_id = a.id
-            WHERE a.source_code = ? 
+            FROM knowledge.logical_units u
+            JOIN library.articles a ON u.article_id = a.id
+            WHERE a.source_code = $1 
         `;
 
         // [FIX] Updated Params: Code, UserID, UserRole
@@ -1351,29 +1359,27 @@ app.post('/api/units/batch', authenticateExtension, async (req, res) => {
         query += `
             AND (
                 u.unit_type != 'user_highlight' 
-                OR u.created_by = ?
-                OR ? = 'admin'
+                OR u.created_by = $2
+                OR $3 = 'admin'
             )
         `;
 
-        // --- BRANCHING LOGIC (JSON vs INT) ---
+        // --- BRANCHING LOGIC (JSONB vs BIGINT[]) ---
         if (source_code === 'lib') {
-            // STRATEGY A: BAHAI.ORG (JSON Anchors Only)
-            // We search purely for overlap between the requested IDs (strings) and stored anchors
-            // Requires MariaDB 10.9+ or MySQL 8.0+
-            query += ` AND JSON_OVERLAPS(u.connected_anchors, ?)`;
-            params.push(JSON.stringify(source_page_ids)); // Pass ["0555...", "0556..."] as JSON string
+            // STRATEGY A: BAHAI.ORG (JSONB Anchors Only)
+            // We search purely for overlap between the requested IDs (strings) and stored anchors via GIN index
+            query += ` AND u.connected_anchors ?| $4::text[]`;
+            params.push(source_page_ids.map(String)); // Pass ["0555...", "0556..."] as text[]
         } else {
             // STRATEGY B: MEDIAWIKI (Integer IDs Only)
             // Standard Page ID lookup for wikis
-            const placeholders = source_page_ids.map(() => '?').join(',');
-            query += ` AND a.source_page_id IN (${placeholders})`;
+            query += ` AND a.source_page_id = ANY($4::bigint[])`;
             
             // Ensure inputs are integers for safety
-            source_page_ids.forEach(id => params.push(parseInt(id, 10)));
+            params.push(source_page_ids.map(id => parseInt(id, 10)).filter(n => !Number.isNaN(n)));
         }
 
-        const [rows] = await metadataPool.query(query, params);
+        const { rows } = await metadataPool.query(query, params);
 
         const unitsWithPermissions = rows.map(unit => ({
             ...unit,
@@ -1401,50 +1407,46 @@ app.patch('/api/units/batch_realign', authenticateExtension, async (req, res) =>
         return res.status(400).json({ error: "No updates provided" });
     }
 
-    let conn;
+    let client;
     try {
-        conn = await metadataPool.getConnection();
-        await conn.beginTransaction();
-
-        // [UPDATE] Prepared statement now includes connected_anchors
-        const updatePosStmt = await conn.prepare(
-            `UPDATE logical_units 
-             SET start_char_index = ?, end_char_index = ?, text_content = ?, connected_anchors = ?, broken_index = 0 
-             WHERE id = ?`
-        );
-        const markBrokenStmt = await conn.prepare(
-            "UPDATE logical_units SET broken_index = 1 WHERE id = ?"
-        );
+        client = await metadataPool.connect();
+        await client.query('BEGIN');
 
         for (const update of updates) {
             if (update.broken_index) {
-                await markBrokenStmt.execute([update.id]);
+                await client.query(
+                    "UPDATE knowledge.logical_units SET broken_index = TRUE WHERE id = $1",
+                    [update.id]
+                );
             } else {
-                // Ensure JSON format
-                const anchors = update.connected_anchors 
-                    ? JSON.stringify(update.connected_anchors) 
-                    : null;
+                // Ensure JSON format with string-normalized anchor IDs
+                const anchors = normalizeConnectedAnchors(update.connected_anchors);
 
-                await updatePosStmt.execute([
-                    update.start_char_index, 
-                    update.end_char_index,
-                    update.text_content,
-                    anchors, // [UPDATE]
-                    update.id
-                ]);
+                await client.query(
+                    `UPDATE knowledge.logical_units 
+                     SET start_char_index = $1, end_char_index = $2, text_content = $3, connected_anchors = $4::jsonb, broken_index = FALSE 
+                     WHERE id = $5`,
+                    [
+                        update.start_char_index, 
+                        update.end_char_index,
+                        update.text_content,
+                        anchors, // [UPDATE]
+                        update.id
+                    ]
+                );
             }
         }
 
-        await conn.commit();
+        await client.query('COMMIT');
         console.log(`[Healer] Processed ${updates.length} adjustments.`);
         res.json({ success: true });
 
     } catch (err) {
-        if (conn) await conn.rollback();
+        if (client) await client.query('ROLLBACK');
         console.error("[API] Realign Error:", err);
         res.status(500).json({ error: "Batch update failed" });
     } finally {
-        if (conn) conn.release();
+        if (client) client.release();
     }
 });
 
@@ -1452,11 +1454,11 @@ app.patch('/api/units/batch_realign', authenticateExtension, async (req, res) =>
 // Fetch tags for a specific unit (for the Edit form)
 app.get('/api/units/:id/tags', authenticateExtension, async (req, res) => {
     try {
-        const [rows] = await metadataPool.query(
-            `SELECT t.id, t.label, t.is_official 
-             FROM defined_tags t
-             JOIN unit_tags ut ON t.id = ut.tag_id
-             WHERE ut.unit_id = ?`,
+        const { rows } = await metadataPool.query(
+            `SELECT t.id, t.label, (t.is_official)::int AS is_official 
+             FROM knowledge.defined_tags t
+             JOIN knowledge.unit_tags ut ON t.id = ut.tag_id
+             WHERE ut.unit_id = $1`,
             [req.params.id]
         );
         res.json(rows);
@@ -1468,68 +1470,78 @@ app.get('/api/units/:id/tags', authenticateExtension, async (req, res) => {
 // PUT /api/units/:id/tags
 // Update tags for a unit
 app.put('/api/units/:id/tags', authenticateExtension, async (req, res) => {
-    const unitId = req.params.id;
+    const unitId = parseInt(req.params.id, 10);
     const { tags } = req.body; // Array of tag IDs
     const userId = req.user.uid;
 
+    let client;
     try {
         // 1. Verify Ownership (or Admin)
-        const [unit] = await metadataPool.query("SELECT created_by FROM logical_units WHERE id = ?", [unitId]);
+        const { rows: unit } = await metadataPool.query("SELECT created_by FROM knowledge.logical_units WHERE id = $1", [unitId]);
         if (unit.length === 0) return res.status(404).json({ error: "Unit not found" });
         
         if (unit[0].created_by !== userId && req.user.role !== 'admin') {
             return res.status(403).json({ error: "Unauthorized" });
         }
 
-        const conn = await metadataPool.getConnection();
-        await conn.beginTransaction();
+        client = await metadataPool.connect();
+        await client.query('BEGIN');
 
         // 2. Wipe existing tags
-        await conn.query("DELETE FROM unit_tags WHERE unit_id = ?", [unitId]);
+        await client.query("DELETE FROM knowledge.unit_tags WHERE unit_id = $1", [unitId]);
 
         // 3. Insert new tags
         if (tags && tags.length > 0) {
-             const values = tags.map(tagId => [unitId, tagId]);
-             await conn.query("INSERT INTO unit_tags (unit_id, tag_id) VALUES ?", [values]);
+            const tagIds = tags.map(tagId => parseInt(tagId, 10));
+            await client.query(
+                `INSERT INTO knowledge.unit_tags (unit_id, tag_id)
+                 SELECT $1, unnest($2::int[])
+                 ON CONFLICT DO NOTHING`,
+                [unitId, tagIds]
+            );
         }
 
-        await conn.commit();
-        conn.release();
+        await client.query('COMMIT');
         res.json({ success: true });
     } catch (err) {
+        if (client) await client.query('ROLLBACK');
         console.error(err);
         res.status(500).json({ error: "Update failed" });
+    } finally {
+        if (client) client.release();
     }
 });
 
 // PUT /api/units/:id
 // Update unit details (Used by the Repair Tool to fix broken highlights)
 app.put('/api/units/:id', authenticateExtension, async (req, res) => {
-    const unitId = req.params.id;
+    const unitId = parseInt(req.params.id, 10);
     const { 
         start_char_index, 
         end_char_index, 
         text_content, 
+        author,
+        unit_type,
         broken_index,
         connected_anchors,
         tags // Optional array of tag IDs
     } = req.body;
     const userId = req.user.uid;
 
-    let conn;
+    let client;
     try {
-        conn = await metadataPool.getConnection();
-        await conn.beginTransaction();
+        client = await metadataPool.connect();
+        await client.query('BEGIN');
 
         // 1. Verify Ownership
-        const [unit] = await conn.query("SELECT created_by FROM logical_units WHERE id = ?", [unitId]);
+        const { rows: unit } = await client.query("SELECT created_by FROM knowledge.logical_units WHERE id = $1", [unitId]);
         if (unit.length === 0) {
-            await conn.rollback();
+            await client.query('ROLLBACK');
             return res.status(404).json({ error: "Unit not found" });
         }
         
         if (unit[0].created_by !== userId && req.user.role !== 'admin') {
-            await conn.rollback();
+            await client.query('ROLLBACK');
             return res.status(403).json({ error: "Unauthorized" });
         }
 
@@ -1537,43 +1549,50 @@ app.put('/api/units/:id', authenticateExtension, async (req, res) => {
         const fields = [];
         const values = [];
 
-        if (start_char_index !== undefined) { fields.push("start_char_index = ?"); values.push(start_char_index); }
-        if (end_char_index !== undefined)   { fields.push("end_char_index = ?");   values.push(end_char_index); }
-        if (broken_index !== undefined)     { fields.push("broken_index = ?");     values.push(broken_index); }
+        if (start_char_index !== undefined) { values.push(start_char_index); fields.push(`start_char_index = $${values.length}`); }
+        if (end_char_index !== undefined)   { values.push(end_char_index);   fields.push(`end_char_index = $${values.length}`); }
+        if (text_content !== undefined)     { values.push(text_content);     fields.push(`text_content = $${values.length}`); }
+        if (author !== undefined)           { values.push(author);           fields.push(`author = $${values.length}`); }
+        if (unit_type !== undefined)        { values.push(unit_type);        fields.push(`unit_type = $${values.length}`); }
+        if (broken_index !== undefined)     { values.push(Boolean(broken_index)); fields.push(`broken_index = $${values.length}`); }
         
         if (connected_anchors !== undefined) { 
-            const jsonVal = typeof connected_anchors === 'object' ? JSON.stringify(connected_anchors) : connected_anchors;
-            fields.push("connected_anchors = ?"); 
-            values.push(jsonVal); 
+            values.push(normalizeConnectedAnchors(connected_anchors));
+            fields.push(`connected_anchors = $${values.length}::jsonb`); 
         }
 
         if (fields.length > 0) {
             values.push(unitId);
-            const sql = `UPDATE logical_units SET ${fields.join(', ')} WHERE id = ?`;
-            await conn.query(sql, values);
+            const sql = `UPDATE knowledge.logical_units SET ${fields.join(', ')} WHERE id = $${values.length}`;
+            await client.query(sql, values);
         }
 
         // 3. Handle Tags (If provided)
         if (tags && Array.isArray(tags)) {
             // A. Wipe existing tags for this unit
-            await conn.query("DELETE FROM unit_tags WHERE unit_id = ?", [unitId]);
+            await client.query("DELETE FROM knowledge.unit_tags WHERE unit_id = $1", [unitId]);
 
             // B. Insert new tags
             if (tags.length > 0) {
-                const tagValues = tags.map(tagId => [unitId, tagId]);
-                await conn.query("INSERT INTO unit_tags (unit_id, tag_id) VALUES ?", [tagValues]);
+                const tagIds = tags.map(tagId => parseInt(tagId, 10));
+                await client.query(
+                    `INSERT INTO knowledge.unit_tags (unit_id, tag_id)
+                     SELECT $1, unnest($2::int[])
+                     ON CONFLICT DO NOTHING`,
+                    [unitId, tagIds]
+                );
             }
         }
 
-        await conn.commit();
+        await client.query('COMMIT');
         res.json({ success: true });
 
     } catch (err) {
-        if (conn) await conn.rollback();
+        if (client) await client.query('ROLLBACK');
         console.error("Unit update error:", err);
         res.status(500).json({ error: "Update failed" });
     } finally {
-        if (conn) conn.release();
+        if (client) client.release();
     }
 });
 
@@ -1583,7 +1602,7 @@ app.delete('/api/units/:id', authenticateExtension, async (req, res) => {
     const userId = req.user.uid;
 
     try {
-        const [unit] = await metadataPool.query("SELECT created_by FROM logical_units WHERE id = ?", [unitId]);
+        const { rows: unit } = await metadataPool.query("SELECT created_by FROM knowledge.logical_units WHERE id = $1", [unitId]);
         if (unit.length === 0) return res.status(404).json({ error: "Unit not found" });
 
         if (unit[0].created_by !== userId && req.user.role !== 'admin') {
@@ -1592,11 +1611,12 @@ app.delete('/api/units/:id', authenticateExtension, async (req, res) => {
 
         // logical_units has a CASCADE delete on unit_tags usually, 
         // but let's delete strictly.
-        await metadataPool.query("DELETE FROM unit_tags WHERE unit_id = ?", [unitId]);
-        await metadataPool.query("DELETE FROM logical_units WHERE id = ?", [unitId]);
+        await metadataPool.query("DELETE FROM knowledge.unit_tags WHERE unit_id = $1", [unitId]);
+        await metadataPool.query("DELETE FROM knowledge.logical_units WHERE id = $1", [unitId]);
 
-        res.json({ success: true });
+        res.json({ success: true, message: "Unit deleted" });
     } catch (err) {
+        console.error("Delete Error:", err);
         res.status(500).json({ error: "Delete failed" });
     }
 });
@@ -1626,16 +1646,16 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
     }
 
     const userId = req.user.uid; 
-    const anchorsJson = connected_anchors ? JSON.stringify(connected_anchors) : null;
+    const anchorsJson = normalizeConnectedAnchors(connected_anchors);
 
-    let conn;
+    let client;
     try {
-        conn = await metadataPool.getConnection();
-        await conn.beginTransaction();
+        client = await metadataPool.connect();
+        await client.query('BEGIN');
 
-        // A. Resolve Article ID
-        const [articleRows] = await conn.query(
-            "SELECT id FROM articles WHERE source_code = ? AND source_page_id = ?",
+        // A. Resolve Article ID (using ON CONFLICT DO NOTHING so extension_api only needs SELECT + INSERT)
+        const { rows: articleRows } = await client.query(
+            "SELECT id FROM library.articles WHERE source_code = $1 AND source_page_id = $2",
             [source_code, source_page_id]
         );
 
@@ -1643,23 +1663,34 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
         if (articleRows.length > 0) {
             articleId = articleRows[0].id;
         } else {
-            const [result] = await conn.query(
-                `INSERT INTO articles (source_code, source_page_id, title, latest_rev_id, is_active) 
-                 VALUES (?, ?, ?, ?, ?)`,
-                [source_code, source_page_id, payloadTitle, 0, 1]
+            const { rows: insertedArticles } = await client.query(
+                `INSERT INTO library.articles (source_code, source_page_id, title, latest_rev_id, is_active) 
+                 VALUES ($1, $2, $3, 0, TRUE)
+                 ON CONFLICT (source_code, source_page_id) DO NOTHING
+                 RETURNING id`,
+                [source_code, source_page_id, payloadTitle]
             );
-            articleId = result.insertId;
+            if (insertedArticles.length > 0) {
+                articleId = insertedArticles[0].id;
+            } else {
+                const { rows: retryRows } = await client.query(
+                    "SELECT id FROM library.articles WHERE source_code = $1 AND source_page_id = $2",
+                    [source_code, source_page_id]
+                );
+                articleId = retryRows[0].id;
+            }
         }
 
         // B. Insert Logical Unit [UPDATE] Added connected_anchors
-        const [unitResult] = await conn.query(
-            `INSERT INTO logical_units 
+        const { rows: unitRows } = await client.query(
+            `INSERT INTO knowledge.logical_units 
             (article_id, start_char_index, end_char_index, text_content, connected_anchors, author, unit_type, rag_indexed, created_by) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+            VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, FALSE, $8)
+            RETURNING id`,
             [articleId, start_char_index, end_char_index, text_content, anchorsJson, author, unit_type, userId]
         );
         
-        const unitId = unitResult.insertId;
+        const unitId = unitRows[0].id;
 
         // C. Link Tags
         if (tags && Array.isArray(tags) && tags.length > 0) {
@@ -1669,26 +1700,37 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
                 // 1. Check if it's a new string tag (e.g. "Justice")
                 if (typeof tag === 'string') {
                     // Check if it exists already
-                    const [existing] = await conn.query("SELECT id FROM defined_tags WHERE label = ?", [tag]);
+                    const { rows: existing } = await client.query(
+                        "SELECT id FROM knowledge.defined_tags WHERE label = $1 AND created_by = $2",
+                        [tag, userId]
+                    );
                     
                     if (existing.length > 0) {
                         tagId = existing[0].id;
                     } else {
                         // Create it
-                        const [newTag] = await conn.query("INSERT INTO defined_tags (label) VALUES (?)", [tag]);
-                        tagId = newTag.insertId;
+                        const { rows: newTag } = await client.query(
+                            `INSERT INTO knowledge.defined_tags (label, created_by, is_official)
+                             VALUES ($1, $2, FALSE)
+                             ON CONFLICT (label, created_by) DO UPDATE SET label = EXCLUDED.label
+                             RETURNING id`,
+                            [tag, userId]
+                        );
+                        tagId = newTag[0].id;
                     }
                 }
 
                 // 2. Link the Tag to the Unit
-                await conn.query(
-                    `INSERT INTO unit_tags (unit_id, tag_id) VALUES (?, ?)`,
+                await client.query(
+                    `INSERT INTO knowledge.unit_tags (unit_id, tag_id)
+                     VALUES ($1, $2)
+                     ON CONFLICT DO NOTHING`,
                     [unitId, tagId]
                 );
             }
         }
 
-        await conn.commit();
+        await client.query('COMMIT');
 
         res.status(201).json({
             success: true,
@@ -1697,11 +1739,11 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
         });
 
     } catch (err) {
-        if (conn) await conn.rollback();
+        if (client) await client.query('ROLLBACK');
         console.error("Contribution Error:", err);
         res.status(500).json({ error: "Database transaction failed", details: err.message });
     } finally {
-        if (conn) conn.release();
+        if (client) client.release();
     }
 });
 
@@ -1737,22 +1779,19 @@ app.get('/api/relationships', authenticateExtension, async (req, res) => {
                 a_o.source_code as object_source_code,
                 a_o.title as object_page_title
 
-            FROM unit_relationships r
-            JOIN logical_units s ON r.subject_unit_id = s.id
-            JOIN articles a_s ON s.article_id = a_s.id
-            JOIN logical_units o ON r.object_unit_id = o.id
-            JOIN articles a_o ON o.article_id = a_o.id
+            FROM knowledge.unit_relationships r
+            JOIN knowledge.logical_units s ON r.subject_unit_id = s.id
+            JOIN library.articles a_s ON s.article_id = a_s.id
+            JOIN knowledge.logical_units o ON r.object_unit_id = o.id
+            JOIN library.articles a_o ON o.article_id = a_o.id
 
             WHERE 
-                (a_s.source_code = ? AND a_s.source_page_id = ?)
+                (a_s.source_code = $1 AND a_s.source_page_id = $2)
                 OR 
-                (a_o.source_code = ? AND a_o.source_page_id = ?)
+                (a_o.source_code = $1 AND a_o.source_page_id = $2)
         `;
         
-        const [rows] = await metadataPool.query(query, [
-            source_code, source_page_id, 
-            source_code, source_page_id
-        ]);
+        const { rows } = await metadataPool.query(query, [source_code, source_page_id]);
 
         const rowsWithPermissions = rows.map(r => ({
             ...r,
@@ -1782,11 +1821,12 @@ app.post('/api/contribute/relationship', authenticateExtension, async (req, res)
     }
 
     try {
-        // Use IGNORE to prevent crashing on duplicate links
+        // Use ON CONFLICT DO NOTHING to prevent crashing on duplicate links
         const query = `
-            INSERT IGNORE INTO unit_relationships 
+            INSERT INTO knowledge.unit_relationships 
             (subject_unit_id, object_unit_id, relationship_type, created_by)
-            VALUES (?, ?, ?, ?)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (subject_unit_id, object_unit_id) DO NOTHING
         `;
         
         await metadataPool.query(query, [subject_unit_id, object_unit_id, relationship_type, userId]);
@@ -1817,11 +1857,11 @@ app.get('/api/qa', authenticateExtension, async (req, res) => {
                 answer_unit_id,
                 source_book,
                 created_by
-            FROM canonical_questions
-            WHERE answer_unit_id = ?
+            FROM knowledge.canonical_questions
+            WHERE answer_unit_id = $1
         `;
 
-        const [rows] = await metadataPool.query(query, [answer_unit_id]);
+        const { rows } = await metadataPool.query(query, [answer_unit_id]);
         
         // Return array (even if empty) to keep frontend logic simple
         res.json(rows);
@@ -1844,49 +1884,18 @@ app.post('/api/contribute/qa', authenticateExtension, async (req, res) => {
 
     try {
         const query = `
-            INSERT INTO canonical_questions 
+            INSERT INTO knowledge.canonical_questions 
             (question_text, answer_unit_id, source_book, created_by)
-            VALUES (?, ?, ?, ?)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id
         `;
         
-        const [result] = await metadataPool.query(query, [question_text, answer_unit_id, source_book || 'Unknown', userId]);
+        const { rows } = await metadataPool.query(query, [question_text, answer_unit_id, source_book || 'Unknown', userId]);
         
-        res.status(201).json({ success: true, id: result.insertId });
+        res.status(201).json({ success: true, id: rows[0].id });
 
     } catch (err) {
         console.error("[API] Q&A Error:", err);
-        res.status(500).json({ error: "Database error" });
-    }
-});
-
-/* DELETE logic */
-app.delete('/api/units/:id', authenticateExtension, async (req, res) => {
-    const unitId = req.params.id;
-    const userId = req.user.uid;
-    const userRole = req.user.role;
-
-    try {
-        // 1. Check ownership
-        const [rows] = await metadataPool.query("SELECT created_by FROM logical_units WHERE id = ?", [unitId]);
-        
-        if (rows.length === 0) {
-            return res.status(404).json({ error: "Unit not found" });
-        }
-
-        const unit = rows[0];
-
-        // 2. Permission Check
-        if (unit.created_by !== userId && userRole !== 'admin') {
-            return res.status(403).json({ error: "You do not have permission to delete this unit." });
-        }
-
-        // 3. Delete
-        await metadataPool.query("DELETE FROM logical_units WHERE id = ?", [unitId]);
-
-        res.json({ success: true, message: "Unit deleted" });
-
-    } catch (err) {
-        console.error("Delete Error:", err);
         res.status(500).json({ error: "Database error" });
     }
 });
@@ -1898,15 +1907,15 @@ app.delete('/api/tags/:id', authenticateExtension, async (req, res) => {
     const userId = req.user.uid;
     const { move_units_to_uncategorized } = req.body; // Boolean
 
-    const conn = await metadataPool.getConnection();
+    const client = await metadataPool.connect();
     try {
-        await conn.beginTransaction();
+        await client.query('BEGIN');
 
         // 1. Verify Ownership & Children
-        const [tagRows] = await conn.query("SELECT id FROM defined_tags WHERE id = ? AND created_by = ?", [tagId, userId]);
+        const { rows: tagRows } = await client.query("SELECT id FROM knowledge.defined_tags WHERE id = $1 AND created_by = $2", [tagId, userId]);
         if (tagRows.length === 0) throw new Error("Tag not found or unauthorized");
 
-        const [childRows] = await conn.query("SELECT id FROM defined_tags WHERE parent_id = ?", [tagId]);
+        const { rows: childRows } = await client.query("SELECT id FROM knowledge.defined_tags WHERE parent_id = $1", [tagId]);
         if (childRows.length > 0) {
             throw new Error("Cannot delete tag with children. Please move or delete child tags first.");
         }
@@ -1915,32 +1924,41 @@ app.delete('/api/tags/:id', authenticateExtension, async (req, res) => {
         if (move_units_to_uncategorized) {
             // Find or Create "Uncategorized" tag
             let uncategId;
-            const [uRows] = await conn.query("SELECT id FROM defined_tags WHERE label = 'Uncategorized' AND created_by = ?", [userId]);
+            const { rows: uRows } = await client.query("SELECT id FROM knowledge.defined_tags WHERE label = 'Uncategorized' AND created_by = $1", [userId]);
             
             if (uRows.length > 0) {
                 uncategId = uRows[0].id;
             } else {
-                const [ins] = await conn.query("INSERT INTO defined_tags (label, created_by, is_official) VALUES ('Uncategorized', ?, 0)", [userId]);
-                uncategId = ins.insertId;
+                const { rows: ins } = await client.query(
+                    "INSERT INTO knowledge.defined_tags (label, created_by, is_official) VALUES ('Uncategorized', $1, FALSE) RETURNING id",
+                    [userId]
+                );
+                uncategId = ins[0].id;
             }
 
-            // Move unit links
-            await conn.query("UPDATE unit_tags SET tag_id = ? WHERE tag_id = ?", [uncategId, tagId]);
+            // Move unit links safely without colliding if a unit already had 'Uncategorized'
+            await client.query(
+                `INSERT INTO knowledge.unit_tags (unit_id, tag_id)
+                 SELECT unit_id, $1 FROM knowledge.unit_tags WHERE tag_id = $2
+                 ON CONFLICT DO NOTHING`,
+                [uncategId, tagId]
+            );
+            await client.query("DELETE FROM knowledge.unit_tags WHERE tag_id = $1", [tagId]);
         } else {
             // Delete unit links (Cascade usually handles this, but let's be explicit)
-            await conn.query("DELETE FROM unit_tags WHERE tag_id = ?", [tagId]);
+            await client.query("DELETE FROM knowledge.unit_tags WHERE tag_id = $1", [tagId]);
         }
 
         // 3. Delete the Tag
-        await conn.query("DELETE FROM defined_tags WHERE id = ?", [tagId]);
+        await client.query("DELETE FROM knowledge.defined_tags WHERE id = $1", [tagId]);
 
-        await conn.commit();
+        await client.query('COMMIT');
         res.json({ success: true });
     } catch (err) {
-        await conn.rollback();
+        await client.query('ROLLBACK');
         res.status(400).json({ error: err.message });
     } finally {
-        conn.release();
+        client.release();
     }
 });
 
@@ -1952,16 +1970,16 @@ app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) =
 
     if (isNaN(unitId)) return res.status(400).json({ error: "Invalid ID" });
 
-    let conn;
+    let client;
     try {
-        conn = await metadataPool.getConnection();
-        await conn.beginTransaction();
+        client = await metadataPool.connect();
+        await client.query('BEGIN');
 
         // 1. Fetch Unit to check ownership & type
-        const [units] = await conn.query("SELECT * FROM logical_units WHERE id = ?", [unitId]);
+        const { rows: units } = await client.query("SELECT * FROM knowledge.logical_units WHERE id = $1", [unitId]);
         
         if (units.length === 0) {
-            await conn.rollback();
+            await client.query('ROLLBACK');
             return res.status(404).json({ error: "Unit not found" });
         }
         
@@ -1969,7 +1987,7 @@ app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) =
 
         // 2. Strict Permission Check (Backend Enforcement)
         if (unitToDelete.created_by !== userId && userRole !== 'admin') {
-            await conn.rollback();
+            await client.query('ROLLBACK');
             return res.status(403).json({ error: "Unauthorized. You can only delete your own contributions." });
         }
 
@@ -1978,10 +1996,10 @@ app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) =
         // so we don't leave a dangling "half-link".
         let partnerId = null;
         if (unitToDelete.unit_type === 'link_subject' || unitToDelete.unit_type === 'link_object') {
-            const [rels] = await conn.query(`
+            const { rows: rels } = await client.query(`
                 SELECT subject_unit_id, object_unit_id 
-                FROM unit_relationships 
-                WHERE subject_unit_id = ? OR object_unit_id = ?
+                FROM knowledge.unit_relationships 
+                WHERE subject_unit_id = $1 OR object_unit_id = $2
             `, [unitId, unitId]);
 
             if (rels.length > 0) {
@@ -1992,30 +2010,30 @@ app.delete('/api/contribute/unit/:id', authenticateExtension, async (req, res) =
 
         // 4. Delete the Target Unit
         // (Cascading Foreign Keys will automatically remove the row from unit_relationships)
-        await conn.query("DELETE FROM logical_units WHERE id = ?", [unitId]);
+        await client.query("DELETE FROM knowledge.logical_units WHERE id = $1", [unitId]);
 
         // 5. Delete Partner (If applicable and it's also a link node)
         if (partnerId) {
-            const [pRows] = await conn.query("SELECT unit_type FROM logical_units WHERE id = ?", [partnerId]);
+            const { rows: pRows } = await client.query("SELECT unit_type FROM knowledge.logical_units WHERE id = $1", [partnerId]);
             if (pRows.length > 0) {
                 const pType = pRows[0].unit_type;
                 // Only auto-delete the partner if it is strictly a link node. 
                 // Do NOT auto-delete if the partner is a 'tablet' or 'user_highlight' that was linked to.
                 if (pType === 'link_subject' || pType === 'link_object') {
-                    await conn.query("DELETE FROM logical_units WHERE id = ?", [partnerId]);
+                    await client.query("DELETE FROM knowledge.logical_units WHERE id = $1", [partnerId]);
                 }
             }
         }
 
-        await conn.commit();
+        await client.query('COMMIT');
         res.json({ success: true });
 
     } catch (err) {
-        if (conn) await conn.rollback();
+        if (client) await client.query('ROLLBACK');
         console.error("Delete Error:", err);
         res.status(500).json({ error: "Database error" });
     } finally {
-        if (conn) conn.release();
+        if (client) client.release();
     }
 });
 
