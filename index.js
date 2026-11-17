@@ -87,6 +87,28 @@ app.use('/js', express.static(path.join(__dirname, 'node_modules/chart.js/dist')
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+let cachedShowcaseUserId = null;
+const getShowcaseUserId = async () => {
+    if (process.env.SHOWCASE_USER_ID) {
+        const parsed = parseInt(process.env.SHOWCASE_USER_ID, 10);
+        if (!Number.isNaN(parsed)) return parsed;
+    }
+    if (cachedShowcaseUserId !== null) return cachedShowcaseUserId;
+
+    try {
+        const { rows } = await metadataPool.query(
+            "SELECT id FROM knowledge.api_users ORDER BY (role = 'admin') DESC, id ASC LIMIT 1"
+        );
+        if (rows.length > 0) {
+            cachedShowcaseUserId = rows[0].id;
+            return cachedShowcaseUserId;
+        }
+    } catch (err) {
+        console.error("[Auth] Failed to resolve showcase user ID:", err.message);
+    }
+    return 1;
+};
+
 const authenticateExtension = (req, res, next) => {
     // --- STEP 1: Version Check ---
     // If header is missing, default to '0.0.0'
@@ -102,6 +124,10 @@ const authenticateExtension = (req, res, next) => {
         });
     }
 
+    if (req.get('X-View-Showcase') === 'true') {
+        return res.status(403).json({ error: 'Read-only sample mode is active' });
+    }
+
     // --- STEP 2: Token Verification ---
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: 'No token provided' });
@@ -109,7 +135,52 @@ const authenticateExtension = (req, res, next) => {
     const token = authHeader.split(' ')[1]; // Bearer <token>
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) return res.status(403).json({ error: 'Invalid token' });
+        if (user.is_guest) return res.status(403).json({ error: 'Read-only session' });
         req.user = user;
+        next();
+    });
+};
+
+const authenticateExtensionRead = async (req, res, next) => {
+    const clientVersion = req.get('X-Client-Version') || '0.0.0';
+    const validClientVersion = semver.valid(clientVersion) ? clientVersion : '0.0.0';
+
+    if (semver.lt(validClientVersion, MIN_CLIENT_VERSION)) {
+        return res.status(426).json({ 
+            error: "Upgrade Required",
+            message: `Your extension version (${clientVersion}) is outdated. Please update to ${MIN_CLIENT_VERSION} or higher.`
+        });
+    }
+
+    const showcaseId = await getShowcaseUserId();
+    const wantsShowcase = req.get('X-View-Showcase') === 'true';
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        req.user = { uid: showcaseId, role: 'guest', is_guest: true, is_showcase: true };
+        return next();
+    }
+
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ error: 'Invalid token' });
+
+        const isOwner = (user.uid === showcaseId) || (user.role === 'admin');
+        if (wantsShowcase && !isOwner) {
+            req.user = {
+                uid: showcaseId,
+                actual_uid: user.uid,
+                role: 'guest',
+                is_guest: true,
+                is_showcase: true
+            };
+        } else {
+            req.user = {
+                ...user,
+                is_guest: false,
+                is_showcase: isOwner
+            };
+        }
         next();
     });
 };
@@ -1024,13 +1095,21 @@ app.post('/auth/verify-session', requireClientVersion, async (req, res) => {
             );
             
             // C. Issue JWT
+            const showcaseId = await getShowcaseUserId();
+            const isShowcaseOwner = (userRows[0].id === showcaseId) || (userRows[0].role === 'admin');
             const token = jwt.sign({ 
                 uid: userRows[0].id, 
                 mw_id: mwUserId, 
                 role: userRows[0].role 
             }, JWT_SECRET, { expiresIn: '30d' });
 
-            return res.json({ token, username: mwUserName, role: userRows[0].role });
+            return res.json({
+                token,
+                uid: userRows[0].id,
+                username: mwUserName,
+                role: userRows[0].role,
+                is_showcase_owner: isShowcaseOwner
+            });
         } else {
             // Login failed (Wrong password, throttled, etc.)
             return res.status(401).json({ 
@@ -1049,12 +1128,27 @@ app.post('/auth/verify-session', requireClientVersion, async (req, res) => {
     }
 });
 
+// Lightweight session introspection for existing tokens
+app.get('/api/session', authenticateExtensionRead, async (req, res) => {
+    const showcaseId = await getShowcaseUserId();
+    const actualUid = req.user.actual_uid || (!req.user.is_guest ? req.user.uid : null);
+    const isAuthenticated = Boolean(actualUid);
+    const isShowcaseOwner = isAuthenticated && ((actualUid === showcaseId) || (req.user.role === 'admin'));
+
+    res.json({
+        authenticated: isAuthenticated,
+        uid: actualUid,
+        is_guest: Boolean(req.user.is_guest),
+        is_showcase_owner: isShowcaseOwner
+    });
+});
+
 /**
  * GET /api/tags
  * Autocomplete endpoint for the RAG Librarian
  * Query Param: ?search=abc
  */
-app.get('/api/tags', authenticateExtension, async (req, res) => {
+app.get('/api/tags', authenticateExtensionRead, async (req, res) => {
     // 1. Extract 'limit' from query params
     const { search, limit } = req.query;
     const userId = req.user.uid; 
@@ -1089,7 +1183,7 @@ app.get('/api/tags', authenticateExtension, async (req, res) => {
 // GET /api/tags/tree
 // Returns the full hierarchy of defined tags
 // Accepts ?scope=mine to filter by user
-app.get('/api/tags/tree', authenticateExtension, async (req, res) => {
+app.get('/api/tags/tree', authenticateExtensionRead, async (req, res) => {
     const format = req.query.format;
     const userId = req.user.uid;
 
@@ -1239,16 +1333,28 @@ app.put('/api/tags/:id', authenticateExtension, async (req, res) => {
 });
 
 // GET LOGICAL UNITS (Read Path - Updated for Hybrid Permissions)
-app.get('/api/units', authenticateExtension, async (req, res) => {
-    const { source_code, source_page_id, tag_id, limit } = req.query;
+app.get('/api/units', authenticateExtensionRead, async (req, res) => {
+    const { source_code, source_page_id, tag_id, scope, limit } = req.query;
     const currentUserId = req.user.uid;
     const currentUserRole = req.user.role;
+    const isReadOnly = Boolean(req.user.is_guest);
+    const includeNullLegacy = Boolean(req.user.is_showcase || currentUserRole === 'admin');
 
-    if ((!source_code || !source_page_id) && !tag_id) {
-        return res.status(400).json({ error: "Must provide source_code+source_page_id OR tag_id" });
+    if ((!source_code || !source_page_id) && !tag_id && scope !== 'labels') {
+        return res.status(400).json({ error: "Must provide source_code+source_page_id, tag_id, or scope=labels" });
     }
 
     try {
+        const isLabelsBrowse = (scope === 'labels') && !source_code && !tag_id;
+        const textExpr = isLabelsBrowse ? 'LEFT(u.text_content, 300) AS text_content' : 'u.text_content';
+        const relExpr = (source_code && source_page_id)
+            ? `, EXISTS (
+                    SELECT 1 FROM knowledge.unit_relationships r
+                    WHERE (r.subject_unit_id = u.id OR r.object_unit_id = u.id)
+                    AND (r.created_by = $3 OR ($4::boolean AND r.created_by IS NULL))
+               ) AS has_relationship`
+            : '';
+
         let query = `
             SELECT 
                 u.id, 
@@ -1258,12 +1364,13 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
                 u.article_id, 
                 u.start_char_index, 
                 u.end_char_index, 
-                u.text_content, 
+                ${textExpr}, 
                 u.connected_anchors,
                 u.author, 
                 u.unit_type,
                 (u.broken_index)::int AS broken_index,
                 u.created_by
+                ${relExpr}
             FROM knowledge.logical_units u
             JOIN library.articles a ON u.article_id = a.id
         `;
@@ -1275,21 +1382,31 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
             // PERMISSION FIX: 
             // 1. If type is 'user_highlight', MUST match currentUserId
             // 2. All other types (metadata) are visible to everyone
-            params.push(source_code, source_page_id, currentUserId);
+            // Scoped to active workspace (user's own data, or showcase data in read-only mode)
+            params.push(source_code, source_page_id, currentUserId, includeNullLegacy);
             query += ` 
                 WHERE a.source_code = $1 
                 AND a.source_page_id = $2 
-                AND (u.unit_type != 'user_highlight' OR u.created_by = $3)
+                AND (u.created_by = $3 OR ($4::boolean AND u.created_by IS NULL))
             `;
         } 
         // SCENARIO B: Fetch by Tag
         else if (tag_id) {
             // NOTE: Tags are strictly personal in your system, so we keep the strict check here.
             // If you later add "Public Official Tags", you would relax this logic similar to above.
-            params.push(tag_id, currentUserId);
+            params.push(tag_id, currentUserId, includeNullLegacy);
             query += ` 
                 JOIN knowledge.unit_tags ut ON u.id = ut.unit_id 
-                WHERE ut.tag_id = $1 AND u.created_by = $2
+                WHERE ut.tag_id = $1 AND (u.created_by = $2 OR ($3::boolean AND u.created_by IS NULL))
+            `;
+        }
+        // SCENARIO C: Browse All Labeled Units in Active Workspace
+        else if (isLabelsBrowse) {
+            params.push(currentUserId, includeNullLegacy);
+            query += `
+                WHERE u.unit_type NOT IN ('user_highlight', 'canonical_answer', 'link_subject', 'link_object')
+                AND (u.created_by = $1 OR ($2::boolean AND u.created_by IS NULL))
+                ORDER BY a.title ASC, u.start_char_index ASC
             `;
         }
 
@@ -1306,7 +1423,7 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
                 ? JSON.parse(unit.connected_anchors) 
                 : (unit.connected_anchors || []),
             // Frontend uses this to show/hide "Delete" buttons
-            can_delete: (unit.created_by === currentUserId) || (currentUserRole === 'admin')
+            can_delete: !isReadOnly && ((unit.created_by === currentUserId) || (currentUserRole === 'admin'))
         }));
 
         res.json(unitsWithPermissions);
@@ -1319,10 +1436,12 @@ app.get('/api/units', authenticateExtension, async (req, res) => {
 
 // BATCH GET LOGICAL UNITS (Read Path for 'lib' fragments)
 // Endpoint: POST /api/units/batch
-app.post('/api/units/batch', authenticateExtension, async (req, res) => {
+app.post('/api/units/batch', authenticateExtensionRead, async (req, res) => {
     const { source_code, source_page_ids } = req.body;
     const currentUserId = req.user.uid;
     const currentUserRole = req.user.role;
+    const isReadOnly = Boolean(req.user.is_guest);
+    const includeNullLegacy = Boolean(req.user.is_showcase || currentUserRole === 'admin');
 
     if (!source_code || !Array.isArray(source_page_ids) || source_page_ids.length === 0) {
         return res.status(400).json({ error: "Invalid input" });
@@ -1343,24 +1462,29 @@ app.post('/api/units/batch', authenticateExtension, async (req, res) => {
                 u.author, 
                 u.unit_type,
                 (u.broken_index)::int AS broken_index,
-                u.created_by
+                u.created_by,
+                EXISTS (
+                    SELECT 1 FROM knowledge.unit_relationships r
+                    WHERE (r.subject_unit_id = u.id OR r.object_unit_id = u.id)
+                    AND (r.created_by = $2 OR ($3::boolean AND r.created_by IS NULL))
+                ) AS has_relationship
             FROM knowledge.logical_units u
             JOIN library.articles a ON u.article_id = a.id
             WHERE a.source_code = $1 
         `;
 
-        // [FIX] Updated Params: Code, UserID, UserRole
-        const params = [source_code, currentUserId, currentUserRole];
+        // [FIX] Updated Params: Code, UserID, IncludeNullLegacy
+        const params = [source_code, currentUserId, includeNullLegacy];
 
         // [FIX] Hybrid Permission Logic
         // 1. Show if it's NOT a user_highlight (Public Data like Tablets)
         // 2. OR if I created it
         // 3. OR if I am an Admin (I can see everyone's private highlights)
+        // Scoped to active workspace (user's own data, or showcase data in read-only mode)
         query += `
             AND (
-                u.unit_type != 'user_highlight' 
-                OR u.created_by = $2
-                OR $3 = 'admin'
+                u.created_by = $2
+                OR ($3::boolean AND u.created_by IS NULL)
             )
         `;
 
@@ -1386,7 +1510,7 @@ app.post('/api/units/batch', authenticateExtension, async (req, res) => {
             connected_anchors: (typeof unit.connected_anchors === 'string') 
                 ? JSON.parse(unit.connected_anchors) 
                 : (unit.connected_anchors || []),
-            can_delete: (unit.created_by === currentUserId) || (req.user.role === 'admin')
+            can_delete: !isReadOnly && ((unit.created_by === currentUserId) || (req.user.role === 'admin'))
         }));
         
         console.log(`[API] Batch requested ${source_page_ids.length} IDs for '${source_code}' -> Returned ${rows.length} units.`);
@@ -1402,6 +1526,8 @@ app.post('/api/units/batch', authenticateExtension, async (req, res) => {
 // BATCH REALIGN (The Healer Endpoint)
 app.patch('/api/units/batch_realign', authenticateExtension, async (req, res) => {
     const { updates } = req.body; 
+    const userId = req.user.uid;
+    const isAdmin = req.user.role === 'admin';
     
     if (!updates || !Array.isArray(updates) || updates.length === 0) {
         return res.status(400).json({ error: "No updates provided" });
@@ -1415,8 +1541,8 @@ app.patch('/api/units/batch_realign', authenticateExtension, async (req, res) =>
         for (const update of updates) {
             if (update.broken_index) {
                 await client.query(
-                    "UPDATE knowledge.logical_units SET broken_index = TRUE WHERE id = $1",
-                    [update.id]
+                    "UPDATE knowledge.logical_units SET broken_index = TRUE WHERE id = $1 AND (created_by = $2 OR $3::boolean)",
+                    [update.id, userId, isAdmin]
                 );
             } else {
                 // Ensure JSON format with string-normalized anchor IDs
@@ -1425,13 +1551,15 @@ app.patch('/api/units/batch_realign', authenticateExtension, async (req, res) =>
                 await client.query(
                     `UPDATE knowledge.logical_units 
                      SET start_char_index = $1, end_char_index = $2, text_content = $3, connected_anchors = $4::jsonb, broken_index = FALSE 
-                     WHERE id = $5`,
+                     WHERE id = $5 AND (created_by = $6 OR $7::boolean)`,
                     [
                         update.start_char_index, 
                         update.end_char_index,
                         update.text_content,
                         anchors, // [UPDATE]
-                        update.id
+                        update.id,
+                        userId,
+                        isAdmin
                     ]
                 );
             }
@@ -1452,14 +1580,17 @@ app.patch('/api/units/batch_realign', authenticateExtension, async (req, res) =>
 
 // GET /api/units/:id/tags
 // Fetch tags for a specific unit (for the Edit form)
-app.get('/api/units/:id/tags', authenticateExtension, async (req, res) => {
+app.get('/api/units/:id/tags', authenticateExtensionRead, async (req, res) => {
+    const userId = req.user.uid;
+    const includeNullLegacy = Boolean(req.user.is_showcase || req.user.role === 'admin');
     try {
         const { rows } = await metadataPool.query(
             `SELECT t.id, t.label, (t.is_official)::int AS is_official 
              FROM knowledge.defined_tags t
              JOIN knowledge.unit_tags ut ON t.id = ut.tag_id
-             WHERE ut.unit_id = $1`,
-            [req.params.id]
+             WHERE ut.unit_id = $1
+             AND (t.created_by = $2 OR ($3::boolean AND t.created_by IS NULL))`,
+            [req.params.id, userId, includeNullLegacy]
         );
         res.json(rows);
     } catch (err) {
@@ -1749,15 +1880,23 @@ app.post('/api/contribute/unit', authenticateExtension, async (req, res) => {
 
 // GET /api/relationships
 // Returns all relationships where the Subject OR Object is on the requested page
-app.get('/api/relationships', authenticateExtension, async (req, res) => {
-    const { source_code, source_page_id } = req.query;
+app.get('/api/relationships', authenticateExtensionRead, async (req, res) => {
+    const { source_code, source_page_id, unit_ids, scope } = req.query;
+    const currentUserId = req.user.uid;
+    const isReadOnly = Boolean(req.user.is_guest);
+    const includeNullLegacy = Boolean(req.user.is_showcase || req.user.role === 'admin');
 
-    if (!source_code || !source_page_id) {
-        return res.status(400).json({ error: "Missing source context" });
-    }
+    const parsedUnitIds = typeof unit_ids === 'string' && unit_ids.trim()
+        ? unit_ids.split(',').map(id => parseInt(id, 10)).filter(n => !Number.isNaN(n))
+        : [];
+    const hasPageContext = Boolean(source_code && source_page_id) || parsedUnitIds.length > 0;
+    const isBrowseAll = scope === 'all' || !hasPageContext;
 
     try {
-        const query = `
+        const subjTextExpr = isBrowseAll ? 'LEFT(s.text_content, 300) as subject_text' : 's.text_content as subject_text';
+        const objTextExpr = isBrowseAll ? 'LEFT(o.text_content, 300) as object_text' : 'o.text_content as object_text';
+
+        let query = `
             SELECT 
                 r.subject_unit_id,
                 r.object_unit_id,
@@ -1766,15 +1905,19 @@ app.get('/api/relationships', authenticateExtension, async (req, res) => {
                 r.created_by,
                 
                 -- Expand Subject Info
-                s.text_content as subject_text,
+                ${subjTextExpr},
                 s.unit_type as subject_type,
+                s.author as subject_author,
+                s.connected_anchors as subject_anchors,
                 a_s.source_page_id as subject_page_id,
                 a_s.source_code as subject_source_code,
                 a_s.title as subject_page_title,
 
                 -- Expand Object Info
-                o.text_content as object_text,
+                ${objTextExpr},
                 o.unit_type as object_type,
+                o.author as object_author,
+                o.connected_anchors as object_anchors,
                 a_o.source_page_id as object_page_id,
                 a_o.source_code as object_source_code,
                 a_o.title as object_page_title
@@ -1785,17 +1928,40 @@ app.get('/api/relationships', authenticateExtension, async (req, res) => {
             JOIN knowledge.logical_units o ON r.object_unit_id = o.id
             JOIN library.articles a_o ON o.article_id = a_o.id
 
-            WHERE 
-                (a_s.source_code = $1 AND a_s.source_page_id = $2)
-                OR 
-                (a_o.source_code = $1 AND a_o.source_page_id = $2)
+            WHERE (r.created_by = $1 OR ($2::boolean AND r.created_by IS NULL))
         `;
+
+        const params = [currentUserId, includeNullLegacy];
+
+        if (!isBrowseAll) {
+            const pageClauses = [];
+            if (source_code && source_page_id) {
+                params.push(source_code, source_page_id);
+                const scIdx = params.length - 1;
+                const spIdx = params.length;
+                pageClauses.push(`(a_s.source_code = $${scIdx} AND a_s.source_page_id = $${spIdx})`);
+                pageClauses.push(`(a_o.source_code = $${scIdx} AND a_o.source_page_id = $${spIdx})`);
+            }
+            if (parsedUnitIds.length > 0) {
+                params.push(parsedUnitIds);
+                const idsIdx = params.length;
+                pageClauses.push(`r.subject_unit_id = ANY($${idsIdx}::int[])`);
+                pageClauses.push(`r.object_unit_id = ANY($${idsIdx}::int[])`);
+            }
+            if (pageClauses.length > 0) {
+                query += ` AND (${pageClauses.join(' OR ')})`;
+            }
+        } else {
+            query += ` ORDER BY r.relationship_type ASC, a_s.title ASC`;
+        }
         
-        const { rows } = await metadataPool.query(query, [source_code, source_page_id]);
+        const { rows } = await metadataPool.query(query, params);
 
         const rowsWithPermissions = rows.map(r => ({
             ...r,
-            can_delete: (r.created_by === req.user.uid) || (req.user.role === 'admin')
+            subject_anchors: typeof r.subject_anchors === 'string' ? JSON.parse(r.subject_anchors) : (r.subject_anchors || []),
+            object_anchors: typeof r.object_anchors === 'string' ? JSON.parse(r.object_anchors) : (r.object_anchors || []),
+            can_delete: !isReadOnly && ((r.created_by === req.user.uid) || (req.user.role === 'admin'))
         }));
 
         res.json(rowsWithPermissions);
@@ -1841,30 +2007,89 @@ app.post('/api/contribute/relationship', authenticateExtension, async (req, res)
 
 // GET /api/qa
 // Fetches canonical questions. Useful for populating the edit form.
-app.get('/api/qa', authenticateExtension, async (req, res) => {
-    const { answer_unit_id } = req.query;
-
-    // Basic validation
-    if (!answer_unit_id) {
-        return res.status(400).json({ error: "Missing required parameter: answer_unit_id" });
-    }
+app.get('/api/qa', authenticateExtensionRead, async (req, res) => {
+    const { answer_unit_id, answer_unit_ids, source_code, source_page_id, scope } = req.query;
+    const currentUserId = req.user.uid;
+    const isReadOnly = Boolean(req.user.is_guest);
+    const includeNullLegacy = Boolean(req.user.is_showcase || req.user.role === 'admin');
 
     try {
-        const query = `
-            SELECT 
-                id,
-                question_text,
-                answer_unit_id,
-                source_book,
-                created_by
-            FROM knowledge.canonical_questions
-            WHERE answer_unit_id = $1
+        // Basic validation / single-unit lookup
+        if (answer_unit_id) {
+            const query = `
+                SELECT 
+                    cq.id,
+                    cq.question_text,
+                    cq.answer_unit_id,
+                    cq.source_book,
+                    cq.created_by
+                FROM knowledge.canonical_questions cq
+                WHERE cq.answer_unit_id = $1
+                AND (cq.created_by = $2 OR ($3::boolean AND cq.created_by IS NULL))
+            `;
+
+            const { rows } = await metadataPool.query(query, [answer_unit_id, currentUserId, includeNullLegacy]);
+            
+            // Return array (even if empty) to keep frontend logic simple
+            return res.json(rows.map(row => ({
+                ...row,
+                can_delete: !isReadOnly && ((row.created_by === currentUserId) || (req.user.role === 'admin'))
+            })));
+        }
+
+        const parsedUnitIds = typeof answer_unit_ids === 'string' && answer_unit_ids.trim()
+            ? answer_unit_ids.split(',').map(id => parseInt(id, 10)).filter(n => !Number.isNaN(n))
+            : [];
+        const hasPageFilter = Boolean(source_code && source_page_id) || parsedUnitIds.length > 0;
+        const isBrowseAll = scope === 'all' || !hasPageFilter;
+
+        let query = `
+            SELECT
+                cq.id,
+                cq.question_text,
+                cq.answer_unit_id,
+                cq.source_book,
+                cq.created_by,
+                LEFT(u.text_content, 300) AS answer_text,
+                u.author,
+                u.connected_anchors,
+                a.source_code,
+                a.source_page_id,
+                a.title
+            FROM knowledge.canonical_questions cq
+            JOIN knowledge.logical_units u ON cq.answer_unit_id = u.id
+            JOIN library.articles a ON u.article_id = a.id
+            WHERE (cq.created_by = $1 OR ($2::boolean AND cq.created_by IS NULL))
         `;
 
-        const { rows } = await metadataPool.query(query, [answer_unit_id]);
-        
-        // Return array (even if empty) to keep frontend logic simple
-        res.json(rows);
+        const params = [currentUserId, includeNullLegacy];
+
+        if (!isBrowseAll) {
+            const clauses = [];
+            if (source_code && source_page_id) {
+                params.push(source_code, source_page_id);
+                clauses.push(`(a.source_code = $${params.length - 1} AND a.source_page_id = $${params.length})`);
+            }
+            if (parsedUnitIds.length > 0) {
+                params.push(parsedUnitIds);
+                clauses.push(`cq.answer_unit_id = ANY($${params.length}::int[])`);
+            }
+            if (clauses.length > 0) {
+                query += ` AND (${clauses.join(' OR ')})`;
+            }
+            query += ` ORDER BY u.start_char_index ASC, cq.id ASC`;
+        } else {
+            query += ` ORDER BY COALESCE(NULLIF(cq.source_book, ''), a.title) ASC, a.title ASC, cq.id ASC`;
+        }
+
+        const { rows } = await metadataPool.query(query, params);
+        res.json(rows.map(row => ({
+            ...row,
+            connected_anchors: typeof row.connected_anchors === 'string'
+                ? JSON.parse(row.connected_anchors)
+                : (row.connected_anchors || []),
+            can_delete: !isReadOnly && ((row.created_by === currentUserId) || (req.user.role === 'admin'))
+        })));
 
     } catch (err) {
         console.error("[API] Fetch QA Error:", err);
